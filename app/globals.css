@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   THEME — Japanese-inspired dark mode palette
+   THEME — Japanese-inspired DARK palette (default)
    ============================================================ */
 :root {
   --background: #0c0f1a;
@@ -31,6 +31,49 @@
 
   --gold: #fbbf24;
   --gold-glow: rgba(251, 191, 36, 0.2);
+
+  --grid-dot: rgba(129, 140, 248, 0.05);
+  --glass-bg: rgba(26, 31, 53, 0.8);
+  --glass-bg-hover: rgba(34, 40, 69, 0.9);
+  --canvas-bg: rgba(12, 15, 26, 0.85);
+}
+
+/* ============================================================
+   THEME — Japanese-inspired LIGHT palette
+   ============================================================ */
+[data-theme="light"] {
+  --background: #f8f6f3;
+  --background-secondary: #f0ede8;
+  --surface: #ffffff;
+  --surface-hover: #f3f0ec;
+  --border: #ddd6cb;
+  --border-light: #c7bfb3;
+
+  --foreground: #1e1b16;
+  --foreground-muted: #5c564d;
+  --foreground-dim: #8a8278;
+
+  --sakura: #db2777;
+  --sakura-light: #ec4899;
+  --sakura-glow: rgba(219, 39, 119, 0.15);
+
+  --indigo: #6366f1;
+  --indigo-light: #4f46e5;
+  --indigo-glow: rgba(99, 102, 241, 0.15);
+
+  --emerald: #059669;
+  --emerald-glow: rgba(5, 150, 105, 0.12);
+
+  --rose: #e11d48;
+  --rose-glow: rgba(225, 29, 72, 0.12);
+
+  --gold: #d97706;
+  --gold-glow: rgba(217, 119, 6, 0.12);
+
+  --grid-dot: rgba(99, 102, 241, 0.06);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --canvas-bg: rgba(255, 255, 255, 0.9);
 }
 
 @theme inline {
@@ -76,6 +119,7 @@
 
 html {
   scroll-behavior: smooth;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -83,6 +127,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans, "Inter", system-ui, sans-serif);
   min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Background pattern — subtle grid */
@@ -93,7 +138,7 @@ body::before {
   z-index: -1;
   background-image: radial-gradient(
     circle at 1px 1px,
-    rgba(129, 140, 248, 0.05) 1px,
+    var(--grid-dot) 1px,
     transparent 0
   );
   background-size: 40px 40px;
@@ -226,11 +271,7 @@ body::before {
 
 /* Glass card effect */
 .glass-card {
-  background: linear-gradient(
-    135deg,
-    rgba(26, 31, 53, 0.8) 0%,
-    rgba(26, 31, 53, 0.4) 100%
-  );
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
@@ -240,13 +281,9 @@ body::before {
 
 .glass-card:hover {
   border-color: var(--border-light);
-  background: linear-gradient(
-    135deg,
-    rgba(34, 40, 69, 0.9) 0%,
-    rgba(34, 40, 69, 0.5) 100%
-  );
+  background: var(--glass-bg-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 /* Flashcard 3D flip */
@@ -376,7 +413,7 @@ body::before {
   height: 280px;
   border-radius: 16px;
   border: 2px solid var(--border);
-  background: rgba(12, 15, 26, 0.85);
+  background: var(--canvas-bg);
   overflow: hidden;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -555,11 +592,7 @@ body::before {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 12px;
-  background: linear-gradient(
-    135deg,
-    rgba(26, 31, 53, 0.9) 0%,
-    rgba(26, 31, 53, 0.5) 100%
-  );
+  background: var(--glass-bg);
   border: 1px solid var(--border);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

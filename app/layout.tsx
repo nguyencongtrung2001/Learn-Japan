@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import Header from "@/components/header";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,18 +36,36 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="vi"
       className={`${inter.variable} ${notoSansJP.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+                  document.documentElement.setAttribute('data-theme', 'light')
+                } else {
+                  document.documentElement.removeAttribute('data-theme')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-border py-6 mt-auto">
-          <div className="mx-auto max-w-6xl px-4 text-center">
-            <p className="text-foreground-dim text-xs">
-              🌸 Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật mỗi
-              ngày
-            </p>
-          </div>
-        </footer>
+        <ThemeProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <footer className="border-t border-border py-6 mt-auto">
+            <div className="mx-auto max-w-6xl px-4 text-center">
+              <p className="text-foreground-dim text-xs">
+                🌸 Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật mỗi
+                ngày
+              </p>
+            </div>
+          </footer>
+        </ThemeProvider>
       </body>
     </html>
   );

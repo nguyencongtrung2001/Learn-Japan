@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "./theme-provider";
 
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
@@ -13,7 +14,13 @@ const navLinks = [
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
@@ -60,29 +67,40 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
-            aria-label="Toggle menu"
-            id="mobile-menu-toggle"
-          >
-            <span
-              className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                isMenuOpen ? "rotate-45 translate-y-2" : ""
-              }`}
-            />
-            <span
-              className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                isMenuOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
-            />
-          </button>
+          {/* Actions: Theme Toggle & Mobile Menu */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-lg hover:bg-surface-hover transition-colors text-foreground-muted hover:text-foreground"
+              aria-label="Toggle theme"
+            >
+              {mounted ? (theme === "dark" ? "🌙" : "☀️") : "⚪"}
+            </button>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
+              aria-label="Toggle menu"
+              id="mobile-menu-toggle"
+            >
+              <span
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "rotate-45 translate-y-2" : ""
+                }`}
+              />
+              <span
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
