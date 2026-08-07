@@ -2,11 +2,11 @@ import Link from "next/link";
 
 const modes = [
   {
-    href: "/flashcard",
-    icon: "🃏",
-    title: "Flashcard",
-    titleJp: "フラッシュカード",
-    description: "Lật thẻ để ghi nhớ. Xem ký tự Kana và kiểm tra cách đọc Romaji.",
+    href: "/alphabet",
+    icon: "🔠",
+    title: "Bảng chữ cái",
+    titleJp: "五十音図",
+    description: "Tra cứu và làm quen với toàn bộ bảng chữ cái Hiragana, Katakana, Dakuten và Youon.",
     gradient: "from-pink-500/20 to-purple-500/20",
     borderColor: "border-pink-500/30",
     hoverShadow: "hover:shadow-pink-500/10",
@@ -86,7 +86,7 @@ export default function HomePage() {
               style={{ animationDelay: "0.3s" }}
             >
               <Link
-                href="/flashcard"
+                href="/alphabet"
                 className="btn-shine px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sakura to-indigo text-white font-semibold
                            hover:shadow-xl hover:shadow-sakura/20 hover:scale-105 transition-all duration-300"
                 id="hero-start-btn"

@@ -7,7 +7,7 @@ import { useTheme } from "./theme-provider";
 
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
-  { href: "/flashcard", label: "Flashcard", icon: "🃏" },
+  { href: "/alphabet", label: "Bảng chữ cái", icon: "🔠" },
   { href: "/kana-to-romaji", label: "Kana → Romaji", icon: "✍️" },
   { href: "/romaji-to-kana", label: "Romaji → Kana", icon: "🔤" },
 ];
