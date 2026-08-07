@@ -358,3 +358,269 @@ body::before {
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
 }
+
+/* ============================================================
+   DRAWING CANVAS — Handwriting input (Google Translate-style)
+   ============================================================ */
+.drawing-canvas-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawing-canvas-wrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  background: rgba(12, 15, 26, 0.85);
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.drawing-canvas-wrapper.is-drawing {
+  border-color: var(--indigo);
+  box-shadow: 0 0 20px var(--indigo-glow), 0 0 40px rgba(129, 140, 248, 0.1);
+}
+
+.drawing-canvas-wrapper.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Writing guide — cross grid like 原稿用紙 */
+.canvas-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.canvas-grid::before,
+.canvas-grid::after {
+  content: "";
+  position: absolute;
+  background: var(--border);
+  opacity: 0.25;
+}
+
+/* Vertical center line */
+.canvas-grid::before {
+  top: 10%;
+  bottom: 10%;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-0.5px);
+}
+
+/* Horizontal center line */
+.canvas-grid::after {
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-0.5px);
+}
+
+.drawing-canvas {
+  position: relative;
+  z-index: 1;
+  cursor: crosshair;
+  display: block;
+  width: 280px;
+  height: 280px;
+}
+
+/* Placeholder — shown when canvas is empty */
+.canvas-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.canvas-placeholder-icon {
+  font-size: 2.5rem;
+  opacity: 0.2;
+  animation: float 3s ease-in-out infinite;
+}
+
+.canvas-placeholder-text {
+  font-size: 0.75rem;
+  color: var(--foreground-dim);
+  opacity: 0.4;
+}
+
+/* Recognition loading indicator */
+.canvas-recognizing {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+.recognizing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.recognizing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--indigo-light);
+  animation: recognizing-bounce 1.4s infinite ease-in-out both;
+}
+
+.recognizing-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.recognizing-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+.recognizing-dots span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes recognizing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Canvas toolbar — Undo / Clear */
+.canvas-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 280px;
+}
+
+.canvas-tool-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.canvas-tool-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--foreground);
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+}
+
+.canvas-tool-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.canvas-tool-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.canvas-tool-icon {
+  font-size: 0.9rem;
+}
+
+/* Candidate bar — recognised character suggestions */
+.candidate-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(26, 31, 53, 0.9) 0%,
+    rgba(26, 31, 53, 0.5) 100%
+  );
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  width: 280px;
+}
+
+.candidate-label {
+  font-size: 0.7rem;
+  color: var(--foreground-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.candidate-list {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.candidate-list::-webkit-scrollbar {
+  display: none;
+}
+
+.candidate-item {
+  min-width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.candidate-item:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--indigo);
+  transform: scale(1.08);
+}
+
+.candidate-item:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.candidate-item.is-selected {
+  background: linear-gradient(135deg, var(--indigo), var(--sakura));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 0 14px var(--indigo-glow);
+  transform: scale(1.05);
+}
+
+.candidate-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}

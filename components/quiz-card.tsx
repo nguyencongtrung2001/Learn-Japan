@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { type KanaItem } from "@/data/kana-data";
+import DrawingCanvas from "./drawing-canvas";
 
 type QuizMode = "kana-to-romaji" | "romaji-to-kana";
 
@@ -27,17 +28,20 @@ export default function QuizCard({
   const [showAnswer, setShowAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input on mount and when item changes
+  const isDrawingMode = mode === "romaji-to-kana";
+
+  // Focus input on mount and when item changes (only for text-input mode)
   useEffect(() => {
     setUserInput("");
     setFeedback(null);
     setShowAnswer(false);
-    // Small delay so the element is available after animation
-    const timer = setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [item]);
+    if (!isDrawingMode) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [item, isDrawingMode]);
 
   const checkAnswer = useCallback(() => {
     if (!userInput.trim()) return;
@@ -67,6 +71,10 @@ export default function QuizCard({
     [checkAnswer, feedback]
   );
 
+  const handleCharacterSelected = useCallback((char: string) => {
+    setUserInput(char);
+  }, []);
+
   // What we display as the question
   const questionDisplay = mode === "kana-to-romaji" ? item.kana : item.romaji;
   // What the correct answer is
@@ -87,11 +95,12 @@ export default function QuizCard({
         <span>{totalCount}</span>
       </div>
 
-      {/* Question card */}
+      {/* Question card — compact for drawing mode, full size for text mode */}
       <div
         className={`
-          glass-card w-72 h-72 sm:w-80 sm:h-80 flex flex-col items-center justify-center
+          glass-card w-72 sm:w-80 flex flex-col items-center justify-center
           transition-all duration-300
+          ${isDrawingMode ? "h-32 sm:h-36" : "h-72 sm:h-80"}
           ${feedback === "correct" ? "correct-glow" : ""}
           ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}
         `}
@@ -112,7 +121,9 @@ export default function QuizCard({
 
         {/* Question display */}
         <span
-          className={`font-bold mb-4 ${
+          className={`font-bold ${
+            isDrawingMode ? "mb-1" : "mb-4"
+          } ${
             mode === "kana-to-romaji"
               ? "kana-display text-7xl sm:text-8xl text-foreground"
               : "text-4xl sm:text-5xl gradient-text"
@@ -125,47 +136,94 @@ export default function QuizCard({
         <p className="text-foreground-dim text-xs">
           {mode === "kana-to-romaji"
             ? "Nhập cách đọc bằng Romaji"
-            : "Nhập ký tự Kana tương ứng"}
+            : "Vẽ ký tự Kana tương ứng"}
         </p>
       </div>
 
       {/* Input section */}
       <div className="w-72 sm:w-80 space-y-3">
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={!!feedback}
-            className={`
-              w-full px-4 py-3 rounded-xl bg-surface border text-center text-lg font-medium
-              outline-none transition-all duration-300
-              placeholder:text-foreground-dim/40
-              ${
-                feedback === "correct"
-                  ? "border-emerald bg-emerald/10 text-emerald"
-                  : feedback === "incorrect"
-                  ? "border-rose bg-rose/10 text-rose"
-                  : "border-border focus:border-indigo focus:ring-2 focus:ring-indigo/20 text-foreground"
-              }
-            `}
-            id="quiz-input"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck="false"
-          />
+        {/* Text input — for kana-to-romaji mode */}
+        {!isDrawingMode && (
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              disabled={!!feedback}
+              className={`
+                w-full px-4 py-3 rounded-xl bg-surface border text-center text-lg font-medium
+                outline-none transition-all duration-300
+                placeholder:text-foreground-dim/40
+                ${
+                  feedback === "correct"
+                    ? "border-emerald bg-emerald/10 text-emerald"
+                    : feedback === "incorrect"
+                    ? "border-rose bg-rose/10 text-rose"
+                    : "border-border focus:border-indigo focus:ring-2 focus:ring-indigo/20 text-foreground"
+                }
+              `}
+              id="quiz-input"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+            />
 
-          {/* Feedback icon */}
-          {feedback && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl animate-confetti-pop">
-              {feedback === "correct" ? "✅" : "❌"}
+            {/* Feedback icon */}
+            {feedback && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl animate-confetti-pop">
+                {feedback === "correct" ? "✅" : "❌"}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Drawing canvas — for romaji-to-kana mode */}
+        {isDrawingMode && (
+          <DrawingCanvas
+            key={`draw-${item.kana}-${currentIndex}`}
+            onCharacterSelected={handleCharacterSelected}
+            selectedChar={userInput}
+            disabled={!!feedback}
+          />
+        )}
+
+        {/* Selected answer display — for drawing mode */}
+        {isDrawingMode && userInput && (
+          <div
+            className={`text-center p-3 rounded-xl border transition-all duration-300 ${
+              feedback === "correct"
+                ? "bg-emerald/10 border-emerald/30"
+                : feedback === "incorrect"
+                ? "bg-rose/10 border-rose/30"
+                : "bg-surface border-border"
+            }`}
+            id="selected-answer"
+          >
+            <span className="text-xs text-foreground-dim block mb-1">
+              Đã chọn:
             </span>
-          )}
-        </div>
+            <span
+              className={`kana-display text-3xl font-bold ${
+                feedback === "correct"
+                  ? "text-emerald"
+                  : feedback === "incorrect"
+                  ? "text-rose"
+                  : "text-indigo-light"
+              }`}
+            >
+              {userInput}
+            </span>
+            {feedback && (
+              <span className="ml-2 text-xl animate-confetti-pop inline-block">
+                {feedback === "correct" ? "✅" : "❌"}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Submit button */}
         {!feedback && (
