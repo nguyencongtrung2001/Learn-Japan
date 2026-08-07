@@ -95,15 +95,17 @@ export default function RomajiToKanaPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
       {/* Page title */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-          <span className="mr-2">🔤</span>
-          <span className="gradient-text">Romaji → Kana</span>
-        </h1>
-        <p className="text-foreground-muted text-sm">
-          Xem từ Romaji và nhập ký tự Hiragana hoặc Katakana tương ứng
-        </p>
-      </div>
+      {phase !== "quiz" && (
+        <div className="text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            <span className="mr-2">🔤</span>
+            <span className="gradient-text">Romaji → Kana</span>
+          </h1>
+          <p className="text-foreground-muted text-sm">
+            Xem từ Romaji và nhập ký tự Hiragana hoặc Katakana tương ứng
+          </p>
+        </div>
+      )}
 
       {/* Select Phase */}
       {phase === "select" && (
@@ -118,26 +120,13 @@ export default function RomajiToKanaPage() {
       {phase === "quiz" && cards.length > 0 && (
         <div className="space-y-6">
           {/* Top bar */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleBackToSelect}
-              className="text-sm text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
-            >
-              ← Chọn nhóm khác
-            </button>
+          <div className="flex items-center justify-center mb-6">
             <StatsDisplay
               correct={sessionCorrect}
               incorrect={sessionIncorrect}
               total={cards.length}
             />
           </div>
-
-          {/* Progress */}
-          <ProgressBar
-            current={currentIndex + 1}
-            total={cards.length}
-            label="Tiến độ"
-          />
 
           {/* Quiz Card */}
           <div className="flex justify-center">
