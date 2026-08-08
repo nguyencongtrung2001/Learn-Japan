@@ -31,6 +31,16 @@ const modes = [
     borderColor: "border-emerald-500/30",
     hoverShadow: "hover:shadow-emerald-500/10",
   },
+  {
+    href: "/mixed-quiz",
+    icon: "🔀",
+    title: "Mixed Quiz",
+    titleJp: "ミックスクイズ",
+    description: "Kết hợp ngẫu nhiên Kana→Romaji và Romaji→Kana. Thử thách toàn diện!",
+    gradient: "from-amber-500/20 to-orange-500/20",
+    borderColor: "border-amber-500/30",
+    hoverShadow: "hover:shadow-amber-500/10",
+  },
 ];
 
 const kanaPreview = [
@@ -77,7 +87,7 @@ export default function HomePage() {
               className="text-foreground-muted max-w-lg mx-auto text-sm sm:text-base mb-8 animate-fade-in-up opacity-0"
               style={{ animationDelay: "0.2s" }}
             >
-              Luyện tập Hiragana, Katakana, Dakuten & Youon với 3 chế độ học
+              Luyện tập Hiragana, Katakana, Dakuten & Youon với 4 chế độ học
               tương tác. Học thuộc bảng chữ cái tiếng Nhật một cách hiệu quả.
             </p>
 
@@ -126,13 +136,13 @@ export default function HomePage() {
       {/* Study Modes */}
       <section className="mb-16 sm:mb-24" id="modes-section">
         <h2 className="text-2xl sm:text-3xl font-bold text-center mb-3">
-          3 Chế độ luyện tập
+          4 Chế độ luyện tập
         </h2>
         <p className="text-foreground-muted text-center mb-10 text-sm max-w-md mx-auto">
           Kết hợp nhiều phương pháp giúp ghi nhớ lâu hơn và hiệu quả hơn
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {modes.map((mode, index) => (
             <Link
               key={mode.href}
