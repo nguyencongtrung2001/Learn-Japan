@@ -18,7 +18,7 @@ export default function StatsDisplay({
 
   return (
     <div
-      className="flex items-center gap-3 sm:gap-5 flex-wrap justify-center"
+      className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center"
       id="stats-display"
     >
       {/* Correct */}

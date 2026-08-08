@@ -45,7 +45,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop navigation */}
-          <nav className="hidden md:flex items-center gap-1" id="desktop-nav">
+          <nav className="hidden lg:flex items-center gap-0.5" id="desktop-nav">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -53,7 +53,7 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={`
-                    px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                    px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap
                     ${
                       isActive
                         ? "bg-indigo/15 text-indigo-light border border-indigo/30"
@@ -81,7 +81,7 @@ export default function Header() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
+              className="lg:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
               aria-label="Toggle menu"
               id="mobile-menu-toggle"
             >
@@ -107,7 +107,7 @@ export default function Header() {
 
       {/* Mobile navigation dropdown */}
       <div
-        className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${
+        className={`lg:hidden border-t border-border overflow-hidden transition-all duration-300 ${
           isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
         }`}
       >

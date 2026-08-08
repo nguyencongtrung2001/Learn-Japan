@@ -58,7 +58,7 @@ const kanaPreview = [
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-16">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-16 overflow-hidden">
       {/* Hero Section */}
       <section className="text-center mb-16 sm:mb-24" id="hero-section">
         {/* Floating Kana background */}
