@@ -95,42 +95,43 @@ export default function QuizCard({
         <span>{totalCount}</span>
       </div>
 
-      {/* Question card — compact for drawing mode, full size for text mode */}
-      <div
-        className={`
-          glass-card w-72 sm:w-80 flex flex-col items-center justify-center
-          transition-all duration-300
-          ${isDrawingMode ? "h-32 sm:h-36" : "h-72 sm:h-80"}
-          ${feedback === "correct" ? "correct-glow" : ""}
-          ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}
-        `}
-        id="quiz-card"
-      >
-
-
-        {/* Question display */}
-        <span
-          className={`font-bold ${
-            isDrawingMode ? "mb-1" : "mb-4"
-          } ${
-            mode === "kana-to-romaji"
-              ? "kana-display text-7xl sm:text-8xl text-foreground"
-              : "text-4xl sm:text-5xl gradient-text"
-          }`}
+      {/* Main content area (splits to side-by-side on laptop for drawing mode) */}
+      <div className={`flex flex-col ${isDrawingMode ? "lg:flex-row lg:items-start" : ""} items-center justify-center gap-5 lg:gap-8 w-full max-w-4xl`}>
+        
+        {/* Question card */}
+        <div
+          className={`
+            glass-card w-72 sm:w-80 flex flex-col items-center justify-center
+            transition-all duration-300 shrink-0
+            ${isDrawingMode ? "h-32 sm:h-36 lg:h-[280px]" : "h-72 sm:h-80"}
+            ${feedback === "correct" ? "correct-glow" : ""}
+            ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}
+          `}
+          id="quiz-card"
         >
-          {questionDisplay}
-        </span>
+          {/* Question display */}
+          <span
+            className={`font-bold ${
+              isDrawingMode ? "mb-1 lg:mb-4" : "mb-4"
+            } ${
+              mode === "kana-to-romaji"
+                ? "kana-display text-7xl sm:text-8xl text-foreground"
+                : "text-4xl sm:text-5xl lg:text-6xl gradient-text"
+            }`}
+          >
+            {questionDisplay}
+          </span>
 
-        {/* Mode hint */}
-        <p className="text-foreground-dim text-xs">
-          {mode === "kana-to-romaji"
-            ? "Nhập cách đọc bằng Romaji"
-            : "Vẽ ký tự Kana tương ứng"}
-        </p>
-      </div>
+          {/* Mode hint */}
+          <p className="text-foreground-dim text-xs">
+            {mode === "kana-to-romaji"
+              ? "Nhập cách đọc bằng Romaji"
+              : "Vẽ ký tự Kana tương ứng"}
+          </p>
+        </div>
 
-      {/* Input section */}
-      <div className="w-72 sm:w-80 space-y-3">
+        {/* Input section */}
+        <div className={`w-72 sm:w-80 space-y-3 shrink-0 ${isDrawingMode ? "lg:w-[280px]" : ""}`}>
         {/* Text input — for kana-to-romaji mode */}
         {!isDrawingMode && (
           <div className="relative">
@@ -253,5 +254,6 @@ export default function QuizCard({
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }
