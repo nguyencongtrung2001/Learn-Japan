@@ -26,6 +26,7 @@ export default function QuizCard({
     null
   );
   const [showAnswer, setShowAnswer] = useState(false);
+  const [isHintUsed, setIsHintUsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isDrawingMode = mode === "romaji-to-kana";
@@ -35,6 +36,7 @@ export default function QuizCard({
     setUserInput("");
     setFeedback(null);
     setShowAnswer(false);
+    setIsHintUsed(false);
     if (!isDrawingMode) {
       const timer = setTimeout(() => {
         inputRef.current?.focus();
@@ -215,23 +217,39 @@ export default function QuizCard({
           </div>
         )}
 
-        {/* Submit button */}
+        {/* Submit & Hint buttons */}
         {!feedback && (
-          <button
-            onClick={checkAnswer}
-            disabled={!userInput.trim()}
-            className={`
-              w-full py-3 rounded-xl font-semibold transition-all duration-200
-              ${
-                userInput.trim()
-                  ? "bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  : "bg-surface-hover text-foreground-dim cursor-not-allowed"
-              }
-            `}
-            id="quiz-submit-btn"
-          >
-            Kiểm tra
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={checkAnswer}
+              disabled={!userInput.trim()}
+              className={`
+                w-full py-3 rounded-xl font-semibold transition-all duration-200
+                ${
+                  userInput.trim()
+                    ? "bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    : "bg-surface-hover text-foreground-dim cursor-not-allowed"
+                }
+              `}
+              id="quiz-submit-btn"
+            >
+              Kiểm tra
+            </button>
+            
+            {!isHintUsed ? (
+              <button
+                onClick={() => setIsHintUsed(true)}
+                className="text-sm text-foreground-dim hover:text-indigo transition-colors py-1 cursor-pointer"
+              >
+                💡 Xem gợi ý
+              </button>
+            ) : (
+              <div className="text-center p-2 rounded-lg bg-surface border border-border/50 animate-fade-in">
+                <span className="text-xs text-foreground-muted block mb-1">Gợi ý:</span>
+                <span className="font-medium text-indigo-light kana-display text-lg">{correctAnswer}</span>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Show answer if incorrect */}
