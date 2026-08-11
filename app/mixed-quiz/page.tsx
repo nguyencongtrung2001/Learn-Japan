@@ -68,6 +68,8 @@ export default function MixedQuizPage() {
 
   const handleAnswer = useCallback(
     (isCorrect: boolean) => {
+      let currentItemsLength = quizItems.length;
+
       if (isCorrect) {
         setSessionCorrect((prev) => prev + 1);
         setProgress((prev) => ({
@@ -84,10 +86,27 @@ export default function MixedQuizPage() {
           totalAttempts: prev.totalAttempts + 1,
           lastStudied: new Date().toISOString(),
         }));
+
+        // Add the incorrect card 2 more times at random positions in the remaining list
+        setQuizItems((prevItems) => {
+          const newItems = [...prevItems];
+          const currentItem = newItems[currentIndex];
+
+          for (let i = 0; i < 2; i++) {
+            const insertAt =
+              Math.floor(Math.random() * (newItems.length - currentIndex)) +
+              currentIndex +
+              1;
+            newItems.splice(insertAt, 0, currentItem);
+          }
+          return newItems;
+        });
+
+        currentItemsLength += 2;
       }
 
       // Move to next question or show results
-      if (currentIndex >= quizItems.length - 1) {
+      if (currentIndex >= currentItemsLength - 1) {
         setTimeout(() => setPhase("results"), isCorrect ? 1000 : 2200);
       } else {
         setTimeout(
@@ -96,7 +115,7 @@ export default function MixedQuizPage() {
         );
       }
     },
-    [currentIndex, quizItems.length, setProgress]
+    [currentIndex, quizItems, setProgress]
   );
 
   const handleRestart = useCallback(() => {
@@ -144,14 +163,7 @@ export default function MixedQuizPage() {
       {/* Quiz Phase */}
       {phase === "quiz" && currentQuizItem && (
         <div className="space-y-6">
-          {/* Top bar */}
-          <div className="flex items-center justify-center mb-2">
-            <StatsDisplay
-              correct={sessionCorrect}
-              incorrect={sessionIncorrect}
-              total={quizItems.length}
-            />
-          </div>
+          {/* Top bar (Stats hidden during play as requested) */}
 
           {/* Mode indicator — so user knows which direction this question is */}
           <div className="flex justify-center">

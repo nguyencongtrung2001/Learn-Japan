@@ -106,18 +106,7 @@ export default function QuizCard({
         `}
         id="quiz-card"
       >
-        {/* Type badge */}
-        <div className="absolute top-4 right-4">
-          <span
-            className={`text-xs px-2 py-1 rounded-full ${
-              item.type === "hiragana"
-                ? "bg-sakura/15 text-sakura-light"
-                : "bg-indigo/15 text-indigo-light"
-            }`}
-          >
-            {item.type === "hiragana" ? "ひらがな" : "カタカナ"}
-          </span>
-        </div>
+
 
         {/* Question display */}
         <span

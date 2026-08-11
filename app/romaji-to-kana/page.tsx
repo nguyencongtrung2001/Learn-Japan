@@ -48,6 +48,8 @@ export default function RomajiToKanaPage() {
 
   const handleAnswer = useCallback(
     (isCorrect: boolean) => {
+      let currentCardsLength = cards.length;
+
       if (isCorrect) {
         setSessionCorrect((prev) => prev + 1);
         setProgress((prev) => ({
@@ -64,10 +66,27 @@ export default function RomajiToKanaPage() {
           totalAttempts: prev.totalAttempts + 1,
           lastStudied: new Date().toISOString(),
         }));
+
+        // Add the incorrect card 2 more times at random positions in the remaining list
+        setCards((prevCards) => {
+          const newCards = [...prevCards];
+          const currentItem = newCards[currentIndex];
+
+          for (let i = 0; i < 2; i++) {
+            const insertAt =
+              Math.floor(Math.random() * (newCards.length - currentIndex)) +
+              currentIndex +
+              1;
+            newCards.splice(insertAt, 0, currentItem);
+          }
+          return newCards;
+        });
+
+        currentCardsLength += 2;
       }
 
       // Move to next question or show results
-      if (currentIndex >= cards.length - 1) {
+      if (currentIndex >= currentCardsLength - 1) {
         setTimeout(() => setPhase("results"), isCorrect ? 1000 : 2200);
       } else {
         setTimeout(
@@ -76,7 +95,7 @@ export default function RomajiToKanaPage() {
         );
       }
     },
-    [currentIndex, cards.length, setProgress]
+    [currentIndex, cards, setProgress]
   );
 
   const handleRestart = useCallback(() => {
@@ -119,14 +138,7 @@ export default function RomajiToKanaPage() {
       {/* Quiz Phase */}
       {phase === "quiz" && cards.length > 0 && (
         <div className="space-y-6">
-          {/* Top bar */}
-          <div className="flex items-center justify-center mb-6">
-            <StatsDisplay
-              correct={sessionCorrect}
-              incorrect={sessionIncorrect}
-              total={cards.length}
-            />
-          </div>
+          {/* Top bar (Stats hidden during play as requested) */}
 
           {/* Quiz Card */}
           <div className="flex justify-center">
