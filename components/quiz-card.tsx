@@ -31,7 +31,7 @@ export default function QuizCard({
 
   const isDrawingMode = mode === "romaji-to-kana";
 
-  // Focus input on mount and when item changes (only for text-input mode)
+  // Focus input on mount and when item/index changes (only for text-input mode)
   useEffect(() => {
     setUserInput("");
     setFeedback(null);
@@ -43,7 +43,7 @@ export default function QuizCard({
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [item, isDrawingMode]);
+  }, [item, isDrawingMode, currentIndex]);
 
   const checkAnswer = useCallback(() => {
     if (!userInput.trim()) return;
@@ -246,7 +246,9 @@ export default function QuizCard({
             ) : (
               <div className="text-center p-2 rounded-lg bg-surface border border-border/50 animate-fade-in">
                 <span className="text-xs text-foreground-muted block mb-1">Gợi ý:</span>
-                <span className="font-medium text-indigo-light kana-display text-lg">{correctAnswer}</span>
+                <span className="font-medium text-indigo-light kana-display text-lg">
+                  {correctAnswer.charAt(0)}...
+                </span>
               </div>
             )}
           </div>
