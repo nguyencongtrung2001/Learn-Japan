@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/alphabet", label: "Bảng chữ cái", icon: "🔠" },
   { href: "/kana-to-romaji", label: "Kana → Romaji", icon: "✍️" },
   { href: "/romaji-to-kana", label: "Romaji → Kana", icon: "🔤" },
+  { href: "/folders", label: "Bộ thẻ", icon: "📂" },
 ];
 
 export default function Header() {
