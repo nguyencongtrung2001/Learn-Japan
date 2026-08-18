@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getFolderById } from "@/actions/folder-actions";
-import { getCardsByFolder, createCard, deleteCard } from "@/actions/card-actions";
+import { getCardsByFolder, createCard, deleteCard, getFolderStats } from "@/actions/card-actions";
 import type { Folder, Card } from "@/db/schema";
 import ExcelImport from "@/components/excel-import";
 
@@ -117,7 +117,14 @@ export default function FolderDetailPage() {
     );
   }
 
-  const dueCards = cardsList.filter((c) => new Date(c.nextReview) <= new Date());
+  const newCards = cardsList.filter((c) => c.growthLevel < 6);
+  const plantedCards = cardsList.filter((c) => c.growthLevel === 6);
+  const dueCards = plantedCards.filter((c) => new Date(c.nextReview) <= new Date());
+
+  const growthIcon = (level: number) => {
+    const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌸", "🌺"];
+    return icons[Math.min(level, 6)];
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-12">
@@ -139,17 +146,26 @@ export default function FolderDetailPage() {
               <p className="text-foreground-muted text-sm mt-1">{folder.description}</p>
             )}
             <p className="text-foreground-dim text-xs mt-2">
-              {cardsList.length} thẻ · {dueCards.length} cần ôn tập
+              {cardsList.length} thẻ · {newCards.length} chưa học · {plantedCards.length} đã nở 🌺 · {dueCards.length} cần ôn
             </p>
           </div>
-          <div className="flex gap-2">
-            {cardsList.length >= 4 && (
+          <div className="flex gap-2 flex-wrap">
+            {newCards.length > 0 && cardsList.length >= 4 && (
               <Link
                 href={`/folders/${folderId}/quiz`}
-                className="btn-shine px-5 py-2.5 rounded-xl bg-gradient-to-r from-sakura to-indigo text-white font-semibold
+                className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-emerald to-teal-500 text-white font-semibold
+                           hover:shadow-xl hover:shadow-emerald/20 hover:scale-105 transition-all duration-300 text-sm"
+              >
+                🌱 Học mới ({Math.min(newCards.length, 5)})
+              </Link>
+            )}
+            {dueCards.length > 0 && (
+              <Link
+                href={`/folders/${folderId}/quiz`}
+                className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-sakura to-indigo text-white font-semibold
                            hover:shadow-xl hover:shadow-sakura/20 hover:scale-105 transition-all duration-300 text-sm"
               >
-                🎯 Ôn tập ({dueCards.length})
+                💧 Ôn tập ({dueCards.length})
               </Link>
             )}
           </div>
@@ -282,6 +298,9 @@ export default function FolderDetailPage() {
                     <span className="text-foreground-dim text-sm">
                       [{card.romaji}]
                     </span>
+                    <span className="text-sm" title={`Growth Level: ${card.growthLevel}`}>
+                      {growthIcon(card.growthLevel)}
+                    </span>
                   </div>
                   <p className="text-foreground-muted text-sm mt-0.5">{card.meaning}</p>
                   {card.usage && (
@@ -300,7 +319,17 @@ export default function FolderDetailPage() {
                   </button>
                   {isDue && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-sakura/15 text-sakura-light">
-                      Cần ôn
+                      💧 Cần ôn
+                    </span>
+                  )}
+                  {card.growthLevel < 6 && card.growthLevel > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald/15 text-emerald">
+                      Lv.{card.growthLevel}/6
+                    </span>
+                  )}
+                  {card.growthLevel === 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-foreground-dim/15 text-foreground-dim">
+                      Chưa học
                     </span>
                   )}
                   <button

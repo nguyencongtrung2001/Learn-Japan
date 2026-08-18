@@ -30,11 +30,13 @@ export const cards = pgTable("cards", {
   usage: text("usage"),                // Câu ví dụ / Cách dùng
   imageUrl: text("image_url"),         // Link hình ảnh minh họa
 
-  // ── Spaced Repetition (SM-2 Algorithm) ──
+  // ── Spaced Repetition (Memrise Classic Algorithm) ──
+  growthLevel: integer("growth_level").default(0).notNull(),               // 0-6 (🌰→🌺)
+  consecutiveCorrect: integer("consecutive_correct").default(0).notNull(), // Lần đúng liên tiếp khi ôn
   nextReview: timestamp("next_review").defaultNow().notNull(),
-  interval: integer("interval").default(0).notNull(),       // Ngày giữa 2 lần ôn
-  easeFactor: real("ease_factor").default(2.5).notNull(),   // Hệ số dễ (min 1.3)
-  repetitions: integer("repetitions").default(0).notNull(), // Số lần đúng liên tiếp
+  interval: integer("interval").default(0).notNull(),       // (legacy) giữ tương thích
+  easeFactor: real("ease_factor").default(2.5).notNull(),   // (legacy)
+  repetitions: integer("repetitions").default(0).notNull(), // (legacy)
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
