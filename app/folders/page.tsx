@@ -15,9 +15,14 @@ export default function FoldersPage() {
 
   const loadFolders = useCallback(async () => {
     setIsLoading(true);
-    const data = await getFolders();
-    setFolders(data);
-    setIsLoading(false);
+    try {
+      const data = await getFolders();
+      setFolders(data);
+    } catch (error) {
+      console.error("Lỗi khi tải thư mục:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -28,12 +33,18 @@ export default function FoldersPage() {
     e.preventDefault();
     if (!name.trim()) return;
     setIsSubmitting(true);
-    await createFolder({ name: name.trim(), description: description.trim() || undefined });
-    setName("");
-    setDescription("");
-    setShowForm(false);
-    setIsSubmitting(false);
-    loadFolders();
+    try {
+      await createFolder({ name: name.trim(), description: description.trim() || undefined });
+      setName("");
+      setDescription("");
+      setShowForm(false);
+      loadFolders();
+    } catch (error) {
+      console.error(error);
+      alert("Lỗi khi tạo thư mục. Vui lòng kiểm tra lại kết nối!");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
