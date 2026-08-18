@@ -11,6 +11,7 @@ import {
 } from "@/actions/card-actions";
 import { shuffleArray } from "@/lib/shuffle";
 import type { Card } from "@/db/schema";
+import DrawingCanvas from "@/components/drawing-canvas";
 
 // ─── Types ───────────────────────────────────────────────────────
 type Phase = "loading" | "select-mode" | "learn" | "review" | "results";
@@ -20,11 +21,12 @@ type LevelType =
   | "audio-select"   // 2→3
   | "abcd-vn-jp"     // 3→4
   | "scramble"       // 4→5
-  | "typing";        // 5→6
+  | "handwriting"    // 5→6
+  | "typing";        // 6→7
 
 interface SessionWord {
   card: Card;
-  sessionLevel: number; // 0-6, tracked per-session
+  sessionLevel: number; // 0-7, tracked per-session
 }
 
 interface QuizItem {
@@ -42,15 +44,16 @@ function getLevelType(level: number): LevelType {
     case 2: return "audio-select";
     case 3: return "abcd-vn-jp";
     case 4: return "scramble";
-    case 5: return "typing";
+    case 5: return "handwriting";
+    case 6: return "typing";
     default: return "typing";
   }
 }
 
 // ─── Growth icon ────────────────────────────────────────────────
 function getGrowthIcon(level: number): string {
-  const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌸", "🌺"];
-  return icons[Math.min(level, 6)];
+  const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌸", "🌺"];
+  return icons[Math.min(level, 7)];
 }
 
 // ─── Scramble: split kana/romaji into tiles ─────────────────────
@@ -110,7 +113,7 @@ export default function QuizPage() {
     const [all, newCards, reviewCards] = await Promise.all([
       getCardsByFolder(folderId),
       getNewCards(folderId, 5),
-      getReviewCards(folderId),
+      getReviewCards(folderId, 15),
     ]);
     if (all.length < 4) {
       alert("Cần ít nhất 4 thẻ để bắt đầu!");
@@ -140,7 +143,7 @@ export default function QuizPage() {
   const buildNextQuestion = useCallback(
     (batch: SessionWord[], allCardsList: Card[]): QuizItem | null => {
       // Filter words not yet completed
-      const active = batch.filter((w) => w.sessionLevel < 6);
+      const active = batch.filter((w) => w.sessionLevel < 7);
       if (active.length === 0) return null;
 
       // Pick word with lowest level (prioritize diversity)
@@ -216,7 +219,7 @@ export default function QuizPage() {
   // ════════════════════════════════════════════════════════════════
 
   const startReviewMode = useCallback(async () => {
-    const reviewCards = await getReviewCards(folderId);
+    const reviewCards = await getReviewCards(folderId, 15);
     if (reviewCards.length === 0) {
       alert("Không có thẻ nào cần ôn tập lúc này!");
       return;
@@ -224,7 +227,7 @@ export default function QuizPage() {
 
     // Build review questions: mix of ABCD and typing
     const items: QuizItem[] = shuffleArray(reviewCards).map((card) => {
-      const word: SessionWord = { card, sessionLevel: 6 };
+      const word: SessionWord = { card, sessionLevel: 7 };
       const useTyping = Math.random() < 0.5;
 
       if (useTyping) {
@@ -294,7 +297,7 @@ export default function QuizPage() {
     (delay: number) => {
       setTimeout(() => {
         if (phase === "learn") {
-          const active = sessionBatch.filter((w) => w.sessionLevel < 6);
+          const active = sessionBatch.filter((w) => w.sessionLevel < 7);
           if (active.length === 0) {
             setPhase("results");
           } else {
@@ -339,7 +342,7 @@ export default function QuizPage() {
       // Persist to DB
       await updateGrowthLevel(card.id, true);
 
-      if (newLevel >= 6) {
+      if (newLevel >= 7) {
         setCompletedWords((p) => p + 1);
       }
     } else {
@@ -442,6 +445,19 @@ export default function QuizPage() {
   // ── Flashcard "Got it" ──
   const handleFlashcardNext = () => {
     handleCorrect();
+  };
+
+  // ── Handwriting ──
+  const handleHandwritingSelect = (selectedChar: string) => {
+    if (feedback || !currentItem) return;
+    const card = currentItem.word.card;
+    const correct = card.kanji || card.kana;
+    // Check if the selected char matches kanji or kana
+    if (selectedChar === correct || selectedChar === card.kana || selectedChar === card.kanji) {
+      handleCorrect();
+    } else {
+      handleIncorrect();
+    }
   };
 
   // ════════════════════════════════════════════════════════════════
@@ -609,7 +625,7 @@ export default function QuizPage() {
       : card.kana;
 
   // Progress bar for learn mode
-  const batchTotal = sessionBatch.length * 6;
+  const batchTotal = sessionBatch.length * 7;
   const batchProgress = sessionBatch.reduce((sum, w) => sum + w.sessionLevel, 0);
 
   // Level type label
@@ -619,6 +635,7 @@ export default function QuizPage() {
     "audio-select": { icon: "🔊", text: "Nghe chọn từ",          color: "bg-indigo/10 border-indigo/30 text-indigo-light" },
     "abcd-vn-jp": { icon: "🅰️", text: "Việt → Nhật",            color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
     scramble:     { icon: "🧩", text: "Ghép ký tự",             color: "bg-amber-500/10 border-amber-500/30 text-amber-400" },
+    handwriting:  { icon: "✍️", text: "Vẽ chữ",                color: "bg-sky-500/10 border-sky-500/30 text-sky-400" },
     typing:       { icon: "⌨️", text: "Gõ chính xác",           color: "bg-violet-500/10 border-violet-500/30 text-violet-400" },
   };
 
@@ -858,6 +875,28 @@ export default function QuizPage() {
               </button>
             </div>
           )}
+        </>
+      )}
+
+      {/* ═══════════════════════ HANDWRITING ═══════════════════════ */}
+      {levelType === "handwriting" && (
+        <>
+          <div
+            className={`glass-card w-full max-w-sm mx-auto p-6 text-center mb-6 transition-all duration-300 ${
+              feedback === "correct" ? "correct-glow" : ""
+            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+          >
+            <div className="text-2xl font-bold text-foreground mb-2">{card.meaning}</div>
+            <p className="text-foreground-dim text-xs">Vẽ nét chữ Nhật tương ứng</p>
+          </div>
+
+          <div className="w-full max-w-sm mx-auto flex justify-center mb-6">
+            <DrawingCanvas
+              onCharacterSelected={handleHandwritingSelect}
+              selectedChar=""
+              disabled={!!feedback}
+            />
+          </div>
         </>
       )}
 

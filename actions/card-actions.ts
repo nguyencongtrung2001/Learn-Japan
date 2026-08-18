@@ -41,24 +41,26 @@ export async function getNewCards(folderId: string, limit: number = 5): Promise<
   const data = await db
     .select()
     .from(cards)
-    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, 6)))
+    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, 7)))
     .orderBy(cards.createdAt)
     .limit(limit);
   return JSON.parse(JSON.stringify(data));
 }
 
-// ─── Get REVIEW cards (growthLevel == 6 AND due) ─────────────────
-export async function getReviewCards(folderId: string): Promise<Card[]> {
+// ─── Get REVIEW cards (growthLevel == 7 AND due) ─────────────────
+export async function getReviewCards(folderId: string, limit: number = 15): Promise<Card[]> {
   const data = await db
     .select()
     .from(cards)
     .where(
       and(
         eq(cards.folderId, folderId),
-        eq(cards.growthLevel, 6),
+        eq(cards.growthLevel, 7),
         lte(cards.nextReview, new Date())
       )
-    );
+    )
+    .orderBy(cards.nextReview)
+    .limit(limit);
   return JSON.parse(JSON.stringify(data));
 }
 
@@ -87,9 +89,9 @@ export async function getFolderStats(folderId: string): Promise<{
   const now = new Date();
   return {
     total: allCards.length,
-    newCount: allCards.filter(c => c.growthLevel < 6).length,
-    plantedCount: allCards.filter(c => c.growthLevel === 6).length,
-    dueCount: allCards.filter(c => c.growthLevel === 6 && new Date(c.nextReview) <= now).length,
+    newCount: allCards.filter(c => c.growthLevel < 7).length,
+    plantedCount: allCards.filter(c => c.growthLevel === 7).length,
+    dueCount: allCards.filter(c => c.growthLevel === 7 && new Date(c.nextReview) <= now).length,
   };
 }
 
@@ -161,8 +163,8 @@ export async function deleteCard(id: string, folderId: string) {
 }
 
 // ─── Update Growth Level (Learn mode — Planting) ─────────────────
-// Khi đang học (growth < 6): đúng +1, sai -1 (min 0)
-// Khi đạt level 6: set nextReview = now + 4h (bắt đầu SRS cycle)
+// Khi đang học (growth < 7): đúng +1, sai -1 (min 0)
+// Khi đạt level 7: set nextReview = now + 4h (bắt đầu SRS cycle)
 export async function updateGrowthLevel(cardId: string, isCorrect: boolean) {
   const result = await db.select().from(cards).where(eq(cards.id, cardId));
   const card = result[0];
@@ -171,15 +173,15 @@ export async function updateGrowthLevel(cardId: string, isCorrect: boolean) {
   let newLevel = card.growthLevel;
 
   if (isCorrect) {
-    newLevel = Math.min(6, newLevel + 1);
+    newLevel = Math.min(7, newLevel + 1);
   } else {
     newLevel = Math.max(0, newLevel - 1);
   }
 
   const updates: Record<string, unknown> = { growthLevel: newLevel };
 
-  // Khi vừa đạt level 6 lần đầu → bắt đầu SRS cycle
-  if (newLevel === 6 && card.growthLevel < 6) {
+  // Khi vừa đạt level 7 lần đầu → bắt đầu SRS cycle
+  if (newLevel === 7 && card.growthLevel < 7) {
     updates.consecutiveCorrect = 0;
     updates.nextReview = getNextReviewDate(0); // +4h
   }

@@ -117,13 +117,13 @@ export default function FolderDetailPage() {
     );
   }
 
-  const newCards = cardsList.filter((c) => c.growthLevel < 6);
-  const plantedCards = cardsList.filter((c) => c.growthLevel === 6);
+  const newCards = cardsList.filter((c) => c.growthLevel < 7);
+  const plantedCards = cardsList.filter((c) => c.growthLevel === 7);
   const dueCards = plantedCards.filter((c) => new Date(c.nextReview) <= new Date());
 
   const growthIcon = (level: number) => {
-    const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌸", "🌺"];
-    return icons[Math.min(level, 6)];
+    const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌸", "🌺"];
+    return icons[Math.min(level, 7)];
   };
 
   return (
@@ -322,9 +322,9 @@ export default function FolderDetailPage() {
                       💧 Cần ôn
                     </span>
                   )}
-                  {card.growthLevel < 6 && card.growthLevel > 0 && (
+                  {card.growthLevel < 7 && card.growthLevel > 0 && (
                     <span className="text-xs px-2 py-0.5 rounded-full bg-emerald/15 text-emerald">
-                      Lv.{card.growthLevel}/6
+                      Lv.{card.growthLevel}/7
                     </span>
                   )}
                   {card.growthLevel === 0 && (
