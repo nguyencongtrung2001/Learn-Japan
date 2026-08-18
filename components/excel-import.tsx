@@ -5,18 +5,22 @@ import * as XLSX from "xlsx";
 
 interface ExcelRow {
   kanji?: string;
-  kana: string;
-  romaji: string;
+  kana?: string;
+  romaji?: string;
+  term?: string;
+  phonetic?: string;
+  partOfSpeech?: string;
   meaning: string;
   usage?: string;
   imageUrl?: string;
 }
 
 interface ExcelImportProps {
+  language?: string;
   onImport: (rows: ExcelRow[]) => Promise<void>;
 }
 
-const TEMPLATE_COLUMNS = [
+const TEMPLATE_COLUMNS_JP = [
   { key: "kanji", label: "Kanji", example: "食べる", required: false },
   { key: "kana", label: "Kana", example: "たべる", required: true },
   { key: "romaji", label: "Romaji", example: "taberu", required: true },
@@ -25,7 +29,16 @@ const TEMPLATE_COLUMNS = [
   { key: "imageUrl", label: "Link ảnh", example: "https://...", required: false },
 ];
 
-export default function ExcelImport({ onImport }: ExcelImportProps) {
+const TEMPLATE_COLUMNS_EN = [
+  { key: "term", label: "Từ vựng", example: "apple", required: true },
+  { key: "phonetic", label: "Phiên âm", example: "/ˈæpl/", required: false },
+  { key: "partOfSpeech", label: "Từ loại", example: "n", required: false },
+  { key: "meaning", label: "Nghĩa", example: "Quả táo", required: true },
+  { key: "usage", label: "Cách dùng", example: "I eat an apple", required: false },
+  { key: "imageUrl", label: "Link ảnh", example: "https://...", required: false },
+];
+
+export default function ExcelImport({ language = "japanese", onImport }: ExcelImportProps) {
   const [showModal, setShowModal] = useState(false);
   const [preview, setPreview] = useState<ExcelRow[]>([]);
   const [error, setError] = useState("");
@@ -60,6 +73,15 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
           kanji: "kanji",
           kana: "kana",
           romaji: "romaji",
+          term: "term",
+          "từ vựng": "term",
+          "tu vung": "term",
+          phonetic: "phonetic",
+          "phiên âm": "phonetic",
+          "phien am": "phonetic",
+          partofspeech: "partOfSpeech",
+          "từ loại": "partOfSpeech",
+          "tu loai": "partOfSpeech",
           meaning: "meaning",
           "nghĩa": "meaning",
           "nghia": "meaning",
@@ -88,23 +110,40 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
           }
 
           // Validate required fields
-          if (mapped.kana && mapped.romaji && mapped.meaning) {
-            rows.push({
-              kanji: mapped.kanji || undefined,
-              kana: mapped.kana,
-              romaji: mapped.romaji,
-              meaning: mapped.meaning,
-              usage: mapped.usage || undefined,
-              imageUrl: mapped.imageUrl || undefined,
-            });
+          if (language === "english") {
+            if (mapped.term && mapped.meaning) {
+              rows.push({
+                term: mapped.term,
+                phonetic: mapped.phonetic || undefined,
+                partOfSpeech: mapped.partOfSpeech || undefined,
+                meaning: mapped.meaning,
+                usage: mapped.usage || undefined,
+                imageUrl: mapped.imageUrl || undefined,
+              });
+            } else {
+              skippedCount++;
+            }
           } else {
-            skippedCount++;
+            if (mapped.kana && mapped.romaji && mapped.meaning) {
+              rows.push({
+                kanji: mapped.kanji || undefined,
+                kana: mapped.kana,
+                romaji: mapped.romaji,
+                meaning: mapped.meaning,
+                usage: mapped.usage || undefined,
+                imageUrl: mapped.imageUrl || undefined,
+              });
+            } else {
+              skippedCount++;
+            }
           }
         }
 
         if (rows.length === 0) {
           setError(
-            `Không tìm thấy dữ liệu hợp lệ. Vui lòng đảm bảo file có các cột: Kana, Romaji, Nghĩa. (${skippedCount} dòng bị bỏ qua)`
+            language === "english"
+              ? `Không tìm thấy dữ liệu hợp lệ. Vui lòng đảm bảo file có các cột: Từ vựng, Nghĩa. (${skippedCount} dòng bị bỏ qua)`
+              : `Không tìm thấy dữ liệu hợp lệ. Vui lòng đảm bảo file có các cột: Kana, Romaji, Nghĩa. (${skippedCount} dòng bị bỏ qua)`
           );
           return;
         }
@@ -138,11 +177,16 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
   };
 
   const downloadTemplate = () => {
-    const templateData = [
-      { Kanji: "食べる", Kana: "たべる", Romaji: "taberu", "Nghĩa": "Ăn", "Cách dùng": "ごはんを食べる (Ăn cơm)", "Link ảnh": "" },
-      { Kanji: "飲む", Kana: "のむ", Romaji: "nomu", "Nghĩa": "Uống", "Cách dùng": "水を飲む (Uống nước)", "Link ảnh": "" },
-      { Kanji: "", Kana: "おはよう", Romaji: "ohayou", "Nghĩa": "Chào buổi sáng", "Cách dùng": "おはようございます", "Link ảnh": "" },
-    ];
+    const templateData = language === "english"
+      ? [
+          { "Từ vựng": "apple", "Phiên âm": "/ˈæpl/", "Từ loại": "n", "Nghĩa": "Quả táo", "Cách dùng": "I eat an apple", "Link ảnh": "" },
+          { "Từ vựng": "run", "Phiên âm": "/rʌn/", "Từ loại": "v", "Nghĩa": "Chạy", "Cách dùng": "He runs fast", "Link ảnh": "" },
+        ]
+      : [
+          { Kanji: "食べる", Kana: "たべる", Romaji: "taberu", "Nghĩa": "Ăn", "Cách dùng": "ごはんを食べる (Ăn cơm)", "Link ảnh": "" },
+          { Kanji: "飲む", Kana: "のむ", Romaji: "nomu", "Nghĩa": "Uống", "Cách dùng": "水を飲む (Uống nước)", "Link ảnh": "" },
+          { Kanji: "", Kana: "おはよう", Romaji: "ohayou", "Nghĩa": "Chào buổi sáng", "Cách dùng": "おはようございます", "Link ảnh": "" },
+        ];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
     // Set column widths
@@ -153,6 +197,8 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
     XLSX.utils.book_append_sheet(wb, ws, "Từ vựng");
     XLSX.writeFile(wb, "mau_tu_vung.xlsx");
   };
+
+  const columns = language === "english" ? TEMPLATE_COLUMNS_EN : TEMPLATE_COLUMNS_JP;
 
   return (
     <>
@@ -188,7 +234,7 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-surface-hover">
-                      {TEMPLATE_COLUMNS.map((col) => (
+                      {columns.map((col) => (
                         <th key={col.key} className="px-3 py-2 text-left font-medium text-foreground-muted whitespace-nowrap">
                           {col.label}
                           {col.required && <span className="text-rose ml-0.5">*</span>}
@@ -198,7 +244,7 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
                   </thead>
                   <tbody>
                     <tr className="border-t border-border/50">
-                      {TEMPLATE_COLUMNS.map((col) => (
+                      {columns.map((col) => (
                         <td key={col.key} className="px-3 py-2 text-foreground-dim kana-display whitespace-nowrap">
                           {col.example}
                         </td>
@@ -259,9 +305,19 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
                     <thead className="sticky top-0">
                       <tr className="bg-surface-hover">
                         <th className="px-3 py-2 text-left text-foreground-muted">#</th>
-                        <th className="px-3 py-2 text-left text-foreground-muted">Kanji</th>
-                        <th className="px-3 py-2 text-left text-foreground-muted">Kana</th>
-                        <th className="px-3 py-2 text-left text-foreground-muted">Romaji</th>
+                        {language === "english" ? (
+                          <>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Từ vựng</th>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Phiên âm</th>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Từ loại</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Kanji</th>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Kana</th>
+                            <th className="px-3 py-2 text-left text-foreground-muted">Romaji</th>
+                          </>
+                        )}
                         <th className="px-3 py-2 text-left text-foreground-muted">Nghĩa</th>
                         <th className="px-3 py-2 text-left text-foreground-muted">Cách dùng</th>
                       </tr>
@@ -270,9 +326,19 @@ export default function ExcelImport({ onImport }: ExcelImportProps) {
                       {preview.map((row, i) => (
                         <tr key={i} className="border-t border-border/50 hover:bg-surface-hover/50">
                           <td className="px-3 py-1.5 text-foreground-dim">{i + 1}</td>
-                          <td className="px-3 py-1.5 kana-display">{row.kanji || "—"}</td>
-                          <td className="px-3 py-1.5 kana-display text-indigo-light">{row.kana}</td>
-                          <td className="px-3 py-1.5">{row.romaji}</td>
+                          {language === "english" ? (
+                            <>
+                              <td className="px-3 py-1.5 font-bold">{row.term}</td>
+                              <td className="px-3 py-1.5 text-indigo-light">{row.phonetic || "—"}</td>
+                              <td className="px-3 py-1.5 italic text-foreground-dim">{row.partOfSpeech || "—"}</td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="px-3 py-1.5 kana-display">{row.kanji || "—"}</td>
+                              <td className="px-3 py-1.5 kana-display text-indigo-light">{row.kana}</td>
+                              <td className="px-3 py-1.5">{row.romaji}</td>
+                            </>
+                          )}
                           <td className="px-3 py-1.5">{row.meaning}</td>
                           <td className="px-3 py-1.5 text-foreground-dim text-xs">{row.usage || "—"}</td>
                         </tr>

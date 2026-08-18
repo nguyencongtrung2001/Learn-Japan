@@ -101,14 +101,17 @@ export default function FolderDetailPage() {
   };
 
   const handleExcelImport = async (
-    rows: { kanji?: string; kana: string; romaji: string; meaning: string; usage?: string; imageUrl?: string }[]
+    rows: { kanji?: string; kana?: string; romaji?: string; term?: string; phonetic?: string; partOfSpeech?: string; meaning: string; usage?: string; imageUrl?: string }[]
   ) => {
     for (const row of rows) {
       await createCard({
         folderId,
         kanji: row.kanji,
-        kana: row.kana,
-        romaji: row.romaji,
+        kana: row.kana || "",
+        romaji: row.romaji || "",
+        term: row.term,
+        phonetic: row.phonetic,
+        partOfSpeech: row.partOfSpeech,
         meaning: row.meaning,
         usage: row.usage,
         imageUrl: row.imageUrl,
@@ -200,7 +203,7 @@ export default function FolderDetailPage() {
         >
           {showForm ? "✕ Đóng form" : "＋ Thêm thẻ mới"}
         </button>
-        <ExcelImport onImport={handleExcelImport} />
+        <ExcelImport language={folder.language} onImport={handleExcelImport} />
       </div>
 
       {/* Add card form */}

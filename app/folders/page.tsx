@@ -119,7 +119,7 @@ export default function FoldersPage() {
                          outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all cursor-pointer"
             >
               <option value="japanese">🇯🇵 Tiếng Nhật</option>
-              <option value="english">🇬🇧 Tiếng Anh</option>
+              <option value="english">🇺🇸 Tiếng Anh (EN)</option>
             </select>
           </div>
           <div>
@@ -173,7 +173,7 @@ export default function FoldersPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-bold text-lg text-foreground group-hover:text-indigo-light transition-colors">
-                      {folder.language === "english" ? "🇬🇧" : "🇯🇵"} {folder.name}
+                      {folder.language === "english" ? "🇺🇸" : "🇯🇵"} {folder.name}
                     </h3>
                     {folder.description && (
                       <p className="text-foreground-muted text-sm mt-1 line-clamp-2">
