@@ -16,10 +16,15 @@ export default function FoldersPage() {
   const loadFolders = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getFolders();
-      setFolders(data);
+      const res = await getFolders();
+      if (res.success && res.data) {
+        setFolders(res.data);
+      } else {
+        console.error("Lỗi khi tải thư mục:", res.error);
+        alert(res.error || "Lỗi khi tải dữ liệu. Vui lòng thử lại!");
+      }
     } catch (error) {
-      console.error("Lỗi khi tải thư mục:", error);
+      console.error("Lỗi catch khi tải:", error);
     } finally {
       setIsLoading(false);
     }
@@ -34,14 +39,18 @@ export default function FoldersPage() {
     if (!name.trim()) return;
     setIsSubmitting(true);
     try {
-      await createFolder({ name: name.trim(), description: description.trim() || undefined });
-      setName("");
-      setDescription("");
-      setShowForm(false);
-      loadFolders();
+      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined });
+      if (res.success) {
+        setName("");
+        setDescription("");
+        setShowForm(false);
+        loadFolders();
+      } else {
+        alert(res.error || "Lỗi khi tạo thư mục!");
+      }
     } catch (error) {
       console.error(error);
-      alert("Lỗi khi tạo thư mục. Vui lòng kiểm tra lại kết nối!");
+      alert("Lỗi kết nối khi tạo thư mục!");
     } finally {
       setIsSubmitting(false);
     }

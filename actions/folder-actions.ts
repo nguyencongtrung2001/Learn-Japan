@@ -6,13 +6,16 @@ import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 // ─── Get all folders ─────────────────────────────────────────────
-export async function getFolders(): Promise<Folder[]> {
+export async function getFolders(): Promise<{ success: boolean; data?: Folder[]; error?: string }> {
   try {
+    if (!process.env.DATABASE_URL) {
+      return { success: false, error: "Thiếu biến môi trường DATABASE_URL trên Vercel!" };
+    }
     const data = await db.select().from(folders).orderBy(desc(folders.createdAt));
-    return JSON.parse(JSON.stringify(data));
-  } catch (error) {
+    return { success: true, data: JSON.parse(JSON.stringify(data)) };
+  } catch (error: any) {
     console.error("Error in getFolders:", error);
-    throw new Error("Failed to get folders from database");
+    return { success: false, error: error.message || "Lỗi kết nối Database" };
   }
 }
 
@@ -23,17 +26,25 @@ export async function getFolderById(id: string): Promise<Folder | undefined> {
 }
 
 // ─── Create folder ──────────────────────────────────────────────
-export async function createFolder(data: { name: string; description?: string }) {
-  const result = await db
-    .insert(folders)
-    .values({
-      name: data.name,
-      description: data.description || null,
-    })
-    .returning();
+export async function createFolder(data: { name: string; description?: string }): Promise<{ success: boolean; data?: Folder; error?: string }> {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return { success: false, error: "Thiếu biến môi trường DATABASE_URL!" };
+    }
+    const result = await db
+      .insert(folders)
+      .values({
+        name: data.name,
+        description: data.description || null,
+      })
+      .returning();
 
-  revalidatePath("/folders");
-  return result[0];
+    revalidatePath("/folders");
+    return { success: true, data: JSON.parse(JSON.stringify(result[0])) };
+  } catch (error: any) {
+    console.error("Error creating folder:", error);
+    return { success: false, error: error.message || "Lỗi khi tạo thư mục" };
+  }
 }
 
 // ─── Update folder ──────────────────────────────────────────────

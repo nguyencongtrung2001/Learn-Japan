@@ -8,7 +8,8 @@ import { shuffleArray } from "@/lib/shuffle";
 import type { Card } from "@/db/schema";
 
 type QuizType = "abcd" | "jp-to-vn" | "vn-to-jp";
-type Phase = "loading" | "quiz" | "results";
+type SelectedMode = QuizType | "mixed";
+type Phase = "loading" | "select-mode" | "quiz" | "results";
 
 interface QuizItem {
   card: Card;
@@ -32,35 +33,44 @@ export default function QuizPage() {
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [sessionIncorrect, setSessionIncorrect] = useState(0);
   const [isHintUsed, setIsHintUsed] = useState(false);
+  
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load cards and build quiz
-  const loadQuiz = useCallback(async () => {
+  // Load cards first, then transition to select-mode
+  const loadInitialData = useCallback(async () => {
     const cards = await getCardsByFolder(folderId);
     if (cards.length < 4) {
       alert("Cần ít nhất 4 thẻ để bắt đầu quiz!");
       router.push(`/folders/${folderId}`);
       return;
     }
-
     setAllCards(cards);
+    setPhase("select-mode");
+  }, [folderId, router]);
 
-    // Filter due cards, fallback to all if less than 4
-    let dueCards = cards.filter((c) => new Date(c.nextReview) <= new Date());
-    if (dueCards.length < 4) dueCards = cards;
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
-    // Build quiz items with random types
+  // Build quiz based on the selected mode
+  const startQuiz = (mode: SelectedMode) => {
+    let dueCards = allCards.filter((c) => new Date(c.nextReview) <= new Date());
+    if (dueCards.length < 4) dueCards = allCards; // fallback to all if less than 4 due
+
     const quizTypes: QuizType[] = ["abcd", "jp-to-vn", "vn-to-jp"];
     const items: QuizItem[] = shuffleArray(dueCards).map((card) => {
-      const type = quizTypes[Math.floor(Math.random() * quizTypes.length)];
+      const type = mode === "mixed" 
+        ? quizTypes[Math.floor(Math.random() * quizTypes.length)] 
+        : mode;
+      
       let options: string[] | undefined;
 
       if (type === "abcd") {
         // Generate 3 wrong options + 1 correct
         const isJpQuestion = Math.random() < 0.5;
         const correctAnswer = isJpQuestion ? card.meaning : (card.kanji || card.kana);
-        const otherCards = cards.filter((c) => c.id !== card.id);
+        const otherCards = allCards.filter((c) => c.id !== card.id);
         const wrongAnswers = shuffleArray(otherCards)
           .slice(0, 3)
           .map((c) => (isJpQuestion ? c.meaning : (c.kanji || c.kana)));
@@ -75,11 +85,7 @@ export default function QuizPage() {
     setSessionCorrect(0);
     setSessionIncorrect(0);
     setPhase("quiz");
-  }, [folderId, router]);
-
-  useEffect(() => {
-    loadQuiz();
-  }, [loadQuiz]);
+  };
 
   // Focus input when question changes
   useEffect(() => {
@@ -186,6 +192,70 @@ export default function QuizPage() {
     );
   }
 
+  // ── Select Mode Phase ──
+  if (phase === "select-mode") {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:py-12 animate-fade-in-up">
+        <h1 className="text-3xl font-bold text-center mb-4 gradient-text">Chọn Chế Độ Chơi</h1>
+        <p className="text-center text-foreground-muted mb-10 text-sm">
+          Chọn cách bạn muốn ôn tập thư mục này
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          {/* Mode 1: ABCD */}
+          <button 
+            onClick={() => startQuiz("abcd")}
+            className="glass-card p-6 text-left hover:scale-[1.02] hover:border-gold/30 hover:shadow-lg hover:shadow-gold/10 transition-all cursor-pointer group"
+          >
+            <div className="text-4xl mb-3">🅰️</div>
+            <h3 className="font-bold text-lg mb-1 group-hover:text-gold transition-colors">Trắc nghiệm ABCD</h3>
+            <p className="text-sm text-foreground-muted">Chọn đáp án đúng từ 4 lựa chọn (Nghĩa tiếng Việt hoặc tiếng Nhật).</p>
+          </button>
+
+          {/* Mode 2: JP -> VN */}
+          <button 
+            onClick={() => startQuiz("jp-to-vn")}
+            className="glass-card p-6 text-left hover:scale-[1.02] hover:border-sakura/30 hover:shadow-lg hover:shadow-sakura/10 transition-all cursor-pointer group"
+          >
+            <div className="text-4xl mb-3">🇯🇵</div>
+            <h3 className="font-bold text-lg mb-1 group-hover:text-sakura-light transition-colors">Nhìn Nhật - Nhập Việt</h3>
+            <p className="text-sm text-foreground-muted">Xem từ vựng tiếng Nhật (Kanji/Kana) và tự nhập nghĩa tiếng Việt.</p>
+          </button>
+
+          {/* Mode 3: VN -> JP */}
+          <button 
+            onClick={() => startQuiz("vn-to-jp")}
+            className="glass-card p-6 text-left hover:scale-[1.02] hover:border-indigo/30 hover:shadow-lg hover:shadow-indigo/10 transition-all cursor-pointer group"
+          >
+            <div className="text-4xl mb-3">🇻🇳</div>
+            <h3 className="font-bold text-lg mb-1 group-hover:text-indigo-light transition-colors">Nhìn Việt - Nhập Nhật</h3>
+            <p className="text-sm text-foreground-muted">Xem nghĩa tiếng Việt và tự gõ Romaji hoặc Kana tương ứng.</p>
+          </button>
+
+          {/* Mode 4: Mixed */}
+          <button 
+            onClick={() => startQuiz("mixed")}
+            className="glass-card p-6 text-left hover:scale-[1.02] hover:border-emerald/30 hover:shadow-lg hover:shadow-emerald/10 transition-all cursor-pointer group"
+          >
+            <div className="text-4xl mb-3">🔀</div>
+            <h3 className="font-bold text-lg mb-1 group-hover:text-emerald transition-colors">Trộn Lẫn</h3>
+            <p className="text-sm text-foreground-muted">Thay đổi liên tục giữa 3 chế độ trên để não bộ ghi nhớ tốt hơn.</p>
+          </button>
+        </div>
+        
+        <div className="mt-10 text-center">
+          <button
+            onClick={() => router.push(`/folders/${folderId}`)}
+            className="text-foreground-muted hover:text-indigo-light text-sm transition-colors cursor-pointer"
+          >
+            ← Quay lại thư mục
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Results Phase ──
   if (phase === "results") {
     const accuracy = sessionCorrect + sessionIncorrect > 0
       ? Math.round((sessionCorrect / (sessionCorrect + sessionIncorrect)) * 100) : 0;
@@ -216,7 +286,7 @@ export default function QuizPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
-            onClick={() => loadQuiz()}
+            onClick={() => setPhase("select-mode")}
             className="btn-shine px-8 py-3 rounded-2xl bg-gradient-to-r from-sakura to-indigo text-white font-semibold
                        hover:shadow-xl hover:shadow-sakura/20 hover:scale-105 transition-all duration-300 cursor-pointer"
           >
@@ -250,11 +320,20 @@ export default function QuizPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12">
-      {/* Counter */}
-      <div className="text-center text-foreground-dim text-sm mb-6">
-        Câu <span className="text-indigo-light font-bold">{currentIndex + 1}</span>
-        <span className="mx-1">/</span>
-        <span>{quizItems.length}</span>
+      {/* Header Controls */}
+      <div className="flex justify-between items-center mb-6">
+        <button
+          onClick={() => { if (confirm("Bạn có chắc muốn thoát Quiz không?")) setPhase("select-mode"); }}
+          className="text-foreground-muted hover:text-indigo-light text-sm transition-colors cursor-pointer"
+        >
+          ✕ Thoát
+        </button>
+        <div className="text-center text-foreground-dim text-sm">
+          Câu <span className="text-indigo-light font-bold">{currentIndex + 1}</span>
+          <span className="mx-1">/</span>
+          <span>{quizItems.length}</span>
+        </div>
+        <div className="w-[60px]" /> {/* Spacer for centering */}
       </div>
 
       {/* Type badge */}
