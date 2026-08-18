@@ -7,19 +7,21 @@ import { revalidatePath } from "next/cache";
 
 // ─── Get all cards in a folder ───────────────────────────────────
 export async function getCardsByFolder(folderId: string): Promise<Card[]> {
-  return db
+  const data = await db
     .select()
     .from(cards)
     .where(eq(cards.folderId, folderId))
     .orderBy(desc(cards.createdAt));
+  return JSON.parse(JSON.stringify(data));
 }
 
 // ─── Get cards due for review (SRS) ─────────────────────────────
 export async function getDueCards(folderId: string): Promise<Card[]> {
-  return db
+  const data = await db
     .select()
     .from(cards)
     .where(and(eq(cards.folderId, folderId), lte(cards.nextReview, new Date())));
+  return JSON.parse(JSON.stringify(data));
 }
 
 // ─── Get card count for a folder ────────────────────────────────
@@ -59,7 +61,7 @@ export async function createCard(data: {
     .returning();
 
   revalidatePath(`/folders/${data.folderId}`);
-  return result[0];
+  return JSON.parse(JSON.stringify(result[0]));
 }
 
 // ─── Update card ─────────────────────────────────────────────────
@@ -87,7 +89,7 @@ export async function updateCard(
     .where(eq(cards.id, id))
     .returning();
 
-  return result[0];
+  return JSON.parse(JSON.stringify(result[0]));
 }
 
 // ─── Delete card ─────────────────────────────────────────────────

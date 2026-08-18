@@ -7,13 +7,19 @@ import { revalidatePath } from "next/cache";
 
 // ─── Get all folders ─────────────────────────────────────────────
 export async function getFolders(): Promise<Folder[]> {
-  return db.select().from(folders).orderBy(desc(folders.createdAt));
+  try {
+    const data = await db.select().from(folders).orderBy(desc(folders.createdAt));
+    return JSON.parse(JSON.stringify(data));
+  } catch (error) {
+    console.error("Error in getFolders:", error);
+    throw new Error("Failed to get folders from database");
+  }
 }
 
 // ─── Get single folder ──────────────────────────────────────────
 export async function getFolderById(id: string): Promise<Folder | undefined> {
   const result = await db.select().from(folders).where(eq(folders.id, id));
-  return result[0];
+  return result[0] ? JSON.parse(JSON.stringify(result[0])) : undefined;
 }
 
 // ─── Create folder ──────────────────────────────────────────────
@@ -42,7 +48,7 @@ export async function updateFolder(id: string, data: { name: string; description
     .returning();
 
   revalidatePath("/folders");
-  return result[0];
+  return JSON.parse(JSON.stringify(result[0]));
 }
 
 // ─── Delete folder ──────────────────────────────────────────────
