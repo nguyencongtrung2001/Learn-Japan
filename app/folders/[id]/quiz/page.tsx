@@ -350,7 +350,7 @@ export default function QuizPage() {
       await updateSRS(card.id, true);
     }
 
-    advanceToNext(1200);
+    advanceToNext(400); // Reduced from 1200ms for faster feedback
   }, [currentItem, phase, typingStartTime, advanceToNext]);
 
   const handleIncorrect = useCallback(async () => {
@@ -370,7 +370,7 @@ export default function QuizPage() {
       await updateSRS(card.id, false);
     }
 
-    advanceToNext(2500);
+    advanceToNext(1500); // Reduced from 2500ms, gives just enough time to see the correct answer
   }, [currentItem, phase, advanceToNext]);
 
   // ── ABCD handler ──

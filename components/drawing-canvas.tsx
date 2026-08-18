@@ -28,7 +28,7 @@ const CANVAS_LOGICAL_SIZE = 280;
 const STROKE_COLOR = "#a5b4fc"; // indigo-light
 const STROKE_COLOR_DISABLED = "#6b75a8"; // foreground-dim
 const STROKE_WIDTH = 5;
-const RECOGNIZE_DEBOUNCE_MS = 600;
+const RECOGNIZE_DEBOUNCE_MS = 300; // Reduced from 600 for faster recognition
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
