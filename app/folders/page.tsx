@@ -10,6 +10,7 @@ export default function FoldersPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [language, setLanguage] = useState("japanese");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,10 +40,11 @@ export default function FoldersPage() {
     if (!name.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined });
+      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined, language });
       if (res.success) {
         setName("");
         setDescription("");
+        setLanguage("japanese");
         setShowForm(false);
         loadFolders();
       } else {
@@ -108,6 +110,20 @@ export default function FoldersPage() {
           </div>
           <div>
             <label className="block text-sm text-foreground-muted mb-1">
+              Ngôn ngữ
+            </label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-surface border border-border text-foreground
+                         outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all cursor-pointer"
+            >
+              <option value="japanese">🇯🇵 Tiếng Nhật</option>
+              <option value="english">🇬🇧 Tiếng Anh</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-foreground-muted mb-1">
               Mô tả (tùy chọn)
             </label>
             <input
@@ -157,7 +173,7 @@ export default function FoldersPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="font-bold text-lg text-foreground group-hover:text-indigo-light transition-colors">
-                      📂 {folder.name}
+                      {folder.language === "english" ? "🇬🇧" : "🇯🇵"} {folder.name}
                     </h3>
                     {folder.description && (
                       <p className="text-foreground-muted text-sm mt-1 line-clamp-2">

@@ -22,6 +22,11 @@ export default function FolderDetailPage() {
   const [kanji, setKanji] = useState("");
   const [kana, setKana] = useState("");
   const [romaji, setRomaji] = useState("");
+  
+  const [term, setTerm] = useState("");
+  const [phonetic, setPhonetic] = useState("");
+  const [partOfSpeech, setPartOfSpeech] = useState("");
+  
   const [meaning, setMeaning] = useState("");
   const [usage, setUsage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -45,13 +50,23 @@ export default function FolderDetailPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!kana.trim() || !romaji.trim() || !meaning.trim()) return;
+    const isEnglish = folder?.language === "english";
+
+    if (isEnglish) {
+      if (!term.trim() || !meaning.trim()) return;
+    } else {
+      if (!kana.trim() || !romaji.trim() || !meaning.trim()) return;
+    }
+
     setIsSubmitting(true);
     await createCard({
       folderId,
       kanji: kanji.trim() || undefined,
-      kana: kana.trim(),
-      romaji: romaji.trim(),
+      kana: kana.trim() || undefined,
+      romaji: romaji.trim() || undefined,
+      term: term.trim() || undefined,
+      phonetic: phonetic.trim() || undefined,
+      partOfSpeech: partOfSpeech.trim() || undefined,
       meaning: meaning.trim(),
       usage: usage.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
@@ -59,6 +74,9 @@ export default function FolderDetailPage() {
     setKanji("");
     setKana("");
     setRomaji("");
+    setTerm("");
+    setPhonetic("");
+    setPartOfSpeech("");
     setMeaning("");
     setUsage("");
     setImageUrl("");
@@ -76,7 +94,8 @@ export default function FolderDetailPage() {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=ja`);
+    const lang = folder?.language === "english" ? "en-US" : "ja";
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=${lang}`);
     audioRef.current = audio;
     audio.play();
   };
@@ -192,31 +211,61 @@ export default function FolderDetailPage() {
         >
           <h3 className="font-bold text-lg mb-4 text-center gradient-text">Thêm thẻ từ vựng</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-foreground-muted mb-1">Kanji (tùy chọn)</label>
-              <input
-                type="text" value={kanji} onChange={(e) => setKanji(e.target.value)}
-                placeholder="食べる" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-foreground-muted mb-1">
-                Kana <span className="text-rose">*</span>
-              </label>
-              <input
-                type="text" value={kana} onChange={(e) => setKana(e.target.value)}
-                placeholder="たべる" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-foreground-muted mb-1">
-                Romaji <span className="text-rose">*</span>
-              </label>
-              <input
-                type="text" value={romaji} onChange={(e) => setRomaji(e.target.value)}
-                placeholder="taberu" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
-              />
-            </div>
+            {folder?.language === "english" ? (
+              <>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs text-foreground-muted mb-1">
+                    Từ vựng <span className="text-rose">*</span>
+                  </label>
+                  <input
+                    type="text" value={term} onChange={(e) => setTerm(e.target.value)}
+                    placeholder="apple" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all font-bold text-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-foreground-muted mb-1">Phiên âm IPA</label>
+                  <input
+                    type="text" value={phonetic} onChange={(e) => setPhonetic(e.target.value)}
+                    placeholder="/ˈæp.əl/" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-indigo-light"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-foreground-muted mb-1">Từ loại (n, v, adj...)</label>
+                  <input
+                    type="text" value={partOfSpeech} onChange={(e) => setPartOfSpeech(e.target.value)}
+                    placeholder="n" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs text-foreground-muted mb-1">Kanji (tùy chọn)</label>
+                  <input
+                    type="text" value={kanji} onChange={(e) => setKanji(e.target.value)}
+                    placeholder="食べる" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-foreground-muted mb-1">
+                    Kana <span className="text-rose">*</span>
+                  </label>
+                  <input
+                    type="text" value={kana} onChange={(e) => setKana(e.target.value)}
+                    placeholder="たべる" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs text-foreground-muted mb-1">
+                    Romaji <span className="text-rose">*</span>
+                  </label>
+                  <input
+                    type="text" value={romaji} onChange={(e) => setRomaji(e.target.value)}
+                    placeholder="taberu" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-xs text-foreground-muted mb-1">
                 Nghĩa tiếng Việt <span className="text-rose">*</span>
@@ -242,7 +291,12 @@ export default function FolderDetailPage() {
             </div>
           </div>
           <button
-            type="submit" disabled={isSubmitting || !kana.trim() || !romaji.trim() || !meaning.trim()}
+            type="submit" 
+            disabled={
+              isSubmitting || 
+              (folder?.language === "english" ? !term.trim() : !kana.trim() || !romaji.trim()) || 
+              !meaning.trim()
+            }
             className="w-full mt-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-sakura to-indigo text-white
                        hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98]
                        transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -287,17 +341,37 @@ export default function FolderDetailPage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    {card.kanji && (
-                      <span className="kana-display text-2xl font-bold text-foreground">
-                        {card.kanji}
-                      </span>
+                    {folder?.language === "english" ? (
+                      <>
+                        <span className="text-xl font-bold text-foreground">
+                          {card.term}
+                        </span>
+                        {card.phonetic && (
+                          <span className="text-indigo-light text-sm">
+                            {card.phonetic}
+                          </span>
+                        )}
+                        {card.partOfSpeech && (
+                          <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground-muted">
+                            {card.partOfSpeech}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {card.kanji && (
+                          <span className="kana-display text-2xl font-bold text-foreground">
+                            {card.kanji}
+                          </span>
+                        )}
+                        <span className="kana-display text-lg text-indigo-light">
+                          {card.kana}
+                        </span>
+                        <span className="text-foreground-dim text-sm">
+                          [{card.romaji}]
+                        </span>
+                      </>
                     )}
-                    <span className="kana-display text-lg text-indigo-light">
-                      {card.kana}
-                    </span>
-                    <span className="text-foreground-dim text-sm">
-                      [{card.romaji}]
-                    </span>
                     <span className="text-sm" title={`Growth Level: ${card.growthLevel}`}>
                       {growthIcon(card.growthLevel)}
                     </span>
@@ -311,7 +385,7 @@ export default function FolderDetailPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => playAudio(card.kanji || card.kana)}
+                    onClick={() => playAudio(folder?.language === "english" ? (card.term || "") : (card.kanji || card.kana || ""))}
                     className="p-2 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
                     title="Phát âm"
                   >

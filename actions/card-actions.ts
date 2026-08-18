@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { cards, type Card, type NewCard } from "@/db/schema";
+import { cards, folders, type Card, type NewCard } from "@/db/schema";
 import { eq, desc, lte, and, lt, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -38,10 +38,14 @@ export async function getCardsByFolder(folderId: string): Promise<Card[]> {
 
 // ─── Get NEW cards (growthLevel < 6 — chưa nở hoa) ──────────────
 export async function getNewCards(folderId: string, limit: number = 5): Promise<Card[]> {
+  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
+  const folder = folderResult[0];
+  const maxLevel = folder?.language === "english" ? 6 : 7;
+
   const data = await db
     .select()
     .from(cards)
-    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, 7)))
+    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, maxLevel)))
     .orderBy(cards.createdAt)
     .limit(limit);
   return JSON.parse(JSON.stringify(data));
@@ -49,13 +53,17 @@ export async function getNewCards(folderId: string, limit: number = 5): Promise<
 
 // ─── Get REVIEW cards (growthLevel == 7 AND due) ─────────────────
 export async function getReviewCards(folderId: string, limit: number = 15): Promise<Card[]> {
+  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
+  const folder = folderResult[0];
+  const maxLevel = folder?.language === "english" ? 6 : 7;
+
   const data = await db
     .select()
     .from(cards)
     .where(
       and(
         eq(cards.folderId, folderId),
-        eq(cards.growthLevel, 7),
+        eq(cards.growthLevel, maxLevel),
         lte(cards.nextReview, new Date())
       )
     )
@@ -85,13 +93,17 @@ export async function getFolderStats(folderId: string): Promise<{
   plantedCount: number;
   dueCount: number;
 }> {
+  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
+  const folder = folderResult[0];
+  const maxLevel = folder?.language === "english" ? 6 : 7;
+
   const allCards = await getCardsByFolder(folderId);
   const now = new Date();
   return {
     total: allCards.length,
-    newCount: allCards.filter(c => c.growthLevel < 7).length,
-    plantedCount: allCards.filter(c => c.growthLevel === 7).length,
-    dueCount: allCards.filter(c => c.growthLevel === 7 && new Date(c.nextReview) <= now).length,
+    newCount: allCards.filter(c => c.growthLevel < maxLevel).length,
+    plantedCount: allCards.filter(c => c.growthLevel === maxLevel).length,
+    dueCount: allCards.filter(c => c.growthLevel === maxLevel && new Date(c.nextReview) <= now).length,
   };
 }
 
@@ -99,8 +111,11 @@ export async function getFolderStats(folderId: string): Promise<{
 export async function createCard(data: {
   folderId: string;
   kanji?: string;
-  kana: string;
-  romaji: string;
+  kana?: string;
+  romaji?: string;
+  term?: string;
+  phonetic?: string;
+  partOfSpeech?: string;
   meaning: string;
   usage?: string;
   imageUrl?: string;
@@ -110,8 +125,11 @@ export async function createCard(data: {
     .values({
       folderId: data.folderId,
       kanji: data.kanji || null,
-      kana: data.kana,
-      romaji: data.romaji,
+      kana: data.kana || null,
+      romaji: data.romaji || null,
+      term: data.term || null,
+      phonetic: data.phonetic || null,
+      partOfSpeech: data.partOfSpeech || null,
       meaning: data.meaning,
       usage: data.usage || null,
       imageUrl: data.imageUrl || null,
@@ -133,8 +151,11 @@ export async function updateCard(
   id: string,
   data: {
     kanji?: string;
-    kana: string;
-    romaji: string;
+    kana?: string;
+    romaji?: string;
+    term?: string;
+    phonetic?: string;
+    partOfSpeech?: string;
     meaning: string;
     usage?: string;
     imageUrl?: string;
@@ -144,8 +165,11 @@ export async function updateCard(
     .update(cards)
     .set({
       kanji: data.kanji || null,
-      kana: data.kana,
-      romaji: data.romaji,
+      kana: data.kana || null,
+      romaji: data.romaji || null,
+      term: data.term || null,
+      phonetic: data.phonetic || null,
+      partOfSpeech: data.partOfSpeech || null,
       meaning: data.meaning,
       usage: data.usage || null,
       imageUrl: data.imageUrl || null,
@@ -163,25 +187,27 @@ export async function deleteCard(id: string, folderId: string) {
 }
 
 // ─── Update Growth Level (Learn mode — Planting) ─────────────────
-// Khi đang học (growth < 7): đúng +1, sai -1 (min 0)
-// Khi đạt level 7: set nextReview = now + 4h (bắt đầu SRS cycle)
 export async function updateGrowthLevel(cardId: string, isCorrect: boolean) {
   const result = await db.select().from(cards).where(eq(cards.id, cardId));
   const card = result[0];
   if (!card) return;
 
+  const folderResult = await db.select().from(folders).where(eq(folders.id, card.folderId));
+  const folder = folderResult[0];
+  const maxLevel = folder?.language === "english" ? 6 : 7;
+
   let newLevel = card.growthLevel;
 
   if (isCorrect) {
-    newLevel = Math.min(7, newLevel + 1);
+    newLevel = Math.min(maxLevel, newLevel + 1);
   } else {
     newLevel = Math.max(0, newLevel - 1);
   }
 
   const updates: Record<string, unknown> = { growthLevel: newLevel };
 
-  // Khi vừa đạt level 7 lần đầu → bắt đầu SRS cycle
-  if (newLevel === 7 && card.growthLevel < 7) {
+  // Khi vừa đạt max level lần đầu → bắt đầu SRS cycle
+  if (newLevel === maxLevel && card.growthLevel < maxLevel) {
     updates.consecutiveCorrect = 0;
     updates.nextReview = getNextReviewDate(0); // +4h
   }

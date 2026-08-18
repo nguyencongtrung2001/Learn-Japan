@@ -26,7 +26,7 @@ export async function getFolderById(id: string): Promise<Folder | undefined> {
 }
 
 // ─── Create folder ──────────────────────────────────────────────
-export async function createFolder(data: { name: string; description?: string }): Promise<{ success: boolean; data?: Folder; error?: string }> {
+export async function createFolder(data: { name: string; description?: string; language?: string }): Promise<{ success: boolean; data?: Folder; error?: string }> {
   try {
     if (!process.env.DATABASE_URL) {
       return { success: false, error: "Thiếu biến môi trường DATABASE_URL!" };
@@ -36,6 +36,7 @@ export async function createFolder(data: { name: string; description?: string })
       .values({
         name: data.name,
         description: data.description || null,
+        language: data.language || "japanese",
       })
       .returning();
 

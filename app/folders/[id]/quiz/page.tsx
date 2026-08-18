@@ -9,8 +9,9 @@ import {
   updateGrowthLevel,
   updateSRS,
 } from "@/actions/card-actions";
+import { getFolderById } from "@/actions/folder-actions";
 import { shuffleArray } from "@/lib/shuffle";
-import type { Card } from "@/db/schema";
+import type { Card, Folder } from "@/db/schema";
 import DrawingCanvas from "@/components/drawing-canvas";
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -21,8 +22,9 @@ type LevelType =
   | "audio-select"   // 2→3
   | "abcd-vn-jp"     // 3→4
   | "scramble"       // 4→5
-  | "handwriting"    // 5→6
-  | "typing";        // 6→7
+  | "handwriting"    // 5→6 (JP only)
+  | "typing"         // 6→7 (JP) or 4→5 (EN)
+  | "sentence";      // 5→6 (EN only)
 
 interface SessionWord {
   card: Card;
@@ -37,16 +39,29 @@ interface QuizItem {
 }
 
 // ─── Level → Quiz type mapping ───────────────────────────────────
-function getLevelType(level: number): LevelType {
-  switch (level) {
-    case 0: return "flashcard";
-    case 1: return "abcd-jp-vn";
-    case 2: return "audio-select";
-    case 3: return "abcd-vn-jp";
-    case 4: return "scramble";
-    case 5: return "handwriting";
-    case 6: return "typing";
-    default: return "typing";
+function getLevelType(level: number, language: string): LevelType {
+  if (language === "english") {
+    switch (level) {
+      case 0: return "flashcard";
+      case 1: return "abcd-jp-vn"; // we reuse this for En->Vn
+      case 2: return "audio-select";
+      case 3: return "scramble";
+      case 4: return "typing";
+      case 5: return "sentence";
+      default: return "sentence";
+    }
+  } else {
+    // Japanese
+    switch (level) {
+      case 0: return "flashcard";
+      case 1: return "abcd-jp-vn";
+      case 2: return "audio-select";
+      case 3: return "abcd-vn-jp";
+      case 4: return "scramble";
+      case 5: return "handwriting";
+      case 6: return "typing";
+      default: return "typing";
+    }
   }
 }
 
@@ -79,6 +94,7 @@ export default function QuizPage() {
   const folderId = params.id as string;
 
   // ── State ──
+  const [folder, setFolder] = useState<Folder | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
   const [allCards, setAllCards] = useState<Card[]>([]);
   const [newCount, setNewCount] = useState(0);
@@ -110,16 +126,19 @@ export default function QuizPage() {
 
   // ── Load initial data ──
   const loadData = useCallback(async () => {
-    const [all, newCards, reviewCards] = await Promise.all([
+    const [folderData, all, newCards, reviewCards] = await Promise.all([
+      getFolderById(folderId),
       getCardsByFolder(folderId),
       getNewCards(folderId, 5),
       getReviewCards(folderId, 15),
     ]);
+    if (!folderData) return;
     if (all.length < 4) {
       alert("Cần ít nhất 4 thẻ để bắt đầu!");
       router.push(`/folders/${folderId}`);
       return;
     }
+    setFolder(folderData);
     setAllCards(all);
     setNewCount(newCards.length);
     setDueCount(reviewCards.length);
@@ -131,10 +150,11 @@ export default function QuizPage() {
   // ── Audio ──
   const playAudio = useCallback((text: string) => {
     if (audioRef.current) audioRef.current.pause();
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=ja`);
+    const lang = folder?.language === "english" ? "en-US" : "ja";
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=${lang}`);
     audioRef.current = audio;
     audio.play();
-  }, []);
+  }, [folder?.language]);
 
   // ════════════════════════════════════════════════════════════════
   //  LEARN MODE — Batching & Interleaving Engine
@@ -142,8 +162,9 @@ export default function QuizPage() {
 
   const buildNextQuestion = useCallback(
     (batch: SessionWord[], allCardsList: Card[]): QuizItem | null => {
+      const maxLevel = folder?.language === "english" ? 6 : 7;
       // Filter words not yet completed
-      const active = batch.filter((w) => w.sessionLevel < 7);
+      const active = batch.filter((w) => w.sessionLevel < maxLevel);
       if (active.length === 0) return null;
 
       // Pick word with lowest level (prioritize diversity)
@@ -154,14 +175,14 @@ export default function QuizPage() {
       const candidates = active.filter((w) => w.sessionLevel === lowestLevel);
       const word = candidates[Math.floor(Math.random() * candidates.length)];
 
-      const levelType = getLevelType(word.sessionLevel);
+      const levelType = getLevelType(word.sessionLevel, folder?.language || "japanese");
       const card = word.card;
 
       let options: string[] | undefined;
       let scrambleTiles: string[] | undefined;
 
       if (levelType === "abcd-jp-vn") {
-        // JP → VN: show kana, pick meaning
+        // JP → VN or EN → VN: show term/kana, pick meaning
         const correct = card.meaning;
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
@@ -169,22 +190,23 @@ export default function QuizPage() {
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "abcd-vn-jp") {
         // VN → JP: show meaning, pick kana/kanji
-        const correct = card.kanji || card.kana;
+        const correct = card.term || card.kanji || card.kana || "";
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.kanji || c.kana);
+          .map((c) => c.term || c.kanji || c.kana || "");
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "audio-select") {
         // Audio → select correct word
-        const correct = card.kanji || card.kana;
+        const correct = card.term || card.kanji || card.kana || "";
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.kanji || c.kana);
+          .map((c) => c.term || c.kanji || c.kana || "");
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "scramble") {
         // Scramble kana characters
-        const isKana = /[\u3040-\u30FF]/.test(card.kana);
-        scrambleTiles = createScrambleTiles(isKana ? card.kana : card.romaji, isKana);
+        const text = card.term || card.kana || card.romaji || "";
+        const isKana = /[\u3040-\u30FF]/.test(text);
+        scrambleTiles = createScrambleTiles(text, isKana);
       }
 
       return { word, levelType, options, scrambleTiles };
@@ -225,11 +247,19 @@ export default function QuizPage() {
       return;
     }
 
-    // Build review questions: mix of ABCD and typing
+    // Build review questions: mix of ABCD, typing, sentence
     const items: QuizItem[] = shuffleArray(reviewCards).map((card) => {
-      const word: SessionWord = { card, sessionLevel: 7 };
-      const useTyping = Math.random() < 0.5;
+      const maxLevel = folder?.language === "english" ? 6 : 7;
+      const word: SessionWord = { card, sessionLevel: maxLevel };
+      
+      if (folder?.language === "english") {
+        const rand = Math.random();
+        if (rand < 0.33) return { word, levelType: "abcd-jp-vn" as LevelType, options: shuffleArray([card.meaning, ...shuffleArray(allCards.filter(c => c.id !== card.id)).slice(0, 3).map(c => c.meaning)]) };
+        if (rand < 0.66) return { word, levelType: "typing" as LevelType };
+        return { word, levelType: "sentence" as LevelType };
+      }
 
+      const useTyping = Math.random() < 0.5;
       if (useTyping) {
         return { word, levelType: "typing" as LevelType };
       } else {
@@ -245,10 +275,10 @@ export default function QuizPage() {
             options: shuffleArray([correct, ...wrongs]),
           };
         } else {
-          const correct = card.kanji || card.kana;
+          const correct = card.kanji || card.kana || "";
           const wrongs = shuffleArray(allCards.filter((c) => c.id !== card.id))
             .slice(0, 3)
-            .map((c) => c.kanji || c.kana);
+            .map((c) => c.kanji || c.kana || "");
           return {
             word,
             levelType: "abcd-vn-jp" as LevelType,
@@ -288,7 +318,7 @@ export default function QuizPage() {
       }
       if (currentItem.levelType === "audio-select") {
         // Auto-play audio for audio questions
-        setTimeout(() => playAudio(currentItem.word.card.kanji || currentItem.word.card.kana), 300);
+        setTimeout(() => playAudio(currentItem.word.card.term || currentItem.word.card.kanji || currentItem.word.card.kana || ""), 300);
       }
     }
   }, [currentItem, playAudio]);
@@ -297,7 +327,8 @@ export default function QuizPage() {
     (delay: number) => {
       setTimeout(() => {
         if (phase === "learn") {
-          const active = sessionBatch.filter((w) => w.sessionLevel < 7);
+          const maxLevel = folder?.language === "english" ? 6 : 7;
+          const active = sessionBatch.filter((w) => w.sessionLevel < maxLevel);
           if (active.length === 0) {
             setPhase("results");
           } else {
@@ -342,7 +373,8 @@ export default function QuizPage() {
       // Persist to DB
       await updateGrowthLevel(card.id, true);
 
-      if (newLevel >= 7) {
+      const maxLevel = folder?.language === "english" ? 6 : 7;
+      if (newLevel >= maxLevel) {
         setCompletedWords((p) => p + 1);
       }
     } else {
@@ -384,7 +416,7 @@ export default function QuizPage() {
     if (currentItem.levelType === "abcd-jp-vn") {
       correct = card.meaning;
     } else if (currentItem.levelType === "abcd-vn-jp" || currentItem.levelType === "audio-select") {
-      correct = card.kanji || card.kana;
+      correct = card.term || card.kanji || card.kana || "";
     } else return;
 
     if (option === correct) {
@@ -400,10 +432,11 @@ export default function QuizPage() {
     const card = currentItem.word.card;
     const answer = userInput.trim().toLowerCase();
 
-    const isCorrect =
-      answer === card.kana.toLowerCase() ||
-      answer === (card.kanji || "").toLowerCase() ||
-      answer === card.romaji.toLowerCase();
+    const isCorrect = folder?.language === "english"
+      ? answer === (card.term || "").toLowerCase()
+      : (answer === (card.kana || "").toLowerCase() ||
+         answer === (card.kanji || "").toLowerCase() ||
+         answer === (card.romaji || "").toLowerCase());
 
     if (isCorrect) handleCorrect();
     else handleIncorrect();
@@ -435,8 +468,14 @@ export default function QuizPage() {
     if (feedback || !currentItem) return;
     const card = currentItem.word.card;
     const assembled = scrambleSelected.join("");
-    const isKana = /[\u3040-\u30FF]/.test(card.kana);
-    const correct = isKana ? card.kana : card.romaji;
+    
+    let correct = "";
+    if (folder?.language === "english") {
+      correct = card.term || "";
+    } else {
+      const isKana = /[\u3040-\u30FF]/.test(card.kana || "");
+      correct = isKana ? (card.kana || "") : (card.romaji || "");
+    }
 
     if (assembled === correct) handleCorrect();
     else handleIncorrect();
@@ -454,6 +493,21 @@ export default function QuizPage() {
     const correct = card.kanji || card.kana;
     // Check if the selected char matches kanji or kana
     if (selectedChar === correct || selectedChar === card.kana || selectedChar === card.kanji) {
+      handleCorrect();
+    } else {
+      handleIncorrect();
+    }
+  };
+
+  // ── Sentence Creation ──
+  const handleSentenceSubmit = () => {
+    if (!userInput.trim() || feedback || !currentItem) return;
+    const card = currentItem.word.card;
+    const answer = userInput.trim().toLowerCase();
+    
+    // Check if the sentence contains the term
+    const term = (card.term || "").toLowerCase();
+    if (term && answer.includes(term)) {
       handleCorrect();
     } else {
       handleIncorrect();
@@ -637,6 +691,7 @@ export default function QuizPage() {
     scramble:     { icon: "🧩", text: "Ghép ký tự",             color: "bg-amber-500/10 border-amber-500/30 text-amber-400" },
     handwriting:  { icon: "✍️", text: "Vẽ chữ",                color: "bg-sky-500/10 border-sky-500/30 text-sky-400" },
     typing:       { icon: "⌨️", text: "Gõ chính xác",           color: "bg-violet-500/10 border-violet-500/30 text-violet-400" },
+    sentence:     { icon: "📝", text: "Viết câu",               color: "bg-rose/10 border-rose/30 text-rose" },
   };
 
   const label = levelLabels[levelType];
@@ -708,7 +763,7 @@ export default function QuizPage() {
             <p className="text-foreground-dim text-sm italic mb-4">💬 {card.usage}</p>
           )}
           <button
-            onClick={() => playAudio(card.kanji || card.kana)}
+            onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
             className="p-3 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer text-2xl mb-4"
           >
             🔊
@@ -736,7 +791,7 @@ export default function QuizPage() {
             {levelType === "audio-select" ? (
               <>
                 <button
-                  onClick={() => playAudio(card.kanji || card.kana)}
+                  onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
                   className="text-5xl p-4 rounded-2xl hover:bg-surface-hover transition-colors cursor-pointer"
                 >
                   🔊
@@ -745,15 +800,21 @@ export default function QuizPage() {
               </>
             ) : levelType === "abcd-jp-vn" ? (
               <>
-                {card.kanji && (
-                  <div className="kana-display text-4xl font-bold text-foreground mb-1">
-                    {card.kanji}
-                  </div>
+                {folder?.language === "english" ? (
+                  <div className="text-4xl font-bold text-foreground mb-1">{card.term}</div>
+                ) : (
+                  <>
+                    {card.kanji && (
+                      <div className="kana-display text-4xl font-bold text-foreground mb-1">
+                        {card.kanji}
+                      </div>
+                    )}
+                    <div className="kana-display text-3xl text-indigo-light">{card.kana}</div>
+                    <div className="text-foreground-dim text-xs mt-1">[{card.romaji}]</div>
+                  </>
                 )}
-                <div className="kana-display text-3xl text-indigo-light">{card.kana}</div>
-                <div className="text-foreground-dim text-xs mt-1">[{card.romaji}]</div>
                 <button
-                  onClick={() => playAudio(card.kanji || card.kana)}
+                  onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
                   className="mt-2 p-2 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer text-xl"
                 >
                   🔊
@@ -914,7 +975,7 @@ export default function QuizPage() {
             {card.usage && (
               <p className="text-foreground-dim text-xs italic mb-2">💬 {card.usage}</p>
             )}
-            <p className="text-foreground-dim text-xs">Gõ Kana hoặc Romaji chính xác</p>
+            <p className="text-foreground-dim text-xs">Gõ {folder?.language === "english" ? "từ vựng" : "Kana hoặc Romaji"} chính xác</p>
           </div>
 
           <div className="w-full max-w-sm mx-auto space-y-3">
@@ -927,7 +988,7 @@ export default function QuizPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !feedback) handleTypingSubmit();
                 }}
-                placeholder="Nhập Kana hoặc Romaji..."
+                placeholder={folder?.language === "english" ? "Nhập từ vựng..." : "Nhập Kana hoặc Romaji..."}
                 disabled={!!feedback}
                 className={`w-full px-4 py-3 rounded-xl bg-surface border text-center text-lg font-medium kana-display
                   outline-none transition-all duration-300 placeholder:text-foreground-dim/40 ${
@@ -970,6 +1031,70 @@ export default function QuizPage() {
                   ⚡ Speed Bonus +{speedBonus}!
                 </p>
               </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ═══════════════════════ SENTENCE CREATION ═══════════════════════ */}
+      {levelType === "sentence" && (
+        <>
+          <div
+            className={`glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 transition-all duration-300 ${
+              feedback === "correct" ? "correct-glow" : ""
+            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+          >
+            <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+              {card.term}
+            </div>
+            <p className="text-foreground-dim text-xs mb-2">{card.meaning}</p>
+            <p className="text-foreground-dim text-xs">Viết một câu có chứa từ này</p>
+          </div>
+
+          <div className="w-full max-w-sm mx-auto space-y-3">
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !feedback) handleSentenceSubmit();
+                }}
+                placeholder="VD: I eat an apple everyday..."
+                disabled={!!feedback}
+                className={`w-full px-4 py-3 rounded-xl bg-surface border text-left text-sm font-medium
+                  outline-none transition-all duration-300 placeholder:text-foreground-dim/40 ${
+                    feedback === "correct"
+                      ? "border-emerald bg-emerald/10 text-emerald"
+                      : feedback === "incorrect"
+                      ? "border-rose bg-rose/10 text-rose"
+                      : "border-border focus:border-indigo focus:ring-2 focus:ring-indigo/20 text-foreground"
+                  }`}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+              />
+              {feedback && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl animate-confetti-pop">
+                  {feedback === "correct" ? "✅" : "❌"}
+                </span>
+              )}
+            </div>
+
+            {!feedback && (
+              <button
+                onClick={handleSentenceSubmit}
+                disabled={!userInput.trim()}
+                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  userInput.trim()
+                    ? "bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                    : "bg-surface-hover text-foreground-dim cursor-not-allowed"
+                }`}
+              >
+                Kiểm tra
+              </button>
             )}
           </div>
         </>

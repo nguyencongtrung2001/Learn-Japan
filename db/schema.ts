@@ -12,6 +12,7 @@ export const folders = pgTable("folders", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  language: text("language").default("japanese").notNull(), // 'japanese' | 'english'
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -22,10 +23,17 @@ export const cards = pgTable("cards", {
     .notNull()
     .references(() => folders.id, { onDelete: "cascade" }),
 
-  // ── Content ──
+  // ── Content (Japanese) ──
   kanji: text("kanji"),                // 漢字 (optional)
-  kana: text("kana").notNull(),        // ひらがな / カタカナ
-  romaji: text("romaji").notNull(),    // Phiên âm la-tinh
+  kana: text("kana"),                  // ひらがな / カタカナ (removed notNull for English compat)
+  romaji: text("romaji"),              // Phiên âm la-tinh
+
+  // ── Content (English) ──
+  term: text("term"),                  // Từ vựng tiếng Anh (e.g. apple)
+  phonetic: text("phonetic"),          // Phiên âm IPA (e.g. /ˈæp.əl/)
+  partOfSpeech: text("part_of_speech"),// Từ loại (n, v, adj...)
+
+  // ── Shared Content ──
   meaning: text("meaning").notNull(),  // Nghĩa tiếng Việt
   usage: text("usage"),                // Câu ví dụ / Cách dùng
   imageUrl: text("image_url"),         // Link hình ảnh minh họa
