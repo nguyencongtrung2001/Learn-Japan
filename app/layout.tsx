@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BackgroundProvider } from "@/components/background-provider";
+import BackgroundVideo from "@/components/background-video";
+import BackgroundSelector from "@/components/background-selector";
 import "./globals.css";
 
 const inter = Inter({
@@ -53,18 +56,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-transparent">
         <ThemeProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-border py-6 mt-auto">
-            <div className="mx-auto max-w-6xl px-4 text-center">
-              <p className="text-foreground-dim text-xs">
-                🌸 Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật mỗi
-                ngày
-              </p>
-            </div>
-          </footer>
+          <BackgroundProvider>
+            <BackgroundVideo />
+            <BackgroundSelector />
+            <Header />
+            <main className="flex-1 relative z-10">{children}</main>
+            <footer className="border-t border-border/20 py-6 mt-auto relative z-10">
+              <div className="mx-auto max-w-6xl px-4 text-center">
+                <p className="text-foreground-dim text-xs font-medium">
+                  🌸 Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật mỗi ngày
+                </p>
+              </div>
+            </footer>
+          </BackgroundProvider>
         </ThemeProvider>
       </body>
     </html>
