@@ -181,6 +181,8 @@ export default function QuizPage() {
       let options: string[] | undefined;
       let scrambleTiles: string[] | undefined;
 
+      const formatJPOption = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
+
       if (levelType === "abcd-jp-vn") {
         // JP → VN or EN → VN: show term/kana, pick meaning
         const correct = card.meaning;
@@ -190,17 +192,17 @@ export default function QuizPage() {
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "abcd-vn-jp") {
         // VN → JP: show meaning, pick kana/kanji
-        const correct = card.term || card.kanji || card.kana || "";
+        const correct = card.term || formatJPOption(card);
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.term || c.kanji || c.kana || "");
+          .map((c) => c.term || formatJPOption(c));
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "audio-select") {
         // Audio → select correct word
-        const correct = card.term || card.kanji || card.kana || "";
+        const correct = card.term || formatJPOption(card);
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.term || c.kanji || c.kana || "");
+          .map((c) => c.term || formatJPOption(c));
         options = shuffleArray([correct, ...wrongs]);
       } else if (levelType === "scramble") {
         // Scramble kana characters
@@ -416,7 +418,8 @@ export default function QuizPage() {
     if (currentItem.levelType === "abcd-jp-vn") {
       correct = card.meaning;
     } else if (currentItem.levelType === "abcd-vn-jp" || currentItem.levelType === "audio-select") {
-      correct = card.term || card.kanji || card.kana || "";
+      const formatJPOption = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
+      correct = card.term || formatJPOption(card);
     } else return;
 
     if (option === correct) {
@@ -671,11 +674,12 @@ export default function QuizPage() {
   const levelType = currentItem.levelType;
 
   // Correct answer for showing when wrong
+  const formatJPOptionRender = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
   const correctDisplay =
     levelType === "abcd-jp-vn"
       ? card.meaning
       : levelType === "abcd-vn-jp" || levelType === "audio-select"
-      ? card.kanji || card.kana
+      ? card.term || formatJPOptionRender(card)
       : card.kana;
 
   // Progress bar for learn mode
