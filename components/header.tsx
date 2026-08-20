@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/kana-to-romaji", label: "Kana → Romaji", icon: "✍️" },
   { href: "/romaji-to-kana", label: "Romaji → Kana", icon: "🔤" },
   { href: "/folders", label: "Bộ thẻ", icon: "📂" },
+  { href: "/speaking-game", label: "Luyện Nói (Beta)", icon: "🎙️" },
 ];
 
 export default function Header() {
