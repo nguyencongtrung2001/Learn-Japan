@@ -47,8 +47,8 @@ export default function SpeakingGamePage() {
         id: i,
         question: q.trim(),
         position: getRandomPosition(),
-        delay: Math.random() * 5 + "s",
-        duration: Math.random() * 10 + 10 + "s",
+        delay: "0s",
+        duration: "0s", 
       }));
     setCards(newCards);
     setShowInput(false);
@@ -64,10 +64,26 @@ export default function SpeakingGamePage() {
     generateCards(questionsList);
   };
 
+  // Move cards to new random positions periodically
+  useEffect(() => {
+    if (showInput || cards.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCards((prevCards) =>
+        prevCards.map((card) => ({
+          ...card,
+          position: getRandomPosition(),
+        }))
+      );
+    }, 5000); // Change position every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [showInput, cards.length]);
+
   const activeCard = cards.find((c) => c.id === activeCardId);
 
   return (
-    <div className="relative min-h-[100vh] bg-background overflow-hidden">
+    <div className="relative min-h-[100vh] bg-transparent overflow-hidden">
       <div className="absolute top-4 left-4 z-50 flex gap-2">
         <Link
           href="/"
@@ -114,14 +130,13 @@ export default function SpeakingGamePage() {
               return (
                 <div
                   key={card.id}
-                  className={`absolute animate-float-random pointer-events-auto cursor-pointer transition-transform hover:scale-110 ${
+                  className={`absolute pointer-events-auto cursor-pointer hover:!scale-110 ${
                     activeCardId === card.id ? "opacity-0" : "opacity-100"
                   }`}
                   style={{
                     top: card.position.top,
                     left: card.position.left,
-                    animationDelay: card.delay,
-                    animationDuration: card.duration,
+                    transition: "top 5s linear, left 5s linear, transform 0.2s, opacity 0.3s",
                   }}
                   onClick={() => {
                     setActiveCardId(card.id);
