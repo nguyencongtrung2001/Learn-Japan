@@ -411,7 +411,8 @@ body::before {
 
 .drawing-canvas-wrapper {
   position: relative;
-  width: 280px;
+  width: 100%;
+  max-width: 600px;
   height: 280px;
   border-radius: 16px;
   border: 2px solid var(--border);

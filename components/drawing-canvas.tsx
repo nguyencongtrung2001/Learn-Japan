@@ -24,7 +24,6 @@ interface DrawingCanvasProps {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-const CANVAS_LOGICAL_SIZE = 280;
 const STROKE_COLOR = "#a5b4fc"; // indigo-light
 const STROKE_COLOR_DISABLED = "#6b75a8"; // foreground-dim
 const STROKE_WIDTH = 5;
@@ -46,6 +45,7 @@ export default function DrawingCanvas({
   const strokesRef = useRef<Stroke[]>([]);
   const startTimeRef = useRef(0);
   const recognizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dimensionsRef = useRef({ width: 280, height: 280 });
 
   /* ---- State (triggers re-render for UI updates) ---- */
   const [strokeCount, setStrokeCount] = useState(0);
@@ -59,9 +59,16 @@ export default function DrawingCanvas({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    
+    // Set logical size to match actual rendered size
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width || 280;
+    const height = rect.height || 280;
+    dimensionsRef.current = { width, height };
+
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = CANVAS_LOGICAL_SIZE * dpr;
-    canvas.height = CANVAS_LOGICAL_SIZE * dpr;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
     const ctx = canvas.getContext("2d");
     if (ctx) ctx.scale(dpr, dpr);
   }, []);
@@ -75,7 +82,7 @@ export default function DrawingCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, CANVAS_LOGICAL_SIZE, CANVAS_LOGICAL_SIZE);
+    ctx.clearRect(0, 0, dimensionsRef.current.width, dimensionsRef.current.height);
     ctx.strokeStyle = STROKE_COLOR;
     ctx.lineWidth = STROKE_WIDTH;
     ctx.lineCap = "round";
@@ -132,8 +139,8 @@ export default function DrawingCanvas({
         return { x: 0, y: 0, t: 0 };
       }
 
-      const scaleX = CANVAS_LOGICAL_SIZE / rect.width;
-      const scaleY = CANVAS_LOGICAL_SIZE / rect.height;
+      const scaleX = dimensionsRef.current.width / rect.width;
+      const scaleY = dimensionsRef.current.height / rect.height;
 
       return {
         x: (clientX - rect.left) * scaleX,
@@ -165,8 +172,8 @@ export default function DrawingCanvas({
         requests: [
           {
             writing_guide: {
-              writing_area_width: CANVAS_LOGICAL_SIZE,
-              writing_area_height: CANVAS_LOGICAL_SIZE,
+              writing_area_width: dimensionsRef.current.width,
+              writing_area_height: dimensionsRef.current.height,
             },
             ink,
             pre_context: "",
