@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getFolderById } from "@/actions/folder-actions";
 import { getCardsByFolder, createCard, deleteCard } from "@/actions/card-actions";
 import type { Folder, Card } from "@/db/schema";
-import ExcelImport from "@/components/excel-import";
+import BulkImport from "@/components/bulk-import";
 
 export default function FolderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -188,7 +188,7 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
         >
           {showCardForm ? "✕ Đóng form" : "＋ Thêm thẻ từ vựng"}
         </button>
-        <ExcelImport onImport={handleExcelImport} />
+        <BulkImport onImport={handleExcelImport} />
       </div>
 
       {/* Add Card Form */}
