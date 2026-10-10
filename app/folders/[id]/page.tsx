@@ -1,39 +1,37 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getFolderById } from "@/actions/folder-actions";
-import { getCardsByFolder, createCard, deleteCard, getFolderStats } from "@/actions/card-actions";
+import { getCardsByFolder, createCard, deleteCard } from "@/actions/card-actions";
 import type { Folder, Card } from "@/db/schema";
 import ExcelImport from "@/components/excel-import";
 
-export default function FolderDetailPage() {
-  const params = useParams();
-  const folderId = params.id as string;
+export default function FolderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const unwrappedParams = use(params);
+  const folderIdString = unwrappedParams.id;
+  const folderId = parseInt(folderIdString, 10);
 
   const [folder, setFolder] = useState<Folder | null>(null);
   const [cardsList, setCardsList] = useState<Card[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  const [showCardForm, setShowCardForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form fields
-  const [kanji, setKanji] = useState("");
-  const [kana, setKana] = useState("");
-  const [romaji, setRomaji] = useState("");
-  
-  const [term, setTerm] = useState("");
+  // Card Form fields
+  const [word, setWord] = useState("");
+  const [translation, setTranslation] = useState("");
+  const [definition, setDefinition] = useState("");
+  const [example, setExample] = useState("");
   const [phonetic, setPhonetic] = useState("");
-  const [partOfSpeech, setPartOfSpeech] = useState("");
-  
-  const [meaning, setMeaning] = useState("");
-  const [usage, setUsage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const loadData = useCallback(async () => {
+    if (isNaN(folderId)) return;
     setIsLoading(true);
     const [folderData, cardsData] = await Promise.all([
       getFolderById(folderId),
@@ -48,43 +46,31 @@ export default function FolderDetailPage() {
     loadData();
   }, [loadData]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreateCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isEnglish = folder?.language === "english";
-
-    if (isEnglish) {
-      if (!term.trim() || !meaning.trim()) return;
-    } else {
-      if (!kana.trim() || !romaji.trim() || !meaning.trim()) return;
-    }
+    if (!word.trim() || !translation.trim()) return;
 
     setIsSubmitting(true);
     await createCard({
       folderId,
-      kanji: kanji.trim() || undefined,
-      kana: kana.trim() || undefined,
-      romaji: romaji.trim() || undefined,
-      term: term.trim() || undefined,
+      word: word.trim(),
+      translation: translation.trim(),
+      definition: definition.trim() || undefined,
+      example: example.trim() || undefined,
       phonetic: phonetic.trim() || undefined,
-      partOfSpeech: partOfSpeech.trim() || undefined,
-      meaning: meaning.trim(),
-      usage: usage.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
     });
-    setKanji("");
-    setKana("");
-    setRomaji("");
-    setTerm("");
+    setWord("");
+    setTranslation("");
+    setDefinition("");
+    setExample("");
     setPhonetic("");
-    setPartOfSpeech("");
-    setMeaning("");
-    setUsage("");
     setImageUrl("");
     setIsSubmitting(false);
     loadData();
   };
 
-  const handleDelete = async (cardId: string) => {
+  const handleDeleteCard = async (cardId: number) => {
     if (!confirm("Xóa thẻ từ vựng này?")) return;
     await deleteCard(cardId, folderId);
     loadData();
@@ -94,26 +80,23 @@ export default function FolderDetailPage() {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const lang = folder?.language === "english" ? "en-US" : "ja";
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=${lang}`);
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=en-US`);
     audioRef.current = audio;
     audio.play();
   };
 
   const handleExcelImport = async (
-    rows: { kanji?: string; kana?: string; romaji?: string; term?: string; phonetic?: string; partOfSpeech?: string; meaning: string; usage?: string; imageUrl?: string }[]
+    rows: { word?: string; translation: string; definition?: string; example?: string; phonetic?: string; imageUrl?: string }[]
   ) => {
     for (const row of rows) {
+      if (!row.word || !row.translation) continue;
       await createCard({
         folderId,
-        kanji: row.kanji,
-        kana: row.kana || "",
-        romaji: row.romaji || "",
-        term: row.term,
+        word: row.word,
+        translation: row.translation,
+        definition: row.definition,
+        example: row.example,
         phonetic: row.phonetic,
-        partOfSpeech: row.partOfSpeech,
-        meaning: row.meaning,
-        usage: row.usage,
         imageUrl: row.imageUrl,
       });
     }
@@ -139,25 +122,25 @@ export default function FolderDetailPage() {
     );
   }
 
-  const newCards = cardsList.filter((c) => c.growthLevel < 7);
-  const plantedCards = cardsList.filter((c) => c.growthLevel === 7);
+  const newCards = cardsList.filter((c) => c.growthLevel < 6);
+  const plantedCards = cardsList.filter((c) => c.growthLevel === 6);
   const dueCards = plantedCards.filter((c) => new Date(c.nextReview) <= new Date());
 
   const growthIcon = (level: number) => {
-    const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌸", "🌺"];
-    return icons[Math.min(level, 7)];
+    const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌺"];
+    return icons[Math.min(level, 6)];
   };
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-12">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/folders"
-          className="text-foreground-muted hover:text-indigo-light text-sm transition-colors inline-flex items-center gap-1 mb-4"
+        <button
+          onClick={() => router.back()}
+          className="text-foreground-muted hover:text-indigo-light text-sm transition-colors inline-flex items-center gap-1 mb-4 cursor-pointer"
         >
-          ← Quay lại danh sách
-        </Link>
+          ← Quay lại
+        </button>
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">
@@ -168,7 +151,7 @@ export default function FolderDetailPage() {
               <p className="text-foreground-muted text-sm mt-1">{folder.description}</p>
             )}
             <p className="text-foreground-dim text-xs mt-2">
-              {cardsList.length} thẻ · {newCards.length} chưa học · {plantedCards.length} đã nở 🌺 · {dueCards.length} cần ôn
+              {cardsList.length} thẻ · {newCards.length} chưa học · {dueCards.length} cần ôn
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -194,227 +177,97 @@ export default function FolderDetailPage() {
         </div>
       </div>
 
-      {/* Add card buttons */}
-      <div className="flex justify-center gap-3 mb-6 flex-wrap">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-3 mb-8 flex-wrap">
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setShowCardForm(!showCardForm);
+          }}
           className="px-5 py-2.5 rounded-xl border border-border text-foreground-muted font-medium
                      hover:bg-surface-hover hover:text-foreground transition-all duration-200 cursor-pointer text-sm"
         >
-          {showForm ? "✕ Đóng form" : "＋ Thêm thẻ mới"}
+          {showCardForm ? "✕ Đóng form" : "＋ Thêm thẻ từ vựng"}
         </button>
-        <ExcelImport language={folder.language} onImport={handleExcelImport} />
+        <ExcelImport onImport={handleExcelImport} />
       </div>
 
-      {/* Add card form */}
-      {showForm && (
+      {/* Add Card Form */}
+      {showCardForm && (
         <form
-          onSubmit={handleCreate}
+          onSubmit={handleCreateCard}
           className="glass-card p-6 max-w-2xl mx-auto mb-8 animate-fade-in"
         >
           <h3 className="font-bold text-lg mb-4 text-center gradient-text">Thêm thẻ từ vựng</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {folder?.language === "english" ? (
-              <>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs text-foreground-muted mb-1">
-                    Từ vựng <span className="text-rose">*</span>
-                  </label>
-                  <input
-                    type="text" value={term} onChange={(e) => setTerm(e.target.value)}
-                    placeholder="apple" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all font-bold text-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-foreground-muted mb-1">Phiên âm IPA</label>
-                  <input
-                    type="text" value={phonetic} onChange={(e) => setPhonetic(e.target.value)}
-                    placeholder="/ˈæp.əl/" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-indigo-light"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-foreground-muted mb-1">Từ loại (n, v, adj...)</label>
-                  <input
-                    type="text" value={partOfSpeech} onChange={(e) => setPartOfSpeech(e.target.value)}
-                    placeholder="n" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-xs text-foreground-muted mb-1">Kanji (tùy chọn)</label>
-                  <input
-                    type="text" value={kanji} onChange={(e) => setKanji(e.target.value)}
-                    placeholder="食べる" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-foreground-muted mb-1">
-                    Kana <span className="text-rose">*</span>
-                  </label>
-                  <input
-                    type="text" value={kana} onChange={(e) => setKana(e.target.value)}
-                    placeholder="たべる" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-lg kana-display"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs text-foreground-muted mb-1">
-                    Romaji <span className="text-rose">*</span>
-                  </label>
-                  <input
-                    type="text" value={romaji} onChange={(e) => setRomaji(e.target.value)}
-                    placeholder="taberu" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
-                  />
-                </div>
-              </>
-            )}
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-foreground-muted mb-1">Từ vựng <span className="text-rose">*</span></label>
+              <input type="text" value={word} onChange={(e) => setWord(e.target.value)} placeholder="apple" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all font-bold text-lg" />
+            </div>
             <div>
-              <label className="block text-xs text-foreground-muted mb-1">
-                Nghĩa tiếng Việt <span className="text-rose">*</span>
-              </label>
-              <input
-                type="text" value={meaning} onChange={(e) => setMeaning(e.target.value)}
-                placeholder="Ăn" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
-              />
+              <label className="block text-xs text-foreground-muted mb-1">Nghĩa tiếng Việt <span className="text-rose">*</span></label>
+              <input type="text" value={translation} onChange={(e) => setTranslation(e.target.value)} placeholder="Quả táo" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
+            </div>
+            <div>
+              <label className="block text-xs text-foreground-muted mb-1">Phiên âm IPA</label>
+              <input type="text" value={phonetic} onChange={(e) => setPhonetic(e.target.value)} placeholder="/ˈæp.əl/" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-indigo-light" />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs text-foreground-muted mb-1">Cách sử dụng / Ví dụ (tùy chọn)</label>
-              <input
-                type="text" value={usage} onChange={(e) => setUsage(e.target.value)}
-                placeholder="ごはんを食べる (Ăn cơm)" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all"
-              />
+              <label className="block text-xs text-foreground-muted mb-1">Định nghĩa tiếng Anh (tùy chọn)</label>
+              <input type="text" value={definition} onChange={(e) => setDefinition(e.target.value)} placeholder="A round fruit with red or green skin" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs text-foreground-muted mb-1">Ví dụ (tùy chọn)</label>
+              <input type="text" value={example} onChange={(e) => setExample(e.target.value)} placeholder="I ate an apple." className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs text-foreground-muted mb-1">Link hình ảnh (tùy chọn)</label>
-              <input
-                type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://example.com/image.jpg" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-sm"
-              />
+              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-sm" />
             </div>
           </div>
-          <button
-            type="submit" 
-            disabled={
-              isSubmitting || 
-              (folder?.language === "english" ? !term.trim() : !kana.trim() || !romaji.trim()) || 
-              !meaning.trim()
-            }
-            className="w-full mt-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-sakura to-indigo text-white
-                       hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98]
-                       transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={isSubmitting || !word.trim() || !translation.trim()} className="w-full mt-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] transition-all disabled:opacity-50">
             {isSubmitting ? "Đang lưu..." : "💾 Lưu thẻ"}
           </button>
         </form>
       )}
 
       {/* Cards list */}
+      <div className="mb-4">
+        <h2 className="text-xl font-bold mb-4 gradient-text">🃏 Thẻ từ vựng</h2>
+      </div>
+      
       {cardsList.length === 0 ? (
         <div className="text-center py-16 glass-card max-w-md mx-auto">
           <div className="text-5xl mb-4">🃏</div>
           <p className="text-foreground-muted">Chưa có thẻ nào trong thư mục này</p>
-          <p className="text-foreground-dim text-sm mt-1">
-            Bấm &quot;Thêm thẻ mới&quot; để bắt đầu!
-          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {cardsList.map((card, index) => {
             const isDue = new Date(card.nextReview) <= new Date();
             return (
-              <div
-                key={card.id}
-                className={`glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in-up group ${
-                  isDue ? "border-l-2 border-l-sakura" : ""
-                }`}
-                style={{ animationDelay: `${index * 0.03}s` }}
-              >
-                {/* Image preview */}
+              <div key={card.id} className={`glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in-up group ${isDue ? "border-l-2 border-l-sakura" : ""}`} style={{ animationDelay: `${index * 0.03}s` }}>
                 {card.imageUrl && (
                   <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-border/50">
-                    <img
-                      src={card.imageUrl}
-                      alt={card.meaning}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={card.imageUrl} alt={card.translation} className="w-full h-full object-cover" />
                   </div>
                 )}
-
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
-                    {folder?.language === "english" ? (
-                      <>
-                        <span className="text-xl font-bold text-foreground">
-                          {card.term}
-                        </span>
-                        {card.phonetic && (
-                          <span className="text-indigo-light text-sm">
-                            {card.phonetic}
-                          </span>
-                        )}
-                        {card.partOfSpeech && (
-                          <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground-muted">
-                            {card.partOfSpeech}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {card.kanji && (
-                          <span className="kana-display text-2xl font-bold text-foreground">
-                            {card.kanji}
-                          </span>
-                        )}
-                        <span className="kana-display text-lg text-indigo-light">
-                          {card.kana}
-                        </span>
-                        <span className="text-foreground-dim text-sm">
-                          [{card.romaji}]
-                        </span>
-                      </>
-                    )}
-                    <span className="text-sm" title={`Growth Level: ${card.growthLevel}`}>
-                      {growthIcon(card.growthLevel)}
-                    </span>
+                    <span className="text-xl font-bold text-foreground">{card.word}</span>
+                    {card.phonetic && <span className="text-indigo-light text-sm">{card.phonetic}</span>}
+                    <span className="text-sm">{growthIcon(card.growthLevel)}</span>
                   </div>
-                  <p className="text-foreground-muted text-sm mt-0.5">{card.meaning}</p>
-                  {card.usage && (
-                    <p className="text-foreground-dim text-xs mt-0.5 italic">💬 {card.usage}</p>
-                  )}
+                  <div className="mt-1">
+                    <span className="font-medium text-foreground">{card.translation}</span>
+                  </div>
+                  {card.definition && <div className="text-foreground-dim text-sm mt-1">{card.definition}</div>}
+                  {card.example && <div className="text-foreground-dim text-sm mt-1 italic">"{card.example}"</div>}
                 </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => playAudio(folder?.language === "english" ? (card.term || "") : (card.kanji || card.kana || ""))}
-                    className="p-2 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
-                    title="Phát âm"
-                  >
+                <div className="flex sm:flex-col gap-2 mt-3 sm:mt-0 shrink-0">
+                  <button onClick={() => playAudio(card.word)} className="p-2 rounded-xl bg-surface hover:bg-surface-hover text-indigo-light transition-colors" title="Nghe phát âm">
                     🔊
                   </button>
-                  {isDue && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-sakura/15 text-sakura-light">
-                      💧 Cần ôn
-                    </span>
-                  )}
-                  {card.growthLevel < 7 && card.growthLevel > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald/15 text-emerald">
-                      Lv.{card.growthLevel}/7
-                    </span>
-                  )}
-                  {card.growthLevel === 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-foreground-dim/15 text-foreground-dim">
-                      Chưa học
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handleDelete(card.id)}
-                    className="p-2 rounded-lg text-rose/50 hover:bg-rose/10 hover:text-rose
-                               transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
-                    title="Xóa"
-                  >
+                  <button onClick={() => handleDeleteCard(card.id)} className="p-2 rounded-xl bg-surface hover:bg-rose/10 text-rose/70 hover:text-rose transition-colors" title="Xóa thẻ">
                     🗑️
                   </button>
                 </div>

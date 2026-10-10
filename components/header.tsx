@@ -7,11 +7,7 @@ import { useTheme } from "./theme-provider";
 
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
-  { href: "/alphabet", label: "Bảng chữ cái", icon: "🔠" },
-  { href: "/kana-to-romaji", label: "Kana → Romaji", icon: "✍️" },
-  { href: "/romaji-to-kana", label: "Romaji → Kana", icon: "🔤" },
   { href: "/folders", label: "Bộ thẻ", icon: "📂" },
-  { href: "/speaking-game", label: "Luyện Nói (Beta)", icon: "🎙️" },
 ];
 
 export default function Header() {
@@ -35,13 +31,13 @@ export default function Header() {
             id="header-logo"
           >
             <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-              🌸
+              📚
             </span>
             <span className="text-lg font-bold gradient-text hidden sm:inline">
-              仮名マスター
+              Flashcard App
             </span>
             <span className="text-lg font-bold gradient-text sm:hidden">
-              KanaMaster
+              Flashcards
             </span>
           </Link>
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
+import { Inter } from "next/font/google";
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BackgroundProvider } from "@/components/background-provider";
@@ -13,32 +13,26 @@ const inter = Inter({
   display: "swap",
 });
 
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "700", "900"],
-});
+
 
 export const metadata: Metadata = {
-  title: "Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật",
+  title: "Flashcard App — Master English Vocabulary",
   description:
-    "Ứng dụng học bảng chữ cái tiếng Nhật miễn phí. Luyện tập Hiragana, Katakana, Dakuten và Youon với Flashcard và Quiz tương tác.",
+    "Ứng dụng học từ vựng tiếng Anh. Luyện tập với Flashcard, Spaced Repetition và Quiz tương tác.",
   keywords: [
-    "Hiragana",
-    "Katakana",
-    "học tiếng Nhật",
-    "bảng chữ cái tiếng Nhật",
-    "Kana",
-    "flashcard",
+    "Flashcard",
+    "English",
+    "học tiếng Anh",
+    "từ vựng tiếng Anh",
+    "Vocabulary",
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="vi"
-      className={`${inter.variable} ${notoSansJP.variable} h-full antialiased`}
+      <html
+        lang="vi"
+        className={`${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
@@ -66,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <footer className="border-t border-border/20 py-6 mt-auto relative z-10">
               <div className="mx-auto max-w-6xl px-4 text-center">
                 <p className="text-foreground-dim text-xs font-medium">
-                  🌸 Kana Master 仮名マスター — Học bảng chữ cái tiếng Nhật mỗi ngày
+                  📚 Flashcard App — Master English Vocabulary
                 </p>
               </div>
             </footer>

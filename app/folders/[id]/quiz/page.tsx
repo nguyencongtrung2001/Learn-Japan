@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, use } from "react";
+import { useRouter } from "next/navigation";
 import {
   getCardsByFolder,
   getNewCards,
@@ -12,86 +12,49 @@ import {
 import { getFolderById } from "@/actions/folder-actions";
 import { shuffleArray } from "@/lib/shuffle";
 import type { Card, Folder } from "@/db/schema";
-import DrawingCanvas from "@/components/drawing-canvas";
 
 // ─── Types ───────────────────────────────────────────────────────
 type Phase = "loading" | "select-mode" | "learn" | "review" | "results";
 type LevelType =
   | "flashcard"      // 0→1
-  | "abcd-jp-vn"     // 1→2
+  | "abcd-en-vn"     // 1→2
   | "audio-select"   // 2→3
-  | "abcd-vn-jp"     // 3→4
-  | "scramble"       // 4→5
-  | "handwriting"    // 5→6 (JP only)
-  | "typing"         // 6→7 (JP) or 4→5 (EN)
-  | "sentence";      // 5→6 (EN only)
+  | "abcd-vn-en"     // 3→4
+  | "typing"         // 4→5
+  | "sentence";      // 5→6
 
 interface SessionWord {
   card: Card;
-  sessionLevel: number; // 0-7, tracked per-session
+  sessionLevel: number;
 }
 
 interface QuizItem {
   word: SessionWord;
   levelType: LevelType;
-  options?: string[];        // ABCD options
-  scrambleTiles?: string[];  // Scramble tiles
+  options?: string[];
 }
 
-// ─── Level → Quiz type mapping ───────────────────────────────────
-function getLevelType(level: number, language: string): LevelType {
-  if (language === "english") {
-    switch (level) {
-      case 0: return "flashcard";
-      case 1: return "abcd-jp-vn"; // we reuse this for En->Vn
-      case 2: return "audio-select";
-      case 3: return "scramble";
-      case 4: return "typing";
-      case 5: return "sentence";
-      default: return "sentence";
-    }
-  } else {
-    // Japanese
-    switch (level) {
-      case 0: return "flashcard";
-      case 1: return "abcd-jp-vn";
-      case 2: return "audio-select";
-      case 3: return "abcd-vn-jp";
-      case 4: return "scramble";
-      case 5: return "handwriting";
-      case 6: return "typing";
-      default: return "typing";
-    }
+function getLevelType(level: number): LevelType {
+  switch (level) {
+    case 0: return "flashcard";
+    case 1: return "abcd-en-vn";
+    case 2: return "audio-select";
+    case 3: return "abcd-vn-en";
+    case 4: return "typing";
+    case 5: return "sentence";
+    default: return "sentence";
   }
 }
 
-// ─── Growth icon ────────────────────────────────────────────────
 function getGrowthIcon(level: number): string {
-  const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌸", "🌺"];
-  return icons[Math.min(level, 7)];
+  const icons = ["🌰", "🌱", "🪴", "☘️", "🌿", "🌷", "🌺"];
+  return icons[Math.min(level, 6)];
 }
 
-// ─── Scramble: split kana/romaji into tiles ─────────────────────
-function createScrambleTiles(text: string, isKana: boolean): string[] {
-  if (isKana) {
-    // Split kana into individual characters
-    return shuffleArray([...text]);
-  }
-  // For romaji, split into character groups (2-3 chars each)
-  const tiles: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    const chunkSize = Math.min(2, text.length - i);
-    tiles.push(text.slice(i, i + chunkSize));
-    i += chunkSize;
-  }
-  return shuffleArray(tiles);
-}
-
-export default function QuizPage() {
-  const params = useParams();
+export default function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const folderId = params.id as string;
+  const unwrappedParams = use(params);
+  const folderId = parseInt(unwrappedParams.id, 10);
 
   // ── State ──
   const [folder, setFolder] = useState<Folder | null>(null);
@@ -111,21 +74,18 @@ export default function QuizPage() {
   // Quiz UI state
   const [userInput, setUserInput] = useState("");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [scrambleSelected, setScrambleSelected] = useState<string[]>([]);
-  const [scrambleAvailable, setScrambleAvailable] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [sessionIncorrect, setSessionIncorrect] = useState(0);
   const [completedWords, setCompletedWords] = useState(0);
-  const [typingStartTime, setTypingStartTime] = useState(0);
-  const [speedBonus, setSpeedBonus] = useState<number | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // ── Load initial data ──
   const loadData = useCallback(async () => {
+    if (isNaN(folderId)) return;
     const [folderData, all, newCards, reviewCards] = await Promise.all([
       getFolderById(folderId),
       getCardsByFolder(folderId),
@@ -150,11 +110,10 @@ export default function QuizPage() {
   // ── Audio ──
   const playAudio = useCallback((text: string) => {
     if (audioRef.current) audioRef.current.pause();
-    const lang = folder?.language === "english" ? "en-US" : "ja";
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=${lang}`);
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=en-US`);
     audioRef.current = audio;
     audio.play();
-  }, [folder?.language]);
+  }, []);
 
   // ════════════════════════════════════════════════════════════════
   //  LEARN MODE — Batching & Interleaving Engine
@@ -162,56 +121,36 @@ export default function QuizPage() {
 
   const buildNextQuestion = useCallback(
     (batch: SessionWord[], allCardsList: Card[]): QuizItem | null => {
-      const maxLevel = folder?.language === "english" ? 6 : 7;
-      // Filter words not yet completed
+      const maxLevel = 6;
       const active = batch.filter((w) => w.sessionLevel < maxLevel);
       if (active.length === 0) return null;
 
-      // Pick word with lowest level (prioritize diversity)
       active.sort((a, b) => a.sessionLevel - b.sessionLevel);
 
-      // Among words with the same (lowest) level, pick randomly
       const lowestLevel = active[0].sessionLevel;
       const candidates = active.filter((w) => w.sessionLevel === lowestLevel);
-      const word = candidates[Math.floor(Math.random() * candidates.length)];
+      const randomWord = candidates[Math.floor(Math.random() * candidates.length)];
 
-      const levelType = getLevelType(word.sessionLevel, folder?.language || "japanese");
-      const card = word.card;
+      const levelType = getLevelType(randomWord.sessionLevel);
+      const card = randomWord.card;
 
       let options: string[] | undefined;
-      let scrambleTiles: string[] | undefined;
 
-      const formatJPOption = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
-
-      if (levelType === "abcd-jp-vn") {
-        // JP → VN or EN → VN: show term/kana, pick meaning
-        const correct = card.meaning;
+      if (levelType === "abcd-en-vn") {
+        const correct = card.translation;
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.meaning);
+          .map((c) => c.translation);
         options = shuffleArray([correct, ...wrongs]);
-      } else if (levelType === "abcd-vn-jp") {
-        // VN → JP: show meaning, pick kana/kanji
-        const correct = card.term || formatJPOption(card);
+      } else if (levelType === "abcd-vn-en" || levelType === "audio-select") {
+        const correct = card.word;
         const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
           .slice(0, 3)
-          .map((c) => c.term || formatJPOption(c));
+          .map((c) => c.word);
         options = shuffleArray([correct, ...wrongs]);
-      } else if (levelType === "audio-select") {
-        // Audio → select correct word
-        const correct = card.term || formatJPOption(card);
-        const wrongs = shuffleArray(allCardsList.filter((c) => c.id !== card.id))
-          .slice(0, 3)
-          .map((c) => c.term || formatJPOption(c));
-        options = shuffleArray([correct, ...wrongs]);
-      } else if (levelType === "scramble") {
-        // Scramble kana characters
-        const text = card.term || card.kana || card.romaji || "";
-        const isKana = /[\u3040-\u30FF]/.test(text);
-        scrambleTiles = createScrambleTiles(text, isKana);
       }
 
-      return { word, levelType, options, scrambleTiles };
+      return { word: randomWord, levelType, options };
     },
     []
   );
@@ -225,7 +164,7 @@ export default function QuizPage() {
 
     const batch: SessionWord[] = newCards.map((card) => ({
       card,
-      sessionLevel: card.growthLevel, // start from DB growth level
+      sessionLevel: card.growthLevel,
     }));
 
     setSessionBatch(batch);
@@ -249,45 +188,21 @@ export default function QuizPage() {
       return;
     }
 
-    // Build review questions: mix of ABCD, typing, sentence
     const items: QuizItem[] = shuffleArray(reviewCards).map((card) => {
-      const maxLevel = folder?.language === "english" ? 6 : 7;
-      const word: SessionWord = { card, sessionLevel: maxLevel };
+      const maxLevel = 6;
+      const randomWord: SessionWord = { card, sessionLevel: maxLevel };
       
-      if (folder?.language === "english") {
-        const rand = Math.random();
-        if (rand < 0.33) return { word, levelType: "abcd-jp-vn" as LevelType, options: shuffleArray([card.meaning, ...shuffleArray(allCards.filter(c => c.id !== card.id)).slice(0, 3).map(c => c.meaning)]) };
-        if (rand < 0.66) return { word, levelType: "typing" as LevelType };
-        return { word, levelType: "sentence" as LevelType };
+      const rand = Math.random();
+      if (rand < 0.33) {
+        return { 
+          word: randomWord, 
+          levelType: "abcd-en-vn" as LevelType, 
+          options: shuffleArray([card.translation, ...shuffleArray(allCards.filter(c => c.id !== card.id)).slice(0, 3).map(c => c.translation)]) 
+        };
+      } else if (rand < 0.66) {
+        return { word: randomWord, levelType: "typing" as LevelType };
       }
-
-      const useTyping = Math.random() < 0.5;
-      if (useTyping) {
-        return { word, levelType: "typing" as LevelType };
-      } else {
-        const isJpToVn = Math.random() < 0.5;
-        if (isJpToVn) {
-          const correct = card.meaning;
-          const wrongs = shuffleArray(allCards.filter((c) => c.id !== card.id))
-            .slice(0, 3)
-            .map((c) => c.meaning);
-          return {
-            word,
-            levelType: "abcd-jp-vn" as LevelType,
-            options: shuffleArray([correct, ...wrongs]),
-          };
-        } else {
-          const correct = card.kanji || card.kana || "";
-          const wrongs = shuffleArray(allCards.filter((c) => c.id !== card.id))
-            .slice(0, 3)
-            .map((c) => c.kanji || c.kana || "");
-          return {
-            word,
-            levelType: "abcd-vn-jp" as LevelType,
-            options: shuffleArray([correct, ...wrongs]),
-          };
-        }
-      }
+      return { word: randomWord, levelType: "sentence" as LevelType };
     });
 
     setReviewQueue(items);
@@ -301,26 +216,18 @@ export default function QuizPage() {
   //  ANSWER HANDLING
   // ════════════════════════════════════════════════════════════════
 
-  // Reset UI when question changes
   useEffect(() => {
     setUserInput("");
     setSelectedOption(null);
-    setScrambleSelected([]);
     setFeedback(null);
     setShowAnswer(false);
-    setSpeedBonus(null);
 
     if (currentItem) {
-      if (currentItem.scrambleTiles) {
-        setScrambleAvailable([...currentItem.scrambleTiles]);
-      }
-      if (currentItem.levelType === "typing") {
-        setTypingStartTime(Date.now());
+      if (currentItem.levelType === "typing" || currentItem.levelType === "sentence") {
         setTimeout(() => inputRef.current?.focus(), 150);
       }
       if (currentItem.levelType === "audio-select") {
-        // Auto-play audio for audio questions
-        setTimeout(() => playAudio(currentItem.word.card.term || currentItem.word.card.kanji || currentItem.word.card.kana || ""), 300);
+        setTimeout(() => playAudio(currentItem.word.card.word || ""), 300);
       }
     }
   }, [currentItem, playAudio]);
@@ -329,7 +236,7 @@ export default function QuizPage() {
     (delay: number) => {
       setTimeout(() => {
         if (phase === "learn") {
-          const maxLevel = folder?.language === "english" ? 6 : 7;
+          const maxLevel = 6;
           const active = sessionBatch.filter((w) => w.sessionLevel < maxLevel);
           if (active.length === 0) {
             setPhase("results");
@@ -360,32 +267,21 @@ export default function QuizPage() {
     const card = currentItem.word.card;
 
     if (phase === "learn") {
-      // Update session level
       const newLevel = currentItem.word.sessionLevel + 1;
       currentItem.word.sessionLevel = newLevel;
 
-      // Speed bonus for typing (level 5→6)
-      if (currentItem.levelType === "typing" && typingStartTime > 0) {
-        const elapsed = (Date.now() - typingStartTime) / 1000;
-        if (elapsed < 3) setSpeedBonus(3);
-        else if (elapsed < 5) setSpeedBonus(2);
-        else if (elapsed < 8) setSpeedBonus(1);
-      }
-
-      // Persist to DB
       await updateGrowthLevel(card.id, true);
 
-      const maxLevel = folder?.language === "english" ? 6 : 7;
+      const maxLevel = 6;
       if (newLevel >= maxLevel) {
         setCompletedWords((p) => p + 1);
       }
     } else {
-      // Review mode
       await updateSRS(card.id, true);
     }
 
-    advanceToNext(400); // Reduced from 1200ms for faster feedback
-  }, [currentItem, phase, typingStartTime, advanceToNext]);
+    advanceToNext(400); 
+  }, [currentItem, phase, advanceToNext]);
 
   const handleIncorrect = useCallback(async () => {
     if (!currentItem) return;
@@ -396,18 +292,16 @@ export default function QuizPage() {
     const card = currentItem.word.card;
 
     if (phase === "learn") {
-      // Decrease session level (min 0)
       currentItem.word.sessionLevel = Math.max(0, currentItem.word.sessionLevel - 1);
       await updateGrowthLevel(card.id, false);
     } else {
-      // Review: hoa héo
       await updateSRS(card.id, false);
     }
 
-    advanceToNext(1500); // Reduced from 2500ms, gives just enough time to see the correct answer
+    advanceToNext(1500);
   }, [currentItem, phase, advanceToNext]);
 
-  // ── ABCD handler ──
+  // ── Handlers ──
   const handleOptionSelect = (option: string) => {
     if (feedback || !currentItem) return;
     setSelectedOption(option);
@@ -415,106 +309,37 @@ export default function QuizPage() {
     const card = currentItem.word.card;
     let correct: string;
 
-    if (currentItem.levelType === "abcd-jp-vn") {
-      correct = card.meaning;
-    } else if (currentItem.levelType === "abcd-vn-jp" || currentItem.levelType === "audio-select") {
-      const formatJPOption = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
-      correct = card.term || formatJPOption(card);
+    if (currentItem.levelType === "abcd-en-vn") {
+      correct = card.translation;
+    } else if (currentItem.levelType === "abcd-vn-en" || currentItem.levelType === "audio-select") {
+      correct = card.word || "";
     } else return;
 
-    if (option === correct) {
-      handleCorrect();
-    } else {
-      handleIncorrect();
-    }
+    if (option === correct) handleCorrect();
+    else handleIncorrect();
   };
 
-  // ── Typing handler ──
-  const handleTypingSubmit = () => {
+  const handleTypingSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!userInput.trim() || feedback || !currentItem) return;
     const card = currentItem.word.card;
     const answer = userInput.trim().toLowerCase();
 
-    const isCorrect = folder?.language === "english"
-      ? answer === (card.term || "").toLowerCase()
-      : (answer === (card.kana || "").toLowerCase() ||
-         answer === (card.kanji || "").toLowerCase() ||
-         answer === (card.romaji || "").toLowerCase());
-
-    if (isCorrect) handleCorrect();
+    if (answer === (card.word || "").toLowerCase()) handleCorrect();
     else handleIncorrect();
   };
 
-  // ── Scramble handlers ──
-  const handleScrambleTileClick = (tile: string, index: number) => {
-    if (feedback) return;
-    setScrambleSelected((prev) => [...prev, tile]);
-    setScrambleAvailable((prev) => {
-      const next = [...prev];
-      next.splice(index, 1);
-      return next;
-    });
-  };
+  const handleFlashcardNext = () => handleCorrect();
 
-  const handleScrambleRemoveTile = (index: number) => {
-    if (feedback) return;
-    const tile = scrambleSelected[index];
-    setScrambleSelected((prev) => {
-      const next = [...prev];
-      next.splice(index, 1);
-      return next;
-    });
-    setScrambleAvailable((prev) => [...prev, tile]);
-  };
-
-  const handleScrambleSubmit = () => {
-    if (feedback || !currentItem) return;
-    const card = currentItem.word.card;
-    const assembled = scrambleSelected.join("");
-    
-    let correct = "";
-    if (folder?.language === "english") {
-      correct = card.term || "";
-    } else {
-      const isKana = /[\u3040-\u30FF]/.test(card.kana || "");
-      correct = isKana ? (card.kana || "") : (card.romaji || "");
-    }
-
-    if (assembled === correct) handleCorrect();
-    else handleIncorrect();
-  };
-
-  // ── Flashcard "Got it" ──
-  const handleFlashcardNext = () => {
-    handleCorrect();
-  };
-
-  // ── Handwriting ──
-  const handleHandwritingSelect = (selectedChar: string) => {
-    if (feedback || !currentItem) return;
-    const card = currentItem.word.card;
-    const correct = card.kanji || card.kana;
-    // Check if the selected char matches kanji or kana
-    if (selectedChar === correct || selectedChar === card.kana || selectedChar === card.kanji) {
-      handleCorrect();
-    } else {
-      handleIncorrect();
-    }
-  };
-
-  // ── Sentence Creation ──
-  const handleSentenceSubmit = () => {
+  const handleSentenceSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!userInput.trim() || feedback || !currentItem) return;
     const card = currentItem.word.card;
     const answer = userInput.trim().toLowerCase();
     
-    // Check if the sentence contains the term
-    const term = (card.term || "").toLowerCase();
-    if (term && answer.includes(term)) {
-      handleCorrect();
-    } else {
-      handleIncorrect();
-    }
+    const wordTarget = (card.word || "").toLowerCase();
+    if (wordTarget && answer.includes(wordTarget)) handleCorrect();
+    else handleIncorrect();
   };
 
   // ════════════════════════════════════════════════════════════════
@@ -564,7 +389,7 @@ export default function QuizPage() {
             </h3>
             <p className="text-sm text-foreground-muted">
               {newCount > 0
-                ? `Gieo hạt ${Math.min(newCount, 5)} từ vựng mới. Flashcard → Trắc nghiệm → Nghe → Ghép → Gõ.`
+                ? `Gieo hạt ${Math.min(newCount, 5)} từ vựng mới.`
                 : "Tất cả từ đã được học! Thêm thẻ mới hoặc ôn tập."}
             </p>
           </button>
@@ -592,7 +417,7 @@ export default function QuizPage() {
             </h3>
             <p className="text-sm text-foreground-muted">
               {dueCount > 0
-                ? `Tưới nước ${dueCount} bông hoa sắp héo. Trắc nghiệm & gõ xen kẽ.`
+                ? `Tưới nước ${dueCount} bông hoa sắp héo.`
                 : "Chưa có từ nào cần ôn tập lúc này!"}
             </p>
           </button>
@@ -667,33 +492,24 @@ export default function QuizPage() {
     );
   }
 
-  // ── Quiz Rendering ──
   if (!currentItem) return null;
 
   const card = currentItem.word.card;
   const levelType = currentItem.levelType;
 
-  // Correct answer for showing when wrong
-  const formatJPOptionRender = (c: any) => c.kanji ? `${c.kanji} (${c.kana})` : (c.kana || "");
   const correctDisplay =
-    levelType === "abcd-jp-vn"
-      ? card.meaning
-      : levelType === "abcd-vn-jp" || levelType === "audio-select"
-      ? card.term || formatJPOptionRender(card)
-      : card.kana;
+    levelType === "abcd-en-vn"
+      ? card.translation
+      : card.word;
 
-  // Progress bar for learn mode
-  const batchTotal = sessionBatch.length * 7;
+  const batchTotal = sessionBatch.length * 6;
   const batchProgress = sessionBatch.reduce((sum, w) => sum + w.sessionLevel, 0);
 
-  // Level type label
   const levelLabels: Record<LevelType, { icon: string; text: string; color: string }> = {
     flashcard:    { icon: "📖", text: "Giới thiệu từ mới",      color: "bg-emerald/10 border-emerald/30 text-emerald" },
-    "abcd-jp-vn": { icon: "🅰️", text: "Nhật → Việt",            color: "bg-gold/10 border-gold/30 text-gold" },
+    "abcd-en-vn": { icon: "🅰️", text: "Anh → Việt",             color: "bg-gold/10 border-gold/30 text-gold" },
     "audio-select": { icon: "🔊", text: "Nghe chọn từ",          color: "bg-indigo/10 border-indigo/30 text-indigo-light" },
-    "abcd-vn-jp": { icon: "🅰️", text: "Việt → Nhật",            color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
-    scramble:     { icon: "🧩", text: "Ghép ký tự",             color: "bg-amber-500/10 border-amber-500/30 text-amber-400" },
-    handwriting:  { icon: "✍️", text: "Vẽ chữ",                color: "bg-sky-500/10 border-sky-500/30 text-sky-400" },
+    "abcd-vn-en": { icon: "🅰️", text: "Việt → Anh",             color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
     typing:       { icon: "⌨️", text: "Gõ chính xác",           color: "bg-violet-500/10 border-violet-500/30 text-violet-400" },
     sentence:     { icon: "📝", text: "Viết câu",               color: "bg-rose/10 border-rose/30 text-rose" },
   };
@@ -702,7 +518,6 @@ export default function QuizPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => {
@@ -716,7 +531,7 @@ export default function QuizPage() {
         {phase === "learn" && (
           <div className="flex items-center gap-2">
             {sessionBatch.map((w, i) => (
-              <span key={i} className="text-sm" title={`${w.card.kana} — Lv.${w.sessionLevel}`}>
+              <span key={i} className="text-sm" title={`${w.card.word} — Lv.${w.sessionLevel}`}>
                 {getGrowthIcon(w.sessionLevel)}
               </span>
             ))}
@@ -730,7 +545,6 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* Progress bar (learn mode) */}
       {phase === "learn" && (
         <div className="w-full h-1.5 bg-surface-hover rounded-full mb-6 overflow-hidden">
           <div
@@ -740,14 +554,12 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* Type badge */}
       <div className="flex justify-center mb-4">
         <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border ${label.color}`}>
           {label.icon} {label.text}
         </span>
       </div>
 
-      {/* ═══════════════════════ FLASHCARD ═══════════════════════ */}
       {levelType === "flashcard" && (
         <div className="glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 animate-fade-in">
           {card.imageUrl && (
@@ -755,19 +567,17 @@ export default function QuizPage() {
               <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
             </div>
           )}
-          {card.kanji && (
-            <div className="kana-display text-5xl font-bold text-foreground mb-2">
-              {card.kanji}
-            </div>
-          )}
-          <div className="kana-display text-3xl text-indigo-light mb-1">{card.kana}</div>
-          <div className="text-foreground-dim text-sm mb-3">[{card.romaji}]</div>
-          <div className="text-xl font-semibold text-foreground mb-3">{card.meaning}</div>
-          {card.usage && (
-            <p className="text-foreground-dim text-sm italic mb-4">💬 {card.usage}</p>
+          <div className="text-4xl font-bold text-foreground mb-2">
+            {card.word}
+          </div>
+          <div className="text-indigo-light mb-1 text-sm">{card.phonetic}</div>
+          <div className="text-xl font-semibold text-foreground mb-3">{card.translation}</div>
+          {card.definition && <div className="text-foreground-dim text-xs mb-3 italic">{card.definition}</div>}
+          {card.example && (
+            <p className="text-foreground-dim text-sm italic mb-4">💬 {card.example}</p>
           )}
           <button
-            onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
+            onClick={() => playAudio(card.word || "")}
             className="p-3 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer text-2xl mb-4"
           >
             🔊
@@ -783,10 +593,8 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* ═══════════════════════ ABCD ═══════════════════════ */}
-      {(levelType === "abcd-jp-vn" || levelType === "abcd-vn-jp" || levelType === "audio-select") && (
+      {(levelType === "abcd-en-vn" || levelType === "abcd-vn-en" || levelType === "audio-select") && (
         <>
-          {/* Question */}
           <div
             className={`glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 transition-all duration-300 ${
               feedback === "correct" ? "correct-glow" : ""
@@ -795,335 +603,144 @@ export default function QuizPage() {
             {levelType === "audio-select" ? (
               <>
                 <button
-                  onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
+                  onClick={() => playAudio(card.word || "")}
                   className="text-5xl p-4 rounded-2xl hover:bg-surface-hover transition-colors cursor-pointer"
                 >
                   🔊
                 </button>
-                <p className="text-foreground-dim text-sm mt-3">Nghe và chọn từ đúng</p>
-              </>
-            ) : levelType === "abcd-jp-vn" ? (
-              <>
-                {folder?.language === "english" ? (
-                  <div className="text-4xl font-bold text-foreground mb-1">{card.term}</div>
-                ) : (
-                  <>
-                    {card.kanji && (
-                      <div className="kana-display text-4xl font-bold text-foreground mb-1">
-                        {card.kanji}
-                      </div>
-                    )}
-                    <div className="kana-display text-3xl text-indigo-light">{card.kana}</div>
-                    <div className="text-foreground-dim text-xs mt-1">[{card.romaji}]</div>
-                  </>
-                )}
-                <button
-                  onClick={() => playAudio(card.term || card.kanji || card.kana || "")}
-                  className="mt-2 p-2 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer text-xl"
-                >
-                  🔊
-                </button>
-                <p className="text-foreground-dim text-xs mt-2">Chọn nghĩa đúng</p>
+                <p className="text-foreground-muted text-sm mt-4">Nghe và chọn từ đúng</p>
               </>
             ) : (
-              <>
-                <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                  {card.meaning}
-                </div>
-                <p className="text-foreground-dim text-xs">Chọn từ tiếng Nhật đúng</p>
-              </>
+              <div className="text-3xl font-bold">
+                {levelType === "abcd-en-vn" ? card.word : card.translation}
+              </div>
             )}
-          </div>
 
-          {/* Options */}
-          <div className="w-full max-w-sm mx-auto grid grid-cols-1 gap-2">
-            {currentItem.options?.map((option, i) => {
-              const isSelected = selectedOption === option;
-              const isCorrectOpt = option === correctDisplay;
-              let cls =
-                "glass-card p-3 text-center cursor-pointer hover:scale-[1.02] transition-all duration-200 text-sm font-medium";
-
-              if (feedback) {
-                if (isCorrectOpt) cls += " !border-emerald !bg-emerald/10 text-emerald";
-                else if (isSelected && !isCorrectOpt) cls += " !border-rose !bg-rose/10 text-rose";
-                else cls += " opacity-50";
-              } else {
-                cls += " hover:border-indigo/50";
-              }
-
-              const isJapanese =
-                levelType === "abcd-vn-jp" || levelType === "audio-select";
-
-              return (
-                <button
-                  key={i}
-                  onClick={() => handleOptionSelect(option)}
-                  disabled={!!feedback}
-                  className={cls}
-                >
-                  <span className="text-foreground-dim mr-2 text-xs">
-                    {String.fromCharCode(65 + i)}.
-                  </span>
-                  <span className={isJapanese ? "kana-display" : ""}>{option}</span>
-                </button>
-              );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* ═══════════════════════ SCRAMBLE ═══════════════════════ */}
-      {levelType === "scramble" && (
-        <>
-          <div
-            className={`glass-card w-full max-w-sm mx-auto p-6 text-center mb-6 transition-all duration-300 ${
-              feedback === "correct" ? "correct-glow" : ""
-            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
-          >
-            <div className="text-2xl font-bold text-foreground mb-2">{card.meaning}</div>
-            <p className="text-foreground-dim text-xs">Ghép đúng thứ tự ký tự</p>
-          </div>
-
-          {/* Selected tiles (answer area) */}
-          <div className="w-full max-w-sm mx-auto mb-4">
-            <div
-              className={`min-h-[52px] flex flex-wrap gap-2 justify-center items-center p-3 rounded-xl border-2 border-dashed transition-colors ${
-                feedback === "correct"
-                  ? "border-emerald bg-emerald/5"
-                  : feedback === "incorrect"
-                  ? "border-rose bg-rose/5"
-                  : "border-border"
-              }`}
-            >
-              {scrambleSelected.length === 0 && (
-                <span className="text-foreground-dim text-sm">Bấm vào ký tự bên dưới...</span>
-              )}
-              {scrambleSelected.map((tile, i) => (
-                <button
-                  key={`sel-${i}`}
-                  onClick={() => handleScrambleRemoveTile(i)}
-                  disabled={!!feedback}
-                  className="px-4 py-2 rounded-lg bg-indigo/20 border border-indigo/40 text-indigo-light font-bold
-                             text-lg kana-display hover:bg-indigo/30 transition-colors cursor-pointer"
-                >
-                  {tile}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Available tiles */}
-          <div className="w-full max-w-sm mx-auto flex flex-wrap gap-2 justify-center mb-4">
-            {scrambleAvailable.map((tile, i) => (
-              <button
-                key={`avail-${i}`}
-                onClick={() => handleScrambleTileClick(tile, i)}
-                disabled={!!feedback}
-                className="px-4 py-2 rounded-lg bg-surface border border-border text-foreground font-bold
-                           text-lg kana-display hover:border-indigo/50 hover:scale-105 transition-all cursor-pointer"
-              >
-                {tile}
-              </button>
-            ))}
-          </div>
-
-          {/* Submit scramble */}
-          {!feedback && scrambleAvailable.length === 0 && scrambleSelected.length > 0 && (
-            <div className="w-full max-w-sm mx-auto">
-              <button
-                onClick={handleScrambleSubmit}
-                className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-sakura to-indigo text-white
-                           hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98]
-                           transition-all duration-200 cursor-pointer"
-              >
-                Kiểm tra
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ═══════════════════════ HANDWRITING ═══════════════════════ */}
-      {levelType === "handwriting" && (
-        <>
-          <div
-            className={`glass-card w-full max-w-sm mx-auto p-6 text-center mb-6 transition-all duration-300 ${
-              feedback === "correct" ? "correct-glow" : ""
-            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
-          >
-            <div className="text-2xl font-bold text-foreground mb-2">{card.meaning}</div>
-            <p className="text-foreground-dim text-xs">Vẽ nét chữ Nhật tương ứng</p>
-          </div>
-
-          <div className="w-full max-w-sm mx-auto flex justify-center mb-6">
-            <DrawingCanvas
-              onCharacterSelected={handleHandwritingSelect}
-              selectedChar=""
-              disabled={!!feedback}
-            />
-          </div>
-        </>
-      )}
-
-      {/* ═══════════════════════ TYPING ═══════════════════════ */}
-      {levelType === "typing" && (
-        <>
-          <div
-            className={`glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 transition-all duration-300 ${
-              feedback === "correct" ? "correct-glow" : ""
-            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
-          >
-            <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              {card.meaning}
-            </div>
-            {card.usage && (
-              <p className="text-foreground-dim text-xs italic mb-2">💬 {card.usage}</p>
-            )}
-            <p className="text-foreground-dim text-xs">Gõ {folder?.language === "english" ? "từ vựng" : "Kana hoặc Romaji"} chính xác</p>
-          </div>
-
-          <div className="w-full max-w-sm mx-auto space-y-3">
-            <div className="relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !feedback) handleTypingSubmit();
-                }}
-                placeholder={folder?.language === "english" ? "Nhập từ vựng..." : "Nhập Kana hoặc Romaji..."}
-                disabled={!!feedback}
-                className={`w-full px-4 py-3 rounded-xl bg-surface border text-center text-lg font-medium kana-display
-                  outline-none transition-all duration-300 placeholder:text-foreground-dim/40 ${
-                    feedback === "correct"
-                      ? "border-emerald bg-emerald/10 text-emerald"
-                      : feedback === "incorrect"
-                      ? "border-rose bg-rose/10 text-rose"
-                      : "border-border focus:border-indigo focus:ring-2 focus:ring-indigo/20 text-foreground"
-                  }`}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-              />
-              {feedback && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl animate-confetti-pop">
-                  {feedback === "correct" ? "✅" : "❌"}
+            {showAnswer && feedback === "incorrect" && (
+              <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
+                <span className="text-xs text-rose font-bold uppercase block mb-1">
+                  Đáp án đúng:
                 </span>
-              )}
-            </div>
-
-            {!feedback && (
-              <button
-                onClick={handleTypingSubmit}
-                disabled={!userInput.trim()}
-                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  userInput.trim()
-                    ? "bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    : "bg-surface-hover text-foreground-dim cursor-not-allowed"
-                }`}
-              >
-                Kiểm tra
-              </button>
-            )}
-
-            {/* Speed bonus */}
-            {speedBonus !== null && feedback === "correct" && (
-              <div className="text-center p-2 rounded-xl bg-gold/10 border border-gold/20 animate-fade-in">
-                <p className="text-gold font-semibold text-sm">
-                  ⚡ Speed Bonus +{speedBonus}!
-                </p>
+                <span className="text-xl text-foreground font-medium">
+                  {correctDisplay}
+                </span>
               </div>
             )}
           </div>
-        </>
-      )}
 
-      {/* ═══════════════════════ SENTENCE CREATION ═══════════════════════ */}
-      {levelType === "sentence" && (
-        <>
-          <div
-            className={`glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 transition-all duration-300 ${
-              feedback === "correct" ? "correct-glow" : ""
-            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
-          >
-            <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              {card.term}
-            </div>
-            <p className="text-foreground-dim text-xs mb-2">{card.meaning}</p>
-            <p className="text-foreground-dim text-xs">Viết một câu có chứa từ này</p>
-          </div>
-
-          <div className="w-full max-w-sm mx-auto space-y-3">
-            <div className="relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !feedback) handleSentenceSubmit();
-                }}
-                placeholder="VD: I eat an apple everyday..."
-                disabled={!!feedback}
-                className={`w-full px-4 py-3 rounded-xl bg-surface border text-left text-sm font-medium
-                  outline-none transition-all duration-300 placeholder:text-foreground-dim/40 ${
-                    feedback === "correct"
-                      ? "border-emerald bg-emerald/10 text-emerald"
-                      : feedback === "incorrect"
-                      ? "border-rose bg-rose/10 text-rose"
-                      : "border-border focus:border-indigo focus:ring-2 focus:ring-indigo/20 text-foreground"
-                  }`}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-              />
-              {feedback && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xl animate-confetti-pop">
-                  {feedback === "correct" ? "✅" : "❌"}
-                </span>
-              )}
-            </div>
-
-            {!feedback && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+            {currentItem.options?.map((opt, i) => (
               <button
-                onClick={handleSentenceSubmit}
-                disabled={!userInput.trim()}
-                className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  userInput.trim()
-                    ? "bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-sakura/25 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    : "bg-surface-hover text-foreground-dim cursor-not-allowed"
-                }`}
+                key={i}
+                onClick={() => handleOptionSelect(opt)}
+                disabled={feedback !== null}
+                className={`
+                  p-4 rounded-xl font-medium text-center transition-all cursor-pointer
+                  ${
+                    selectedOption === opt
+                      ? feedback === "correct"
+                        ? "bg-emerald/20 border border-emerald/50 text-emerald"
+                        : "bg-rose/20 border border-rose/50 text-rose"
+                      : "bg-surface border border-border hover:bg-surface-hover hover:scale-[1.02] active:scale-[0.98]"
+                  }
+                  ${feedback && selectedOption !== opt && opt === correctDisplay ? "bg-emerald/20 border border-emerald/50 text-emerald" : ""}
+                `}
               >
-                Kiểm tra
+                {opt}
               </button>
-            )}
+            ))}
           </div>
         </>
       )}
 
-      {/* ═══════════════════════ FEEDBACK ═══════════════════════ */}
-      <div className="w-full max-w-sm mx-auto mt-4 space-y-2">
-        {showAnswer && (
-          <div className="text-center p-3 rounded-xl bg-rose/10 border border-rose/20 animate-fade-in">
-            <p className="text-rose/70 text-xs mb-1">Đáp án đúng:</p>
-            <p className="text-xl font-bold text-rose kana-display">{correctDisplay}</p>
-            {card.meaning && levelType !== "abcd-jp-vn" && (
-              <p className="text-rose/50 text-xs mt-1">{card.meaning}</p>
-            )}
-          </div>
-        )}
+      {levelType === "typing" && (
+        <div
+          className={`glass-card w-full max-w-sm mx-auto p-8 text-center transition-all duration-300 ${
+            feedback === "correct" ? "correct-glow" : ""
+          } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+        >
+          <div className="text-xl font-bold mb-6">{card.translation}</div>
 
-        {feedback === "correct" && levelType !== "flashcard" && (
-          <div className="text-center p-3 rounded-xl bg-emerald/10 border border-emerald/20 animate-fade-in">
-            <p className="text-emerald font-semibold">
-              🎉 Chính xác! {getGrowthIcon(currentItem.word.sessionLevel)}
-            </p>
-          </div>
-        )}
-      </div>
+          <form onSubmit={handleTypingSubmit}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              disabled={feedback !== null}
+              className="w-full text-center text-2xl font-bold px-4 py-3 rounded-xl bg-surface border border-border text-foreground
+                         outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all mb-4"
+              placeholder="Gõ từ tiếng Anh..."
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              disabled={!userInput.trim() || feedback !== null}
+              className="w-full py-3 rounded-xl font-semibold bg-indigo text-white hover:bg-indigo-light transition-all disabled:opacity-50"
+            >
+              Kiểm tra
+            </button>
+          </form>
+
+          {showAnswer && feedback === "incorrect" && (
+            <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
+              <span className="text-xs text-rose font-bold uppercase block mb-1">
+                Đáp án đúng:
+              </span>
+              <span className="text-2xl text-foreground font-medium">
+                {card.word}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {levelType === "sentence" && (
+        <div
+          className={`glass-card w-full max-w-sm mx-auto p-8 text-center transition-all duration-300 ${
+            feedback === "correct" ? "correct-glow" : ""
+          } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+        >
+          <div className="text-3xl font-bold mb-2">{card.word}</div>
+          <div className="text-foreground-dim text-sm mb-6">({card.translation})</div>
+          
+          <p className="text-sm text-foreground-muted mb-4">
+            Hãy viết một câu tiếng Anh có chứa từ này.
+          </p>
+
+          <form onSubmit={handleSentenceSubmit}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              disabled={feedback !== null}
+              className="w-full text-center text-lg px-4 py-3 rounded-xl bg-surface border border-border text-foreground
+                         outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all mb-4"
+              placeholder="VD: I want to eat an apple."
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              disabled={!userInput.trim() || feedback !== null}
+              className="w-full py-3 rounded-xl font-semibold bg-rose text-white hover:bg-rose/80 transition-all disabled:opacity-50"
+            >
+              Kiểm tra
+            </button>
+          </form>
+
+          {showAnswer && feedback === "incorrect" && (
+            <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
+              <span className="text-xs text-rose font-bold uppercase block mb-2">
+                Gợi ý:
+              </span>
+              <span className="text-sm text-foreground-muted">
+                Câu của bạn cần chứa chính xác từ <strong className="text-foreground">{card.word}</strong>.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

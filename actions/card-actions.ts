@@ -27,7 +27,7 @@ function getNextReviewDate(consecutiveCorrect: number): Date {
 }
 
 // ─── Get all cards in a folder ───────────────────────────────────
-export async function getCardsByFolder(folderId: string): Promise<Card[]> {
+export async function getCardsByFolder(folderId: number): Promise<Card[]> {
   const data = await db
     .select()
     .from(cards)
@@ -37,10 +37,8 @@ export async function getCardsByFolder(folderId: string): Promise<Card[]> {
 }
 
 // ─── Get NEW cards (growthLevel < 6 — chưa nở hoa) ──────────────
-export async function getNewCards(folderId: string, limit: number = 5): Promise<Card[]> {
-  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
-  const folder = folderResult[0];
-  const maxLevel = folder?.language === "english" ? 6 : 7;
+export async function getNewCards(folderId: number, limit: number = 5): Promise<Card[]> {
+  const maxLevel = 6;
 
   const data = await db
     .select()
@@ -51,11 +49,9 @@ export async function getNewCards(folderId: string, limit: number = 5): Promise<
   return JSON.parse(JSON.stringify(data));
 }
 
-// ─── Get REVIEW cards (growthLevel == 7 AND due) ─────────────────
-export async function getReviewCards(folderId: string, limit: number = 15): Promise<Card[]> {
-  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
-  const folder = folderResult[0];
-  const maxLevel = folder?.language === "english" ? 6 : 7;
+// ─── Get REVIEW cards (growthLevel == 6 AND due) ─────────────────
+export async function getReviewCards(folderId: number, limit: number = 15): Promise<Card[]> {
+  const maxLevel = 6;
 
   const data = await db
     .select()
@@ -73,12 +69,12 @@ export async function getReviewCards(folderId: string, limit: number = 15): Prom
 }
 
 // ─── Get cards due for review (SRS) — legacy compat ──────────────
-export async function getDueCards(folderId: string): Promise<Card[]> {
+export async function getDueCards(folderId: number): Promise<Card[]> {
   return getReviewCards(folderId);
 }
 
 // ─── Get card count for a folder ────────────────────────────────
-export async function getCardCount(folderId: string): Promise<number> {
+export async function getCardCount(folderId: number): Promise<number> {
   const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(cards)
@@ -87,15 +83,13 @@ export async function getCardCount(folderId: string): Promise<number> {
 }
 
 // ─── Get folder stats ───────────────────────────────────────────
-export async function getFolderStats(folderId: string): Promise<{
+export async function getFolderStats(folderId: number): Promise<{
   total: number;
   newCount: number;
   plantedCount: number;
   dueCount: number;
 }> {
-  const folderResult = await db.select().from(folders).where(eq(folders.id, folderId));
-  const folder = folderResult[0];
-  const maxLevel = folder?.language === "english" ? 6 : 7;
+  const maxLevel = 6;
 
   const allCards = await getCardsByFolder(folderId);
   const now = new Date();
@@ -109,29 +103,23 @@ export async function getFolderStats(folderId: string): Promise<{
 
 // ─── Create card ─────────────────────────────────────────────────
 export async function createCard(data: {
-  folderId: string;
-  kanji?: string;
-  kana?: string;
-  romaji?: string;
-  term?: string;
+  folderId: number;
+  word: string;
+  translation: string;
+  definition?: string;
+  example?: string;
   phonetic?: string;
-  partOfSpeech?: string;
-  meaning: string;
-  usage?: string;
   imageUrl?: string;
 }) {
   const result = await db
     .insert(cards)
     .values({
       folderId: data.folderId,
-      kanji: data.kanji || null,
-      kana: data.kana || null,
-      romaji: data.romaji || null,
-      term: data.term || null,
+      word: data.word,
+      translation: data.translation,
+      definition: data.definition || null,
+      example: data.example || null,
       phonetic: data.phonetic || null,
-      partOfSpeech: data.partOfSpeech || null,
-      meaning: data.meaning,
-      usage: data.usage || null,
       imageUrl: data.imageUrl || null,
       growthLevel: 0,
       consecutiveCorrect: 0,
@@ -148,30 +136,24 @@ export async function createCard(data: {
 
 // ─── Update card ─────────────────────────────────────────────────
 export async function updateCard(
-  id: string,
+  id: number,
   data: {
-    kanji?: string;
-    kana?: string;
-    romaji?: string;
-    term?: string;
+    word?: string;
+    translation?: string;
+    definition?: string;
+    example?: string;
     phonetic?: string;
-    partOfSpeech?: string;
-    meaning: string;
-    usage?: string;
     imageUrl?: string;
   }
 ) {
   const result = await db
     .update(cards)
     .set({
-      kanji: data.kanji || null,
-      kana: data.kana || null,
-      romaji: data.romaji || null,
-      term: data.term || null,
+      word: data.word,
+      translation: data.translation,
+      definition: data.definition || null,
+      example: data.example || null,
       phonetic: data.phonetic || null,
-      partOfSpeech: data.partOfSpeech || null,
-      meaning: data.meaning,
-      usage: data.usage || null,
       imageUrl: data.imageUrl || null,
     })
     .where(eq(cards.id, id))
@@ -181,20 +163,18 @@ export async function updateCard(
 }
 
 // ─── Delete card ─────────────────────────────────────────────────
-export async function deleteCard(id: string, folderId: string) {
+export async function deleteCard(id: number, folderId: number) {
   await db.delete(cards).where(eq(cards.id, id));
   revalidatePath(`/folders/${folderId}`);
 }
 
 // ─── Update Growth Level (Learn mode — Planting) ─────────────────
-export async function updateGrowthLevel(cardId: string, isCorrect: boolean) {
+export async function updateGrowthLevel(cardId: number, isCorrect: boolean) {
   const result = await db.select().from(cards).where(eq(cards.id, cardId));
   const card = result[0];
   if (!card) return;
 
-  const folderResult = await db.select().from(folders).where(eq(folders.id, card.folderId));
-  const folder = folderResult[0];
-  const maxLevel = folder?.language === "english" ? 6 : 7;
+  const maxLevel = 6;
 
   let newLevel = card.growthLevel;
 
@@ -217,7 +197,7 @@ export async function updateGrowthLevel(cardId: string, isCorrect: boolean) {
 
 // ─── Update SRS (Review mode — Watering) ─────────────────────────
 // Memrise Classic: đúng → consecutive++, sai → hoa héo (level=3, consecutive=0)
-export async function updateSRS(cardId: string, isCorrect: boolean) {
+export async function updateSRS(cardId: number, isCorrect: boolean) {
   const result = await db.select().from(cards).where(eq(cards.id, cardId));
   const card = result[0];
   if (!card) return;

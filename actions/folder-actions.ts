@@ -20,13 +20,13 @@ export async function getFolders(): Promise<{ success: boolean; data?: Folder[];
 }
 
 // ─── Get single folder ──────────────────────────────────────────
-export async function getFolderById(id: string): Promise<Folder | undefined> {
+export async function getFolderById(id: number): Promise<Folder | undefined> {
   const result = await db.select().from(folders).where(eq(folders.id, id));
   return result[0] ? JSON.parse(JSON.stringify(result[0])) : undefined;
 }
 
 // ─── Create folder ──────────────────────────────────────────────
-export async function createFolder(data: { name: string; description?: string; language?: string }): Promise<{ success: boolean; data?: Folder; error?: string }> {
+export async function createFolder(data: { name: string; description?: string }): Promise<{ success: boolean; data?: Folder; error?: string }> {
   try {
     if (!process.env.DATABASE_URL) {
       return { success: false, error: "Thiếu biến môi trường DATABASE_URL!" };
@@ -36,7 +36,6 @@ export async function createFolder(data: { name: string; description?: string; l
       .values({
         name: data.name,
         description: data.description || null,
-        language: data.language || "japanese",
       })
       .returning();
 
@@ -49,7 +48,7 @@ export async function createFolder(data: { name: string; description?: string; l
 }
 
 // ─── Update folder ──────────────────────────────────────────────
-export async function updateFolder(id: string, data: { name: string; description?: string }) {
+export async function updateFolder(id: number, data: { name: string; description?: string }) {
   const result = await db
     .update(folders)
     .set({
@@ -64,7 +63,7 @@ export async function updateFolder(id: string, data: { name: string; description
 }
 
 // ─── Delete folder ──────────────────────────────────────────────
-export async function deleteFolder(id: string) {
+export async function deleteFolder(id: number) {
   await db.delete(folders).where(eq(folders.id, id));
   revalidatePath("/folders");
 }

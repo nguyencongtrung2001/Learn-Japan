@@ -1,42 +1,36 @@
 import {
   pgTable,
-  uuid,
+  serial,
   text,
   timestamp,
   integer,
   real,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 // ─── Folders Table ───────────────────────────────────────────────
 export const folders = pgTable("folders", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  language: text("language").default("japanese").notNull(), // 'japanese' | 'english'
+  language: text("language").default("english").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ─── Cards Table ─────────────────────────────────────────────────
 export const cards = pgTable("cards", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  folderId: uuid("folder_id")
+  id: serial("id").primaryKey(),
+  folderId: integer("folder_id")
     .notNull()
     .references(() => folders.id, { onDelete: "cascade" }),
 
-  // ── Content (Japanese) ──
-  kanji: text("kanji"),                // 漢字 (optional)
-  kana: text("kana"),                  // ひらがな / カタカナ (removed notNull for English compat)
-  romaji: text("romaji"),              // Phiên âm la-tinh
-
-  // ── Content (English) ──
-  term: text("term"),                  // Từ vựng tiếng Anh (e.g. apple)
-  phonetic: text("phonetic"),          // Phiên âm IPA (e.g. /ˈæp.əl/)
-  partOfSpeech: text("part_of_speech"),// Từ loại (n, v, adj...)
-
-  // ── Shared Content ──
-  meaning: text("meaning").notNull(),  // Nghĩa tiếng Việt
-  usage: text("usage"),                // Câu ví dụ / Cách dùng
-  imageUrl: text("image_url"),         // Link hình ảnh minh họa
+  // ── Content ──
+  word: text("word").notNull(),
+  translation: text("translation").notNull(),
+  definition: text("definition"),
+  example: text("example"),
+  phonetic: text("phonetic"),
+  imageUrl: text("image_url"),
 
   // ── Spaced Repetition (Memrise Classic Algorithm) ──
   growthLevel: integer("growth_level").default(0).notNull(),               // 0-6 (🌰→🌺)
