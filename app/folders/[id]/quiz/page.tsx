@@ -561,89 +561,104 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
       </div>
 
       {levelType === "flashcard" && (
-        <div className="glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 animate-fade-in">
+        <div className="glass-card w-full max-w-md mx-auto p-6 sm:p-10 text-center mb-6 animate-fade-in shadow-2xl shadow-indigo/5 border-t border-white/10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald to-teal-500 opacity-50" />
           {card.imageUrl && (
-            <div className="w-24 h-24 rounded-xl overflow-hidden mx-auto mb-4 border border-border/50">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden mx-auto mb-6 border-2 border-white/10 shadow-lg">
               <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
             </div>
           )}
-          <div className="text-4xl font-bold text-foreground mb-2">
+          <div className="text-4xl sm:text-5xl font-extrabold text-foreground mb-3 tracking-tight">
             {card.word}
           </div>
-          <div className="text-indigo-light mb-1 text-sm">{card.phonetic}</div>
-          <div className="text-xl font-semibold text-foreground mb-3">{card.translation}</div>
-          {card.definition && <div className="text-foreground-dim text-xs mb-3 italic">{card.definition}</div>}
+          <div className="text-indigo-light mb-2 text-sm sm:text-base font-medium bg-indigo/10 inline-block px-3 py-1 rounded-full">{card.phonetic}</div>
+          <div className="text-xl sm:text-2xl font-semibold text-foreground mb-4 mt-2">{card.translation}</div>
+          
+          {card.definition && <div className="text-foreground-dim text-sm sm:text-base mb-4 px-4">{card.definition}</div>}
+          
           {card.example && (
-            <p className="text-foreground-dim text-sm italic mb-4">💬 {card.example}</p>
+            <div className="bg-surface/50 p-4 rounded-xl text-foreground-muted text-sm sm:text-base italic mb-6 border border-border/50 text-left">
+              💬 "{card.example}"
+            </div>
           )}
-          <button
-            onClick={() => playAudio(card.word || "")}
-            className="p-3 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer text-2xl mb-4"
-          >
-            🔊
-          </button>
-          <button
-            onClick={handleFlashcardNext}
-            className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald to-teal-500 text-white
-                       hover:shadow-lg hover:shadow-emerald/25 hover:scale-[1.02] active:scale-[0.98]
-                       transition-all duration-200 cursor-pointer"
-          >
-            ✅ Đã nhớ — Tiếp tục
-          </button>
+          
+          <div className="flex flex-col sm:flex-row gap-3 mt-8">
+            <button
+              onClick={() => playAudio(card.word || "")}
+              className="p-4 rounded-2xl bg-surface border border-border hover:bg-surface-hover hover:border-indigo/30 transition-all cursor-pointer text-2xl group flex items-center justify-center shrink-0"
+              title="Nghe phát âm"
+            >
+              <span className="group-hover:scale-110 transition-transform">🔊</span>
+            </button>
+            <button
+              onClick={handleFlashcardNext}
+              className="flex-1 py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-emerald to-teal-500 text-white
+                         hover:shadow-xl hover:shadow-emerald/25 hover:scale-[1.02] active:scale-[0.98]
+                         transition-all duration-300 cursor-pointer"
+            >
+              ✅ Đã nhớ — Tiếp tục
+            </button>
+          </div>
         </div>
       )}
 
       {(levelType === "abcd-en-vn" || levelType === "abcd-vn-en" || levelType === "audio-select") && (
         <>
           <div
-            className={`glass-card w-full max-w-sm mx-auto p-8 text-center mb-6 transition-all duration-300 ${
-              feedback === "correct" ? "correct-glow" : ""
-            } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+            className={`glass-card w-full max-w-md mx-auto p-8 sm:p-12 text-center mb-8 transition-all duration-500 shadow-2xl relative overflow-hidden ${
+              feedback === "correct" ? "shadow-emerald/20 border-emerald/50" : ""
+            } ${feedback === "incorrect" ? "shadow-rose/20 border-rose/50 animate-shake" : "shadow-indigo/5 border-white/5"}`}
           >
-            {levelType === "audio-select" ? (
-              <>
-                <button
-                  onClick={() => playAudio(card.word || "")}
-                  className="text-5xl p-4 rounded-2xl hover:bg-surface-hover transition-colors cursor-pointer"
-                >
-                  🔊
-                </button>
-                <p className="text-foreground-muted text-sm mt-4">Nghe và chọn từ đúng</p>
-              </>
-            ) : (
-              <div className="text-3xl font-bold">
-                {levelType === "abcd-en-vn" ? card.word : card.translation}
-              </div>
-            )}
+            {feedback === "correct" && <div className="absolute inset-0 bg-emerald/5 animate-fade-in" />}
+            {feedback === "incorrect" && <div className="absolute inset-0 bg-rose/5 animate-fade-in" />}
+            
+            <div className="relative z-10">
+              {levelType === "audio-select" ? (
+                <div className="flex flex-col items-center">
+                  <button
+                    onClick={() => playAudio(card.word || "")}
+                    className="w-24 h-24 flex items-center justify-center bg-indigo/10 text-indigo-light text-5xl rounded-full hover:bg-indigo/20 transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+                  >
+                    🔊
+                  </button>
+                  <p className="text-foreground-muted text-sm sm:text-base mt-6 font-medium">Nghe và chọn đáp án đúng</p>
+                </div>
+              ) : (
+                <div className="text-3xl sm:text-5xl font-extrabold tracking-tight">
+                  {levelType === "abcd-en-vn" ? card.word : card.translation}
+                </div>
+              )}
 
-            {showAnswer && feedback === "incorrect" && (
-              <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
-                <span className="text-xs text-rose font-bold uppercase block mb-1">
-                  Đáp án đúng:
-                </span>
-                <span className="text-xl text-foreground font-medium">
-                  {correctDisplay}
-                </span>
-              </div>
-            )}
+              {showAnswer && feedback === "incorrect" && (
+                <div className="mt-8 pt-6 border-t border-border/50 animate-fade-in text-left">
+                  <span className="text-xs sm:text-sm text-rose font-bold uppercase tracking-wider block mb-2">
+                    Đáp án đúng:
+                  </span>
+                  <span className="text-2xl sm:text-3xl text-foreground font-bold">
+                    {correctDisplay}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
             {currentItem.options?.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => handleOptionSelect(opt)}
                 disabled={feedback !== null}
                 className={`
-                  p-4 rounded-xl font-medium text-center transition-all cursor-pointer
+                  p-5 rounded-2xl font-semibold text-lg sm:text-xl text-center transition-all cursor-pointer shadow-sm
                   ${
                     selectedOption === opt
                       ? feedback === "correct"
-                        ? "bg-emerald/20 border border-emerald/50 text-emerald"
-                        : "bg-rose/20 border border-rose/50 text-rose"
-                      : "bg-surface border border-border hover:bg-surface-hover hover:scale-[1.02] active:scale-[0.98]"
+                        ? "bg-emerald/20 border-2 border-emerald/50 text-emerald shadow-emerald/20 scale-[1.02]"
+                        : "bg-rose/20 border-2 border-rose/50 text-rose shadow-rose/20 scale-[0.98]"
+                      : "bg-surface border-2 border-border/50 text-foreground hover:bg-surface-hover hover:border-indigo/30 hover:shadow-md hover:-translate-y-1"
                   }
-                  ${feedback && selectedOption !== opt && opt === correctDisplay ? "bg-emerald/20 border border-emerald/50 text-emerald" : ""}
+                  ${feedback && selectedOption !== opt && opt === correctDisplay ? "bg-emerald/20 border-2 border-emerald/50 text-emerald shadow-emerald/20 scale-[1.02] animate-pulse" : ""}
+                  ${feedback && selectedOption !== opt && opt !== correctDisplay ? "opacity-50 grayscale" : ""}
                 `}
               >
                 {opt}
@@ -655,90 +670,104 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
       {levelType === "typing" && (
         <div
-          className={`glass-card w-full max-w-sm mx-auto p-8 text-center transition-all duration-300 ${
-            feedback === "correct" ? "correct-glow" : ""
-          } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+          className={`glass-card w-full max-w-md mx-auto p-8 sm:p-12 text-center transition-all duration-500 shadow-2xl relative overflow-hidden ${
+            feedback === "correct" ? "shadow-emerald/20 border-emerald/50" : ""
+          } ${feedback === "incorrect" ? "shadow-rose/20 border-rose/50 animate-shake" : "shadow-indigo/5 border-white/5"}`}
         >
-          <div className="text-xl font-bold mb-6">{card.translation}</div>
+          {feedback === "correct" && <div className="absolute inset-0 bg-emerald/5 animate-fade-in" />}
+          {feedback === "incorrect" && <div className="absolute inset-0 bg-rose/5 animate-fade-in" />}
 
-          <form onSubmit={handleTypingSubmit}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              disabled={feedback !== null}
-              className="w-full text-center text-2xl font-bold px-4 py-3 rounded-xl bg-surface border border-border text-foreground
-                         outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all mb-4"
-              placeholder="Gõ từ tiếng Anh..."
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              disabled={!userInput.trim() || feedback !== null}
-              className="w-full py-3 rounded-xl font-semibold bg-indigo text-white hover:bg-indigo-light transition-all disabled:opacity-50"
-            >
-              Kiểm tra
-            </button>
-          </form>
+          <div className="relative z-10">
+            <div className="text-2xl sm:text-4xl font-extrabold mb-8">{card.translation}</div>
 
-          {showAnswer && feedback === "incorrect" && (
-            <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
-              <span className="text-xs text-rose font-bold uppercase block mb-1">
-                Đáp án đúng:
-              </span>
-              <span className="text-2xl text-foreground font-medium">
-                {card.word}
-              </span>
-            </div>
-          )}
+            <form onSubmit={handleTypingSubmit} className="space-y-4">
+              <input
+                ref={inputRef}
+                type="text"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                disabled={feedback !== null}
+                className={`w-full text-center text-3xl font-bold px-6 py-5 rounded-2xl bg-surface/50 border-2 text-foreground
+                           outline-none transition-all placeholder:text-foreground-muted/30
+                           ${feedback === "correct" ? "border-emerald/50 text-emerald" : feedback === "incorrect" ? "border-rose/50 text-rose" : "border-border/50 focus:border-indigo focus:ring-4 focus:ring-indigo/10"}`}
+                placeholder="Gõ từ tiếng Anh..."
+                autoComplete="off"
+                spellCheck="false"
+              />
+              <button
+                type="submit"
+                disabled={!userInput.trim() || feedback !== null}
+                className="w-full py-4 rounded-2xl font-bold text-lg bg-indigo text-white hover:bg-indigo-light hover:shadow-lg hover:shadow-indigo/20 transition-all disabled:opacity-50 disabled:hover:shadow-none"
+              >
+                Kiểm tra
+              </button>
+            </form>
+
+            {showAnswer && feedback === "incorrect" && (
+              <div className="mt-8 pt-6 border-t border-border/50 animate-fade-in text-left">
+                <span className="text-xs sm:text-sm text-rose font-bold uppercase tracking-wider block mb-2">
+                  Đáp án đúng:
+                </span>
+                <span className="text-3xl sm:text-4xl text-foreground font-bold">
+                  {card.word}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {levelType === "sentence" && (
         <div
-          className={`glass-card w-full max-w-sm mx-auto p-8 text-center transition-all duration-300 ${
-            feedback === "correct" ? "correct-glow" : ""
-          } ${feedback === "incorrect" ? "incorrect-glow animate-shake" : ""}`}
+          className={`glass-card w-full max-w-md mx-auto p-8 sm:p-12 text-center transition-all duration-500 shadow-2xl relative overflow-hidden ${
+            feedback === "correct" ? "shadow-emerald/20 border-emerald/50" : ""
+          } ${feedback === "incorrect" ? "shadow-rose/20 border-rose/50 animate-shake" : "shadow-indigo/5 border-white/5"}`}
         >
-          <div className="text-3xl font-bold mb-2">{card.word}</div>
-          <div className="text-foreground-dim text-sm mb-6">({card.translation})</div>
-          
-          <p className="text-sm text-foreground-muted mb-4">
-            Hãy viết một câu tiếng Anh có chứa từ này.
-          </p>
+          {feedback === "correct" && <div className="absolute inset-0 bg-emerald/5 animate-fade-in" />}
+          {feedback === "incorrect" && <div className="absolute inset-0 bg-rose/5 animate-fade-in" />}
 
-          <form onSubmit={handleSentenceSubmit}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              disabled={feedback !== null}
-              className="w-full text-center text-lg px-4 py-3 rounded-xl bg-surface border border-border text-foreground
-                         outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all mb-4"
-              placeholder="VD: I want to eat an apple."
-              autoComplete="off"
-            />
-            <button
-              type="submit"
-              disabled={!userInput.trim() || feedback !== null}
-              className="w-full py-3 rounded-xl font-semibold bg-rose text-white hover:bg-rose/80 transition-all disabled:opacity-50"
-            >
-              Kiểm tra
-            </button>
-          </form>
+          <div className="relative z-10">
+            <div className="text-3xl sm:text-5xl font-extrabold mb-3 tracking-tight">{card.word}</div>
+            <div className="text-foreground-dim text-base sm:text-lg mb-6 font-medium">({card.translation})</div>
+            
+            <p className="text-sm sm:text-base text-foreground-muted mb-6 bg-surface/50 p-3 rounded-lg border border-border/50">
+              Hãy viết một câu tiếng Anh có chứa từ này.
+            </p>
 
-          {showAnswer && feedback === "incorrect" && (
-            <div className="mt-6 pt-4 border-t border-border/50 animate-fade-in text-left">
-              <span className="text-xs text-rose font-bold uppercase block mb-2">
-                Gợi ý:
-              </span>
-              <span className="text-sm text-foreground-muted">
-                Câu của bạn cần chứa chính xác từ <strong className="text-foreground">{card.word}</strong>.
-              </span>
-            </div>
-          )}
+            <form onSubmit={handleSentenceSubmit} className="space-y-4">
+              <textarea
+                ref={inputRef as any}
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                disabled={feedback !== null}
+                rows={3}
+                className={`w-full text-center text-lg sm:text-xl font-medium px-5 py-4 rounded-2xl bg-surface/50 border-2 text-foreground
+                           outline-none transition-all placeholder:text-foreground-muted/30 resize-none
+                           ${feedback === "correct" ? "border-emerald/50 text-emerald" : feedback === "incorrect" ? "border-rose/50 text-rose" : "border-border/50 focus:border-indigo focus:ring-4 focus:ring-indigo/10"}`}
+                placeholder="VD: I want to eat an apple."
+                autoComplete="off"
+                spellCheck="false"
+              />
+              <button
+                type="submit"
+                disabled={!userInput.trim() || feedback !== null}
+                className="w-full py-4 rounded-2xl font-bold text-lg bg-rose text-white hover:bg-rose/80 hover:shadow-lg hover:shadow-rose/20 transition-all disabled:opacity-50 disabled:hover:shadow-none"
+              >
+                Kiểm tra
+              </button>
+            </form>
+
+            {showAnswer && feedback === "incorrect" && (
+              <div className="mt-8 pt-6 border-t border-border/50 animate-fade-in text-left">
+                <span className="text-xs sm:text-sm text-rose font-bold uppercase tracking-wider block mb-2">
+                  Gợi ý:
+                </span>
+                <span className="text-base sm:text-lg text-foreground-muted">
+                  Câu của bạn cần chứa chính xác từ <strong className="text-foreground font-bold">{card.word}</strong>.
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

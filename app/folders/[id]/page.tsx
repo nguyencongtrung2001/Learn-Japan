@@ -132,45 +132,54 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-12">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-12">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10 sm:mb-12 relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo/10 blur-[80px] rounded-full pointer-events-none -z-10" />
         <button
           onClick={() => router.back()}
-          className="text-foreground-muted hover:text-indigo-light text-sm transition-colors inline-flex items-center gap-1 mb-4 cursor-pointer"
+          className="text-foreground-muted hover:text-indigo-light text-sm font-semibold transition-colors inline-flex items-center gap-2 mb-6 cursor-pointer bg-surface/50 px-4 py-2 rounded-full border border-border/50 hover:border-indigo/30"
         >
           ← Quay lại
         </button>
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">
-              <span className="mr-2">📂</span>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex-1">
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3">
+              <span className="mr-3">📂</span>
               <span className="gradient-text">{folder.name}</span>
             </h1>
             {folder.description && (
-              <p className="text-foreground-muted text-sm mt-1">{folder.description}</p>
+              <p className="text-foreground-muted text-base sm:text-lg mb-4 max-w-2xl">{folder.description}</p>
             )}
-            <p className="text-foreground-dim text-xs mt-2">
-              {cardsList.length} thẻ · {newCards.length} chưa học · {dueCards.length} cần ôn
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="bg-surface border border-border/50 px-4 py-1.5 rounded-full text-sm font-medium text-foreground-dim shadow-sm">
+                📚 {cardsList.length} thẻ
+              </span>
+              <span className="bg-emerald/10 border border-emerald/20 px-4 py-1.5 rounded-full text-sm font-bold text-emerald shadow-sm">
+                🌱 {newCards.length} chưa học
+              </span>
+              <span className="bg-sakura/10 border border-sakura/20 px-4 py-1.5 rounded-full text-sm font-bold text-sakura-light shadow-sm">
+                💧 {dueCards.length} cần ôn
+              </span>
+            </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-3 flex-wrap sm:flex-nowrap">
             {newCards.length > 0 && cardsList.length >= 4 && (
               <Link
                 href={`/folders/${folderId}/quiz`}
-                className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-emerald to-teal-500 text-white font-semibold
-                           hover:shadow-xl hover:shadow-emerald/20 hover:scale-105 transition-all duration-300 text-sm"
+                className="flex-1 sm:flex-none text-center btn-shine px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald to-teal-500 text-white font-bold text-lg
+                           hover:shadow-xl hover:shadow-emerald/30 hover:scale-105 active:scale-95 transition-all duration-300"
               >
-                🌱 Học mới ({Math.min(newCards.length, 5)})
+                🌱 Học Mới ({Math.min(newCards.length, 5)})
               </Link>
             )}
             {dueCards.length > 0 && (
               <Link
                 href={`/folders/${folderId}/quiz`}
-                className="btn-shine px-4 py-2 rounded-xl bg-gradient-to-r from-sakura to-indigo text-white font-semibold
-                           hover:shadow-xl hover:shadow-sakura/20 hover:scale-105 transition-all duration-300 text-sm"
+                className="flex-1 sm:flex-none text-center btn-shine px-8 py-4 rounded-2xl bg-gradient-to-r from-sakura to-indigo text-white font-bold text-lg
+                           hover:shadow-xl hover:shadow-sakura/30 hover:scale-105 active:scale-95 transition-all duration-300"
               >
-                💧 Ôn tập ({dueCards.length})
+                💧 Ôn Tập ({dueCards.length})
               </Link>
             )}
           </div>
@@ -178,15 +187,15 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-3 mb-8 flex-wrap">
+      <div className="flex justify-start gap-3 mb-10 flex-wrap">
         <button
           onClick={() => {
             setShowCardForm(!showCardForm);
           }}
-          className="px-5 py-2.5 rounded-xl border border-border text-foreground-muted font-medium
-                     hover:bg-surface-hover hover:text-foreground transition-all duration-200 cursor-pointer text-sm"
+          className="px-6 py-3 rounded-xl border-2 border-indigo/20 bg-indigo/5 text-indigo-light font-bold
+                     hover:bg-indigo hover:border-indigo hover:text-white hover:shadow-lg transition-all duration-300 cursor-pointer shadow-sm"
         >
-          {showCardForm ? "✕ Đóng form" : "＋ Thêm thẻ từ vựng"}
+          {showCardForm ? "✕ Đóng Form" : "＋ Thêm Thẻ Mới"}
         </button>
         <BulkImport onImport={handleExcelImport} />
       </div>
@@ -195,81 +204,84 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
       {showCardForm && (
         <form
           onSubmit={handleCreateCard}
-          className="glass-card p-6 max-w-2xl mx-auto mb-8 animate-fade-in"
+          className="glass-card p-8 sm:p-10 max-w-3xl mx-auto mb-12 animate-fade-in shadow-2xl relative overflow-hidden"
         >
-          <h3 className="font-bold text-lg mb-4 text-center gradient-text">Thêm thẻ từ vựng</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-foreground-muted mb-1">Từ vựng <span className="text-rose">*</span></label>
-              <input type="text" value={word} onChange={(e) => setWord(e.target.value)} placeholder="apple" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all font-bold text-lg" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo to-sakura opacity-50" />
+          <h3 className="font-extrabold text-2xl mb-8 text-center gradient-text">Thêm Thẻ Từ Vựng</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">Từ vựng <span className="text-rose">*</span></label>
+              <input type="text" value={word} onChange={(e) => setWord(e.target.value)} placeholder="VD: apple" required className="w-full px-5 py-4 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all font-bold text-xl placeholder:font-normal placeholder:text-foreground-muted/40" />
             </div>
             <div>
-              <label className="block text-xs text-foreground-muted mb-1">Nghĩa tiếng Việt <span className="text-rose">*</span></label>
-              <input type="text" value={translation} onChange={(e) => setTranslation(e.target.value)} placeholder="Quả táo" required className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
+              <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">Nghĩa tiếng Việt <span className="text-rose">*</span></label>
+              <input type="text" value={translation} onChange={(e) => setTranslation(e.target.value)} placeholder="Quả táo" required className="w-full px-5 py-3.5 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all font-medium placeholder:text-foreground-muted/40" />
             </div>
             <div>
-              <label className="block text-xs text-foreground-muted mb-1">Phiên âm IPA</label>
-              <input type="text" value={phonetic} onChange={(e) => setPhonetic(e.target.value)} placeholder="/ˈæp.əl/" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-indigo-light" />
+              <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">Phiên âm IPA</label>
+              <input type="text" value={phonetic} onChange={(e) => setPhonetic(e.target.value)} placeholder="/ˈæp.əl/" className="w-full px-5 py-3.5 rounded-2xl bg-surface/50 border-2 border-border/50 text-indigo-light outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all font-medium placeholder:text-foreground-muted/40" />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-foreground-muted mb-1">Định nghĩa tiếng Anh (tùy chọn)</label>
-              <input type="text" value={definition} onChange={(e) => setDefinition(e.target.value)} placeholder="A round fruit with red or green skin" className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">Định nghĩa tiếng Anh (tùy chọn)</label>
+              <textarea value={definition} onChange={(e) => setDefinition(e.target.value)} placeholder="A round fruit with red or green skin..." rows={2} className="w-full px-5 py-3.5 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all resize-none placeholder:text-foreground-muted/40" />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-foreground-muted mb-1">Ví dụ (tùy chọn)</label>
-              <input type="text" value={example} onChange={(e) => setExample(e.target.value)} placeholder="I ate an apple." className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all" />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs text-foreground-muted mb-1">Link hình ảnh (tùy chọn)</label>
-              <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-foreground outline-none focus:border-indigo focus:ring-1 focus:ring-indigo/20 transition-all text-sm" />
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">Ví dụ (tùy chọn)</label>
+              <textarea value={example} onChange={(e) => setExample(e.target.value)} placeholder="I ate an apple." rows={2} className="w-full px-5 py-3.5 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all resize-none placeholder:text-foreground-muted/40" />
             </div>
           </div>
-          <button type="submit" disabled={isSubmitting || !word.trim() || !translation.trim()} className="w-full mt-4 py-3 rounded-xl font-semibold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] transition-all disabled:opacity-50">
-            {isSubmitting ? "Đang lưu..." : "💾 Lưu thẻ"}
+          <button type="submit" disabled={isSubmitting || !word.trim() || !translation.trim()} className="w-full mt-8 py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-sakura to-indigo text-white hover:shadow-lg hover:shadow-indigo/30 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-50 disabled:hover:transform-none disabled:hover:shadow-none">
+            {isSubmitting ? "⏳ Đang lưu..." : "💾 Lưu Thẻ"}
           </button>
         </form>
       )}
 
       {/* Cards list */}
-      <div className="mb-4">
-        <h2 className="text-xl font-bold mb-4 gradient-text">🃏 Thẻ từ vựng</h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-2xl font-extrabold gradient-text">🃏 Danh Sách Thẻ</h2>
+        <span className="text-sm font-semibold text-foreground-muted bg-surface px-3 py-1 rounded-full border border-border/50">{cardsList.length} Thẻ</span>
       </div>
       
       {cardsList.length === 0 ? (
-        <div className="text-center py-16 glass-card max-w-md mx-auto">
-          <div className="text-5xl mb-4">🃏</div>
-          <p className="text-foreground-muted">Chưa có thẻ nào trong thư mục này</p>
+        <div className="text-center py-20 glass-card max-w-lg mx-auto border-dashed border-2 border-border/50">
+          <div className="text-6xl mb-6">📭</div>
+          <p className="text-lg font-bold text-foreground mb-2">Thư mục đang trống</p>
+          <p className="text-foreground-muted text-sm">Bấm "Thêm Thẻ Mới" hoặc "Nhập nhanh" để tạo từ vựng.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cardsList.map((card, index) => {
             const isDue = new Date(card.nextReview) <= new Date();
             return (
-              <div key={card.id} className={`glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 animate-fade-in-up group ${isDue ? "border-l-2 border-l-sakura" : ""}`} style={{ animationDelay: `${index * 0.03}s` }}>
-                {card.imageUrl && (
-                  <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-border/50">
-                    <img src={card.imageUrl} alt={card.translation} className="w-full h-full object-cover" />
+              <div key={card.id} className={`glass-card p-5 flex flex-col justify-between gap-4 animate-fade-in-up group hover:shadow-xl transition-all duration-300 border-l-4 ${isDue ? "border-l-sakura bg-sakura/5" : "border-l-indigo/50"}`} style={{ animationDelay: `${index * 0.02}s` }}>
+                
+                <div className="flex gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                      <span className="text-2xl font-extrabold text-foreground tracking-tight">{card.word}</span>
+                      {card.phonetic && <span className="bg-indigo/10 text-indigo-light px-2 py-0.5 rounded text-xs font-bold">{card.phonetic}</span>}
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-lg font-bold text-foreground/90">{card.translation}</span>
+                    </div>
+                    {card.definition && <div className="text-foreground-muted text-sm mb-2 leading-relaxed line-clamp-2">{card.definition}</div>}
+                    {card.example && <div className="bg-surface/50 p-2.5 rounded-lg border border-border/50 text-foreground-dim text-sm italic line-clamp-2 border-l-2 border-l-emerald/50">"{card.example}"</div>}
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-xl font-bold text-foreground">{card.word}</span>
-                    {card.phonetic && <span className="text-indigo-light text-sm">{card.phonetic}</span>}
-                    <span className="text-sm">{growthIcon(card.growthLevel)}</span>
-                  </div>
-                  <div className="mt-1">
-                    <span className="font-medium text-foreground">{card.translation}</span>
-                  </div>
-                  {card.definition && <div className="text-foreground-dim text-sm mt-1">{card.definition}</div>}
-                  {card.example && <div className="text-foreground-dim text-sm mt-1 italic">"{card.example}"</div>}
                 </div>
-                <div className="flex sm:flex-col gap-2 mt-3 sm:mt-0 shrink-0">
-                  <button onClick={() => playAudio(card.word)} className="p-2 rounded-xl bg-surface hover:bg-surface-hover text-indigo-light transition-colors" title="Nghe phát âm">
-                    🔊
-                  </button>
-                  <button onClick={() => handleDeleteCard(card.id)} className="p-2 rounded-xl bg-surface hover:bg-rose/10 text-rose/70 hover:text-rose transition-colors" title="Xóa thẻ">
-                    🗑️
-                  </button>
+
+                <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
+                  <div className="flex items-center gap-2" title="Tiến độ học">
+                    <span className="text-xl">{growthIcon(card.growthLevel)}</span>
+                    <span className="text-xs font-semibold text-foreground-muted">Level {card.growthLevel}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => playAudio(card.word)} className="p-2.5 rounded-xl bg-surface hover:bg-indigo/10 text-indigo-light hover:text-indigo transition-colors shadow-sm" title="Nghe phát âm">
+                      🔊
+                    </button>
+                    <button onClick={() => handleDeleteCard(card.id)} className="p-2.5 rounded-xl bg-surface hover:bg-rose/10 text-rose/70 hover:text-rose transition-colors shadow-sm" title="Xóa thẻ">
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
             );
