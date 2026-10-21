@@ -40,7 +40,7 @@ export default function FoldersPage() {
     if (!name.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined, limit: limit ? parseInt(limit, 10) : undefined });
+      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined, maxCards: limit ? parseInt(limit, 10) : undefined });
       if (res.success) {
         setName("");
         setDescription("");
@@ -191,9 +191,9 @@ export default function FoldersPage() {
                   <span className="text-foreground-dim text-xs font-medium bg-surface inline-block px-3 py-1 rounded-full border border-border/50">
                     🗓️ {new Date(folder.createdAt).toLocaleDateString("vi-VN")}
                   </span>
-                  {folder.limit && (
+                  {folder.maxCards && (
                     <span className="text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1 rounded-full">
-                      📊 Giới hạn: {folder.limit} từ
+                      📊 Giới hạn: {folder.maxCards} từ
                     </span>
                   )}
                 </div>

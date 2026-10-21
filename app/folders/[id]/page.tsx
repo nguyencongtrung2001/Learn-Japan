@@ -54,9 +54,9 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
     e.preventDefault();
     if (!word.trim() || !translation.trim()) return;
 
-    // enforce folder card limit
-    if (folder?.limit && cardsList.length >= folder.limit) {
-      alert(`Đã đạt giới hạn ${folder.limit} từ cho thư mục này.`);
+    // enforce folder card maxCards
+    if (folder?.maxCards && cardsList.length >= folder.maxCards) {
+      alert(`Đã đạt giới hạn ${folder.maxCards} từ cho thư mục này.`);
       return;
     }
 
@@ -163,27 +163,27 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
             )}
 
             {/* Limit progress bar */}
-            {folder.limit && !editMode && (
+            {folder.maxCards && !editMode && (
               <div className="mb-4 max-w-sm">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-foreground-muted uppercase tracking-wide">Giới hạn từ vựng</span>
-                  <span className={`text-xs font-extrabold ${cardsList.length >= folder.limit ? 'text-rose' : 'text-emerald'}`}>
-                    {cardsList.length} / {folder.limit}
+                  <span className={`text-xs font-extrabold ${cardsList.length >= folder.maxCards ? 'text-rose' : 'text-emerald'}`}>
+                    {cardsList.length} / {folder.maxCards}
                   </span>
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-surface border border-border/50 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ease-out ${
-                      cardsList.length >= folder.limit
+                      cardsList.length >= folder.maxCards
                         ? 'bg-gradient-to-r from-rose to-red-500'
-                        : cardsList.length >= folder.limit * 0.8
+                        : cardsList.length >= folder.maxCards * 0.8
                           ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                           : 'bg-gradient-to-r from-emerald to-teal-500'
                     }`}
-                    style={{ width: `${Math.min((cardsList.length / folder.limit) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((cardsList.length / folder.maxCards) * 100, 100)}%` }}
                   />
                 </div>
-                {cardsList.length >= folder.limit && (
+                {cardsList.length >= folder.maxCards && (
                   <p className="text-rose text-xs mt-1 font-semibold animate-pulse">⚠️ Đã đạt giới hạn!</p>
                 )}
               </div>
@@ -193,7 +193,7 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
             <button
               onClick={() => {
                 setEditDescription(folder.description ?? '');
-                setEditLimit(folder.limit ? folder.limit.toString() : '');
+                setEditLimit(folder.maxCards ? folder.maxCards.toString() : '');
                 setEditMode(!editMode);
               }}
               className={`mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${
@@ -213,7 +213,7 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
                   const res = await updateFolder(folder.id, {
                     name: folder.name,
                     description: editDescription.trim() || undefined,
-                    limit: editLimit ? parseInt(editLimit, 10) : undefined,
+                    maxCards: editLimit ? parseInt(editLimit, 10) : undefined,
                   });
                   if (res) {
                     loadData();

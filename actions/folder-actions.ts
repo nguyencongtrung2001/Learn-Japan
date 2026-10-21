@@ -26,7 +26,7 @@ export async function getFolderById(id: number): Promise<Folder | undefined> {
 }
 
 // ─── Create folder ──────────────────────────────────────────────
-export async function createFolder(data: { name: string; description?: string; limit?: number }): Promise<{ success: boolean; data?: Folder; error?: string }> {
+export async function createFolder(data: { name: string; description?: string; maxCards?: number }): Promise<{ success: boolean; data?: Folder; error?: string }> {
   try {
     if (!process.env.DATABASE_URL) {
       return { success: false, error: "Thiếu biến môi trường DATABASE_URL!" };
@@ -36,7 +36,7 @@ export async function createFolder(data: { name: string; description?: string; l
       .values({
         name: data.name,
         description: data.description || null,
-        limit: data.limit ?? null,
+        maxCards: data.maxCards ?? null,
       })
       .returning();
 
@@ -49,13 +49,13 @@ export async function createFolder(data: { name: string; description?: string; l
 }
 
 // ─── Update folder ──────────────────────────────────────────────
-export async function updateFolder(id: number, data: { name: string; description?: string; limit?: number }) {
+export async function updateFolder(id: number, data: { name: string; description?: string; maxCards?: number }) {
   const result = await db
     .update(folders)
     .set({
       name: data.name,
       description: data.description || null,
-      limit: data.limit ?? null,
+      maxCards: data.maxCards ?? null,
     })
     .where(eq(folders.id, id))
     .returning();
