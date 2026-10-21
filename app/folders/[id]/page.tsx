@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getFolderById } from "@/actions/folder-actions";
+import { getFolderById, updateFolder } from "@/actions/folder-actions";
 import { getCardsByFolder, createCard, deleteCard } from "@/actions/card-actions";
 import type { Folder, Card } from "@/db/schema";
 import BulkImport from "@/components/bulk-import";
@@ -19,6 +19,10 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
   const [showCardForm, setShowCardForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // edit mode for folder metadata
+  const [editMode, setEditMode] = useState(false);
+  const [editDescription, setEditDescription] = useState<string>('');
+  const [editLimit, setEditLimit] = useState<string>('');
 
   // Card Form fields
   const [word, setWord] = useState("");
@@ -49,6 +53,12 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
   const handleCreateCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!word.trim() || !translation.trim()) return;
+
+    // enforce folder card limit
+    if (folder?.limit && cardsList.length >= folder.limit) {
+      alert(`Đã đạt giới hạn ${folder.limit} từ cho thư mục này.`);
+      return;
+    }
 
     setIsSubmitting(true);
     await createCard({
@@ -148,9 +158,129 @@ export default function FolderDetailPage({ params }: { params: Promise<{ id: str
               <span className="mr-3">📂</span>
               <span className="gradient-text">{folder.name}</span>
             </h1>
-            {folder.description && (
-              <p className="text-foreground-muted text-base sm:text-lg mb-4 max-w-2xl">{folder.description}</p>
+            {folder.description && !editMode && (
+              <p className="text-foreground-muted text-base sm:text-lg mb-2 max-w-2xl leading-relaxed">{folder.description}</p>
             )}
+
+            {/* Limit progress bar */}
+            {folder.limit && !editMode && (
+              <div className="mb-4 max-w-sm">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-foreground-muted uppercase tracking-wide">Giới hạn từ vựng</span>
+                  <span className={`text-xs font-extrabold ${cardsList.length >= folder.limit ? 'text-rose' : 'text-emerald'}`}>
+                    {cardsList.length} / {folder.limit}
+                  </span>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-surface border border-border/50 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ease-out ${
+                      cardsList.length >= folder.limit
+                        ? 'bg-gradient-to-r from-rose to-red-500'
+                        : cardsList.length >= folder.limit * 0.8
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                          : 'bg-gradient-to-r from-emerald to-teal-500'
+                    }`}
+                    style={{ width: `${Math.min((cardsList.length / folder.limit) * 100, 100)}%` }}
+                  />
+                </div>
+                {cardsList.length >= folder.limit && (
+                  <p className="text-rose text-xs mt-1 font-semibold animate-pulse">⚠️ Đã đạt giới hạn!</p>
+                )}
+              </div>
+            )}
+
+            {/* Edit toggle button */}
+            <button
+              onClick={() => {
+                setEditDescription(folder.description ?? '');
+                setEditLimit(folder.limit ? folder.limit.toString() : '');
+                setEditMode(!editMode);
+              }}
+              className={`mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${
+                editMode
+                  ? 'bg-rose/10 text-rose border border-rose/20 hover:bg-rose/20'
+                  : 'bg-indigo/10 text-indigo-light border border-indigo/20 hover:bg-indigo/20'
+              }`}
+            >
+              {editMode ? '❌ Hủy chỉnh sửa' : '✏️ Chỉnh sửa Thư Mục'}
+            </button>
+
+            {/* Edit form panel */}
+            {editMode && (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const res = await updateFolder(folder.id, {
+                    name: folder.name,
+                    description: editDescription.trim() || undefined,
+                    limit: editLimit ? parseInt(editLimit, 10) : undefined,
+                  });
+                  if (res) {
+                    loadData();
+                    setEditMode(false);
+                  } else {
+                    alert('Cập nhật thất bại');
+                  }
+                }}
+                className="glass-card p-6 sm:p-8 mb-6 space-y-5 animate-fade-in shadow-xl relative overflow-hidden max-w-xl"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo to-sakura opacity-60" />
+                <h3 className="text-lg font-extrabold gradient-text flex items-center gap-2">
+                  ⚙️ Cài đặt Thư Mục
+                </h3>
+                <div>
+                  <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">
+                    Mô tả (tùy chọn)
+                  </label>
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Mô tả nội dung thư mục..."
+                    rows={3}
+                    className="w-full px-5 py-4 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground font-medium
+                               outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all placeholder:text-foreground-muted/40 resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-foreground-muted mb-2 uppercase tracking-wide">
+                    Giới hạn số từ (tùy chọn)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      value={editLimit}
+                      onChange={(e) => setEditLimit(e.target.value)}
+                      placeholder="VD: 50 — để trống = không giới hạn"
+                      className="w-full px-5 py-4 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground font-medium
+                                 outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all placeholder:text-foreground-muted/40"
+                    />
+                  </div>
+                  <p className="text-foreground-dim text-xs mt-2">
+                    💡 Hiện tại: {cardsList.length} từ. {editLimit ? `Giới hạn mới: ${editLimit} từ.` : 'Không giới hạn.'}
+                  </p>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-emerald to-teal-500 text-white
+                               hover:shadow-lg hover:shadow-emerald/30 hover:-translate-y-0.5 active:translate-y-0
+                               transition-all duration-300 cursor-pointer"
+                  >
+                    ✅ Lưu Thay Đổi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditMode(false)}
+                    className="px-6 py-3 rounded-xl font-bold bg-surface border border-border/50 text-foreground-muted
+                               hover:bg-rose/10 hover:text-rose hover:border-rose/20 transition-all duration-300 cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </form>
+            )}
+
             <div className="flex flex-wrap items-center gap-3">
               <span className="bg-surface border border-border/50 px-4 py-1.5 rounded-full text-sm font-medium text-foreground-dim shadow-sm">
                 📚 {cardsList.length} thẻ

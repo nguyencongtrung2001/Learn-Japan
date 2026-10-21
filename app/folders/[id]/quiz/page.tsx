@@ -51,6 +51,29 @@ function getGrowthIcon(level: number): string {
   return icons[Math.min(level, 6)];
 }
 
+function checkAnswerMatch(input: string, target: string): boolean {
+  if (!input || !target) return false;
+  const normalize = (t: string) =>
+    t
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // loại bỏ dấu tiếng Việt
+      .replace(/[.,?!\-]/g, "") // loại bỏ dấu câu
+      .trim()
+      .replace(/\s+/g, " ");
+      
+  const normInput = normalize(input);
+  const normTarget = normalize(target);
+  
+  if (normInput === normTarget) return true;
+  
+  // Kiểm tra sát nghĩa (chứa một phần đáng kể)
+  if (normTarget.includes(normInput) && normInput.length >= Math.max(2, normTarget.length * 0.5)) return true;
+  if (normInput.includes(normTarget) && normTarget.length >= Math.max(2, normInput.length * 0.5)) return true;
+  
+  return false;
+}
+
 export default function QuizPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -323,10 +346,16 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     if (e) e.preventDefault();
     if (!userInput.trim() || feedback || !currentItem) return;
     const card = currentItem.word.card;
-    const answer = userInput.trim().toLowerCase();
 
-    if (answer === (card.word || "").toLowerCase()) handleCorrect();
-    else handleIncorrect();
+    // Chấp nhận nếu gõ đúng từ tiếng Anh HOẶC sát nghĩa tiếng Việt
+    const isEnglishCorrect = checkAnswerMatch(userInput, card.word || "");
+    const isVietnameseCorrect = checkAnswerMatch(userInput, card.translation || "");
+
+    if (isEnglishCorrect || isVietnameseCorrect) {
+      handleCorrect();
+    } else {
+      handleIncorrect();
+    }
   };
 
   const handleFlashcardNext = () => handleCorrect();
@@ -335,11 +364,17 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
     if (e) e.preventDefault();
     if (!userInput.trim() || feedback || !currentItem) return;
     const card = currentItem.word.card;
-    const answer = userInput.trim().toLowerCase();
     
-    const wordTarget = (card.word || "").toLowerCase();
-    if (wordTarget && answer.includes(wordTarget)) handleCorrect();
-    else handleIncorrect();
+    const normalize = (t: string) => t.toLowerCase().replace(/[.,?!\-]/g, "").trim().replace(/\s+/g, " ");
+    
+    const normInput = normalize(userInput);
+    const normWordTarget = normalize(card.word || "");
+    
+    if (normWordTarget && normInput.includes(normWordTarget)) {
+      handleCorrect();
+    } else {
+      handleIncorrect();
+    }
   };
 
   // ════════════════════════════════════════════════════════════════
@@ -690,7 +725,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
                 className={`w-full text-center text-3xl font-bold px-6 py-5 rounded-2xl bg-surface/50 border-2 text-foreground
                            outline-none transition-all placeholder:text-foreground-muted/30
                            ${feedback === "correct" ? "border-emerald/50 text-emerald" : feedback === "incorrect" ? "border-rose/50 text-rose" : "border-border/50 focus:border-indigo focus:ring-4 focus:ring-indigo/10"}`}
-                placeholder="Gõ từ tiếng Anh..."
+                placeholder="Gõ đáp án của bạn..."
                 autoComplete="off"
                 spellCheck="false"
               />

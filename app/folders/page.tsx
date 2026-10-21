@@ -10,6 +10,7 @@ export default function FoldersPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [limit, setLimit] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,10 +40,11 @@ export default function FoldersPage() {
     if (!name.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined });
+      const res = await createFolder({ name: name.trim(), description: description.trim() || undefined, limit: limit ? parseInt(limit, 10) : undefined });
       if (res.success) {
         setName("");
         setDescription("");
+        setLimit("");
         setShowForm(false);
         loadFolders();
       } else {
@@ -113,11 +115,25 @@ export default function FoldersPage() {
             <label className="block text-sm font-semibold text-foreground-muted mb-2 uppercase tracking-wide">
               Mô tả (tùy chọn)
             </label>
-            <input
-              type="text"
+            <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="VD: 50 từ vựng cơ bản"
+              placeholder="VD: Từ vựng chủ đề gia đình, giao tiếp cơ bản..."
+              rows={2}
+              className="w-full px-5 py-4 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground font-medium
+                         outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all placeholder:text-foreground-muted/40 resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-foreground-muted mb-2 uppercase tracking-wide">
+              Giới hạn số từ (tùy chọn)
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              placeholder="VD: 50"
               className="w-full px-5 py-4 rounded-2xl bg-surface/50 border-2 border-border/50 text-foreground font-medium
                          outline-none focus:border-indigo focus:ring-4 focus:ring-indigo/10 transition-all placeholder:text-foreground-muted/40"
             />
@@ -171,9 +187,16 @@ export default function FoldersPage() {
                     )}
                   </div>
                 </div>
-                <p className="text-foreground-dim text-xs font-medium mt-4 bg-surface inline-block px-3 py-1 rounded-full border border-border/50">
-                  🗓️ {new Date(folder.createdAt).toLocaleDateString("vi-VN")}
-                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-4">
+                  <span className="text-foreground-dim text-xs font-medium bg-surface inline-block px-3 py-1 rounded-full border border-border/50">
+                    🗓️ {new Date(folder.createdAt).toLocaleDateString("vi-VN")}
+                  </span>
+                  {folder.limit && (
+                    <span className="text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1 rounded-full">
+                      📊 Giới hạn: {folder.limit} từ
+                    </span>
+                  )}
+                </div>
               </Link>
               <div className="flex gap-3 pt-4 border-t border-border/50 relative z-10">
                 <Link

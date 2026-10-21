@@ -13,6 +13,7 @@ export const folders = pgTable("folders", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  limit: integer("limit"), // optional max number of cards, null = unlimited
   language: text("language").default("english").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
