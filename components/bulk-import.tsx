@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import type { CardInput } from "@/lib/card-utils";
 
 export interface BulkImportProps {
-  onImport: (rows: { word: string; translation: string; definition?: string; example?: string; phonetic?: string; imageUrl?: string }[]) => Promise<void>;
+  /** Trả về số thẻ thực sự được tạo (có thể ít hơn số dòng nếu vượt giới hạn thư mục). */
+  onImport: (rows: CardInput[]) => Promise<number | void>;
 }
 
 export default function BulkImport({ onImport }: BulkImportProps) {
@@ -17,10 +19,10 @@ export default function BulkImport({ onImport }: BulkImportProps) {
 
     try {
       const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-      const importedCards: any[] = [];
+      const importedCards: CardInput[] = [];
 
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
+        const line = lines[i];
 
         // Bỏ qua dòng format markdown table header dạng |---|---|
         if (line.match(/^\|?[-:]+\|/)) continue;
@@ -73,8 +75,13 @@ export default function BulkImport({ onImport }: BulkImportProps) {
       }
 
       if (importedCards.length > 0) {
-        await onImport(importedCards);
-        alert(`Đã nhập nhanh thành công ${importedCards.length} thẻ!`);
+        const created = await onImport(importedCards);
+        const createdCount = typeof created === "number" ? created : importedCards.length;
+        const skipped = importedCards.length - createdCount;
+        alert(
+          `Đã nhập nhanh thành công ${createdCount} thẻ!` +
+            (skipped > 0 ? ` (${skipped} thẻ bị bỏ qua do đã đạt giới hạn thư mục)` : "")
+        );
         setText("");
         setIsOpen(false);
       } else {
