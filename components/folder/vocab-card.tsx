@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { growthIcon } from "@/lib/growth";
 import type { CardListItem } from "@/lib/card-utils";
 
@@ -16,8 +16,12 @@ interface VocabCardProps {
  *   nên thẻ ngoài màn hình không tốn chi phí layout/paint.
  */
 function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   return (
-    <article className={isDue ? "vocab-card vocab-card--due" : "vocab-card"}>
+    <article
+      className={`${isDue ? "vocab-card vocab-card--due" : "vocab-card"} border border-gray-200 rounded-lg p-4 min-h-[80px] transition-transform duration-200 ${isExpanded ? "scale-200" : ""} cursor-pointer hover:shadow-lg origin-center`}
+      onClick={() => setIsExpanded(prev => !prev)}
+    >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h3
@@ -41,12 +45,12 @@ function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
         {card.translation}
       </p>
 
-      {card.definition && (
+      {isExpanded && card.definition && (
         <p className="line-clamp-1 text-xs leading-snug text-foreground-muted" title={card.definition}>
           {card.definition}
         </p>
       )}
-      {card.example && (
+      {isExpanded && card.example && (
         <p
           className="line-clamp-1 border-l-2 border-emerald/50 pl-2 text-xs italic leading-snug text-foreground-dim"
           title={card.example}
@@ -60,7 +64,7 @@ function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
         <div className="flex gap-1">
           <button
             type="button"
-            onClick={() => onPlay(card.word)}
+            onClick={(e) => { e.stopPropagation(); onPlay(card.word); }}
             className="cursor-pointer rounded-lg bg-surface-hover/60 px-2 py-1 text-sm text-indigo-light transition-colors hover:bg-indigo/15"
             aria-label={`Nghe phát âm ${card.word}`}
             title="Nghe phát âm"
@@ -69,7 +73,7 @@ function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
           </button>
           <button
             type="button"
-            onClick={() => onDelete(card.id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(card.id); }}
             className="cursor-pointer rounded-lg bg-surface-hover/60 px-2 py-1 text-sm text-rose/70 transition-colors hover:bg-rose/10 hover:text-rose"
             aria-label={`Xóa thẻ ${card.word}`}
             title="Xóa thẻ"
