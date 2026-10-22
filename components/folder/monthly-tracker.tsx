@@ -1,31 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  getDay,
+  isSameDay,
+} from "date-fns";
 
-interface MonthlyTrackerProps {
-  folderId: number;
-}
+const STORAGE_KEY = "studyStreak_global";
 
-export function MonthlyTracker({ folderId }: MonthlyTrackerProps) {
-  const storageKey = `studyStreak_${folderId}`;
-
-
-  const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set<string>());
+export function MonthlyTracker() {
+  const [selectedDates, setSelectedDates] = useState<Set<string>>(
+    new Set<string>()
+  );
 
   // Load from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
         const arr: string[] = JSON.parse(stored);
-        setSelectedDates(new Set(arr));
+        setSelectedDates(new Set<string>(arr));
       } catch (_) {}
     }
-  }, [storageKey]);
+  }, []);
 
   const save = (set: Set<string>) => {
-    localStorage.setItem(storageKey, JSON.stringify(Array.from(set)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)));
   };
 
   const today = new Date();
@@ -42,11 +46,13 @@ export function MonthlyTracker({ folderId }: MonthlyTrackerProps) {
     save(newSet);
   };
 
+  // Count streak
+  const streakCount = selectedDates.size;
+
   // Build weeks rows
-  const weeks: Date[][] = [];
-  let week: Date[] = [];
-  // Pad first week with nulls for days before month start
-  for (let i = 0; i < getDay(monthStart); i++) week.push(null as any);
+  const weeks: (Date | null)[][] = [];
+  let week: (Date | null)[] = [];
+  for (let i = 0; i < getDay(monthStart); i++) week.push(null);
   days.forEach((d) => {
     week.push(d);
     if (week.length === 7) {
@@ -55,38 +61,93 @@ export function MonthlyTracker({ folderId }: MonthlyTrackerProps) {
     }
   });
   if (week.length) {
-    // Pad end of last week
-    while (week.length < 7) week.push(null as any);
+    while (week.length < 7) week.push(null);
     weeks.push(week);
   }
 
   return (
-    <div className="mt-6">
-      <h2 className="text-lg font-bold mb-2">📅 Theo dõi học tháng {format(today, "MMMM yyyy")}</h2>
-      <div className="grid grid-cols-7 gap-1 text-center text-sm">
-        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
-          <div key={d} className="font-medium text-foreground-muted">{d}</div>
-        ))}
-        {weeks.map((w, wi) =>
-          w.map((d, di) => {
-            if (!d) return <div key={`empty-${wi}-${di}`} />;
-            const key = format(d, "yyyy-MM-dd");
-            const isToday = isSameDay(d, today);
-            const selected = selectedDates.has(key);
-            const bg = selected ? "bg-emerald-500" : isToday ? "bg-amber-200" : "bg-surface";
-            const text = selected ? "text-white" : "text-foreground";
-            return (
-              <button
-                key={key}
-                onClick={() => toggleDate(d)}
-                className={`p-2 rounded ${bg} ${text} hover:opacity-80 transition-colors`}
-                title={format(d, "PPP")}
-              >
-                {d.getDate()}
-              </button>
-            );
-          })
-        )}
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="card p-5 text-center">
+          <p className="text-3xl font-bold gradient-text">{streakCount}</p>
+          <p className="text-sm text-foreground-muted mt-1">
+            Ngày đã học tháng này
+          </p>
+        </div>
+        <div className="card p-5 text-center">
+          <p className="text-3xl font-bold gradient-text">
+            {days.length - streakCount}
+          </p>
+          <p className="text-sm text-foreground-muted mt-1">Ngày còn lại</p>
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="card p-5">
+        <h2 className="text-lg font-bold mb-4">
+          📅 Tháng {format(today, "MMMM yyyy")}
+        </h2>
+        <div className="grid grid-cols-7 gap-1.5 text-center text-sm">
+          {["CN", "T2", "T3", "T4", "T5", "T6", "T7"].map((d) => (
+            <div
+              key={d}
+              className="font-semibold text-foreground-muted py-1.5"
+            >
+              {d}
+            </div>
+          ))}
+          {weeks.map((w, wi) =>
+            w.map((d, di) => {
+              if (!d)
+                return (
+                  <div
+                    key={`empty-${wi}-${di}`}
+                    className="aspect-square"
+                  />
+                );
+              const key = format(d, "yyyy-MM-dd");
+              const isToday = isSameDay(d, today);
+              const selected = selectedDates.has(key);
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggleDate(d)}
+                  className={`
+                    aspect-square flex items-center justify-center rounded-lg text-sm font-medium
+                    transition-all duration-200 cursor-pointer
+                    ${
+                      selected
+                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-105"
+                        : isToday
+                          ? "bg-indigo/20 text-indigo-light ring-2 ring-indigo/40"
+                          : "bg-surface hover:bg-surface-hover text-foreground"
+                    }
+                  `}
+                  title={format(d, "PPP")}
+                >
+                  {d.getDate()}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-6 justify-center text-sm text-foreground-muted">
+        <span className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-emerald-500 inline-block" />
+          Đã học
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-indigo/20 ring-2 ring-indigo/40 inline-block" />
+          Hôm nay
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded bg-surface inline-block border border-border" />
+          Chưa học
+        </span>
       </div>
     </div>
   );

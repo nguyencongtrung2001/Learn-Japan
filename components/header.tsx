@@ -8,6 +8,7 @@ import { useTheme } from "./theme-provider";
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
   { href: "/folders", label: "Bộ thẻ", icon: "📂" },
+  { href: "/tracker", label: "Theo dõi", icon: "📅" },
 ];
 
 export default function Header() {
