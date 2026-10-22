@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { cards, folders, type Card } from "@/db/schema";
-import { eq, desc, lte, and, lt, sql } from "drizzle-orm";
+import { eq, desc, lte, and, lt, sql, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-utils";
 
@@ -264,4 +264,49 @@ export async function updateSRS(cardId: number, isCorrect: boolean) {
       })
       .where(eq(cards.id, cardId));
   }
+}
+
+// ─── Move cards between folders ──────────────────────────────────
+export async function moveCards(
+  sourceFolderId: number,
+  targetFolderId: number,
+  cardIds: number[]
+): Promise<{ success: boolean; movedIds: number[]; error?: string }> {
+  if (cardIds.length === 0) return { success: false, movedIds: [], error: "Không có thẻ nào được chọn." };
+  if (sourceFolderId === targetFolderId) return { success: false, movedIds: [], error: "Thư mục nguồn và đích phải khác nhau." };
+
+  // Check target folder exists & maxCards limit
+  const [targetFolder] = await db
+    .select({ maxCards: folders.maxCards })
+    .from(folders)
+    .where(eq(folders.id, targetFolderId));
+  if (!targetFolder) return { success: false, movedIds: [], error: "Thư mục đích không tồn tại." };
+
+  if (targetFolder.maxCards) {
+    const currentCount = await getCardCount(targetFolderId);
+    if (currentCount + cardIds.length > targetFolder.maxCards) {
+      return {
+        success: false,
+        movedIds: [],
+        error: `Thư mục đích chỉ còn chỗ cho ${Math.max(0, targetFolder.maxCards - currentCount)} thẻ.`,
+      };
+    }
+  }
+
+  // Perform the move
+  await db
+    .update(cards)
+    .set({ folderId: targetFolderId })
+    .where(
+      and(
+        eq(cards.folderId, sourceFolderId),
+        inArray(cards.id, cardIds)
+      )
+    );
+
+  revalidatePath(`/folders/${sourceFolderId}`);
+  revalidatePath(`/folders/${targetFolderId}`);
+  revalidatePath("/folders");
+
+  return { success: true, movedIds: cardIds };
 }

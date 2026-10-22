@@ -16,6 +16,7 @@ import { AddCardForm } from "./add-card-form";
 import { CardsHeader } from "./cards-header";
 import { EmptyCards } from "./empty-cards";
 import { VocabGrid } from "./vocab-grid";
+import { TransferControls } from "./transfer-controls";
 
 interface FolderDetailProps {
   folder: Folder;
@@ -34,24 +35,20 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const [showCardForm, setShowCardForm] = useState(false);
   const [editing, setEditing] = useState(false);
   const [now] = useState(serverNow);
-+  // ---------- Transfer (multi‑select) state ----------
-+  const [selecting, setSelecting] = useState(false);
-+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-+  const toggleSelect = (id: number) => {
-+    setSelectedIds((prev) => {
-+      const next = new Set(prev);
-+      if (next.has(id)) next.delete(id);
-+      else next.add(id);
-+      return next;
-+    });
-+  };
-+  const selectedCards = cards.filter((c) => selectedIds.has(c.id));
-+  // ---------------------------------------------------
-  const [folder, setFolder] = useState(initialFolder);
-  const [cards, setCards] = useState(initialCards);
-  const [showCardForm, setShowCardForm] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [now] = useState(serverNow);
+
+  // ---------- Transfer (multi‑select) state ----------
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const selectedCards = cards.filter((c) => selectedIds.has(c.id));
+  // ---------------------------------------------------
 
   // Ref giữ bản mới nhất để các handler có identity ổn định (không phá React.memo của thẻ).
   const cardsRef = useRef(cards);
@@ -151,30 +148,36 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               dueCount={dueCount}
               editing={editing}
             />
+
             {/* Transfer controls */}
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => setSelecting((v) => !v)}
-                className={`w-full rounded-xl px-4 py-2 text-sm font-bold transition ${selecting ? 'bg-rose/10 text-rose' : 'bg-indigo/10 text-indigo-light'} hover:bg-${selecting ? 'rose' : 'indigo'}/20`}
+                onClick={() => {
+                  setSelecting((v) => !v);
+                  if (selecting) setSelectedIds(new Set());
+                }}
+                className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
+                  selecting
+                    ? "border-rose/20 bg-rose/10 text-rose hover:bg-rose/20"
+                    : "border-indigo/20 bg-indigo/10 text-indigo-light hover:bg-indigo/20"
+                }`}
               >
-                {selecting ? '✖️ Hủy chọn' : '🔀 Chọn để chuyển'}
+                {selecting ? "✖️ Hủy chọn" : "🔀 Chọn để chuyển"}
               </button>
               {selecting && selectedCards.length > 0 && (
                 <TransferControls
                   sourceFolderId={folder.id}
                   selectedCards={selectedCards}
-                  onTransferSuccess={(moved) => {
-                    // Remove moved cards from source state
-+                    const movedIds = new Set(moved.map((c) => c.id));
-+                    commitCards(cards.filter((c) => !movedIds.has(c.id)));
-+                    setSelectedIds(new Set());
-+                    setSelecting(false);
+                  onTransferSuccess={(movedIds: number[]) => {
+                    const movedSet = new Set(movedIds);
+                    commitCards(cardsRef.current.filter((c) => !movedSet.has(c.id)));
+                    setSelectedIds(new Set());
+                    setSelecting(false);
                   }}
                 />
               )}
             </div>
-
 
             <QuizActions folderId={folderId} total={cards.length} newCount={newCount} dueCount={dueCount} />
 
@@ -222,14 +225,14 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             <EmptyCards />
           ) : (
             <VocabGrid
-          cards={cards}
-          now={now}
-          onPlay={playAudio}
-          onDelete={handleDelete}
-          selecting={selecting}
-          selectedIds={selectedIds}
-          toggleSelect={toggleSelect}
-        />
+              cards={cards}
+              now={now}
+              onPlay={playAudio}
+              onDelete={handleDelete}
+              selecting={selecting}
+              selectedIds={selectedIds}
+              toggleSelect={toggleSelect}
+            />
           )}
         </main>
       </div>
