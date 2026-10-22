@@ -9,12 +9,7 @@ interface VocabCardProps {
   onDelete: (id: number) => void;
 }
 
-/**
- * Thẻ từ vựng dạng compact (dùng trong lưới 3 cột).
- * - React.memo: chỉ render lại khi chính thẻ này đổi.
- * - Class `.vocab-card` (globals.css): không dùng backdrop-filter, có content-visibility:auto
- *   nên thẻ ngoài màn hình không tốn chi phí layout/paint.
- */
+
 function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   return (
