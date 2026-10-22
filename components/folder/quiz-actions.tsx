@@ -10,9 +10,9 @@ interface QuizActionsProps {
 export function QuizActions({ folderId, total, newCount, dueCount }: QuizActionsProps) {
   const href = `/folders/${folderId}/quiz`;
   const hasEnough = total >= 4;
-
   return (
     <div className="flex flex-col gap-3">
+
       {/* 🌱 Học Mới */}
       {hasEnough && newCount > 0 ? (
         <Link

@@ -9,6 +9,7 @@ import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-ut
 import type { Folder } from "@/db/schema";
 import BulkImport from "@/components/bulk-import";
 import { FolderInfoCard } from "./folder-info-card";
+import Link from "next/link";
 import { QuizActions } from "./quiz-actions";
 import { FolderEditForm } from "./folder-edit-form";
 import { AddCardForm } from "./add-card-form";
@@ -133,7 +134,9 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               editing={editing}
             />
 
+
             <QuizActions folderId={folderId} total={cards.length} newCount={newCount} dueCount={dueCount} />
+            <Link href={`/folders/${folderId}/tracker`} className="mt-4 inline-block w-full text-center py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium rounded-lg transition-colors">Theo dõi</Link>
 
             <button
               type="button"
