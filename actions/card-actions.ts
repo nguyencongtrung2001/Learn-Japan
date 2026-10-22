@@ -1,9 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { cards, folders, type Card, type NewCard } from "@/db/schema";
+import { cards, folders, type Card } from "@/db/schema";
 import { eq, desc, lte, and, lt, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-utils";
 
 // ─── Memrise Classic SRS Intervals (in hours) ─────────────────────
 const MEMRISE_INTERVALS_HOURS = [
@@ -28,12 +29,30 @@ function getNextReviewDate(consecutiveCorrect: number): Date {
 
 // ─── Get all cards in a folder ───────────────────────────────────
 export async function getCardsByFolder(folderId: number): Promise<Card[]> {
-  const data = await db
+  return db
     .select()
     .from(cards)
     .where(eq(cards.folderId, folderId))
     .orderBy(desc(cards.createdAt));
-  return JSON.parse(JSON.stringify(data));
+}
+
+// ─── Danh sách thẻ "nhẹ" cho trang thư mục (chỉ cột cần hiển thị) ──
+export async function getCardListByFolder(folderId: number): Promise<CardListItem[]> {
+  const rows = await db
+    .select({
+      id: cards.id,
+      word: cards.word,
+      translation: cards.translation,
+      definition: cards.definition,
+      example: cards.example,
+      phonetic: cards.phonetic,
+      growthLevel: cards.growthLevel,
+      nextReview: cards.nextReview,
+    })
+    .from(cards)
+    .where(eq(cards.folderId, folderId))
+    .orderBy(desc(cards.createdAt));
+  return rows.map(toCardListItem);
 }
 
 // ─── Get NEW cards (growthLevel < 6 — chưa nở hoa) ──────────────
@@ -46,7 +65,7 @@ export async function getNewCards(folderId: number, limit: number = 5): Promise<
     .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, maxLevel)))
     .orderBy(cards.createdAt)
     .limit(limit);
-  return JSON.parse(JSON.stringify(data));
+  return data;
 }
 
 // ─── Get REVIEW cards (growthLevel == 6 AND due) ─────────────────
@@ -65,7 +84,7 @@ export async function getReviewCards(folderId: number, limit: number = 15): Prom
     )
     .orderBy(cards.nextReview)
     .limit(limit);
-  return JSON.parse(JSON.stringify(data));
+  return data;
 }
 
 // ─── Get cards due for review (SRS) — legacy compat ──────────────
@@ -102,36 +121,59 @@ export async function getFolderStats(folderId: number): Promise<{
 }
 
 // ─── Create card ─────────────────────────────────────────────────
-export async function createCard(data: {
-  folderId: number;
-  word: string;
-  translation: string;
-  definition?: string;
-  example?: string;
-  phonetic?: string;
-  imageUrl?: string;
-}) {
-  const result = await db
-    .insert(cards)
-    .values({
-      folderId: data.folderId,
-      word: data.word,
-      translation: data.translation,
-      definition: data.definition || null,
-      example: data.example || null,
-      phonetic: data.phonetic || null,
-      imageUrl: data.imageUrl || null,
-      growthLevel: 0,
-      consecutiveCorrect: 0,
-      nextReview: new Date(),
-      interval: 0,
-      easeFactor: 2.5,
-      repetitions: 0,
-    })
-    .returning();
+function toInsertRow(folderId: number, data: CardInput) {
+  return {
+    folderId,
+    word: data.word.trim(),
+    translation: data.translation.trim(),
+    definition: data.definition?.trim() || null,
+    example: data.example?.trim() || null,
+    phonetic: data.phonetic?.trim() || null,
+    imageUrl: data.imageUrl?.trim() || null,
+    // growthLevel, consecutiveCorrect, nextReview, ... dùng default của schema
+  };
+}
 
-  revalidatePath(`/folders/${data.folderId}`);
-  return JSON.parse(JSON.stringify(result[0]));
+export async function createCard(data: CardInput & { folderId: number }): Promise<Card> {
+  const { folderId, ...input } = data;
+  const [row] = await db.insert(cards).values(toInsertRow(folderId, input)).returning();
+  revalidatePath(`/folders/${folderId}`);
+  return row;
+}
+
+// ─── Create nhiều thẻ trong 1 lần (import nhanh) ─────────────────
+// Trước đây import gọi createCard tuần tự → N round-trip + N lần revalidate,
+// và bỏ qua giới hạn maxCards. Giờ: 1 lượt kiểm tra limit + insert theo lô.
+const BULK_CHUNK_SIZE = 200;
+
+export async function createCardsBulk(
+  folderId: number,
+  rows: CardInput[]
+): Promise<{ created: Card[]; skipped: number }> {
+  const valid = rows.filter((r) => r.word?.trim() && r.translation?.trim());
+  if (valid.length === 0) return { created: [], skipped: rows.length };
+
+  const [folder] = await db
+    .select({ maxCards: folders.maxCards })
+    .from(folders)
+    .where(eq(folders.id, folderId));
+  if (!folder) return { created: [], skipped: rows.length };
+
+  let allowed = valid;
+  if (folder.maxCards) {
+    const current = await getCardCount(folderId);
+    allowed = valid.slice(0, Math.max(0, folder.maxCards - current));
+  }
+  if (allowed.length === 0) return { created: [], skipped: rows.length };
+
+  const created: Card[] = [];
+  for (let i = 0; i < allowed.length; i += BULK_CHUNK_SIZE) {
+    const chunk = allowed.slice(i, i + BULK_CHUNK_SIZE).map((r) => toInsertRow(folderId, r));
+    created.push(...(await db.insert(cards).values(chunk).returning()));
+  }
+
+  revalidatePath(`/folders/${folderId}`);
+  return { created, skipped: rows.length - created.length };
 }
 
 // ─── Update card ─────────────────────────────────────────────────
@@ -159,7 +201,7 @@ export async function updateCard(
     .where(eq(cards.id, id))
     .returning();
 
-  return JSON.parse(JSON.stringify(result[0]));
+  return result[0];
 }
 
 // ─── Delete card ─────────────────────────────────────────────────

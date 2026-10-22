@@ -1,9 +1,13 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { folders, type Folder, type NewFolder } from "@/db/schema";
+import { folders, type Folder } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 // ─── Get all folders ─────────────────────────────────────────────
 export async function getFolders(): Promise<{ success: boolean; data?: Folder[]; error?: string }> {
@@ -12,17 +16,17 @@ export async function getFolders(): Promise<{ success: boolean; data?: Folder[];
       return { success: false, error: "Thiếu biến môi trường DATABASE_URL trên Vercel!" };
     }
     const data = await db.select().from(folders).orderBy(desc(folders.createdAt));
-    return { success: true, data: JSON.parse(JSON.stringify(data)) };
-  } catch (error: any) {
+    return { success: true, data };
+  } catch (error) {
     console.error("Error in getFolders:", error);
-    return { success: false, error: error.message || "Lỗi kết nối Database" };
+    return { success: false, error: errorMessage(error, "Lỗi kết nối Database") };
   }
 }
 
 // ─── Get single folder ──────────────────────────────────────────
 export async function getFolderById(id: number): Promise<Folder | undefined> {
   const result = await db.select().from(folders).where(eq(folders.id, id));
-  return result[0] ? JSON.parse(JSON.stringify(result[0])) : undefined;
+  return result[0];
 }
 
 // ─── Create folder ──────────────────────────────────────────────
@@ -41,10 +45,10 @@ export async function createFolder(data: { name: string; description?: string; m
       .returning();
 
     revalidatePath("/folders");
-    return { success: true, data: JSON.parse(JSON.stringify(result[0])) };
-  } catch (error: any) {
+    return { success: true, data: result[0] };
+  } catch (error) {
     console.error("Error creating folder:", error);
-    return { success: false, error: error.message || "Lỗi khi tạo thư mục" };
+    return { success: false, error: errorMessage(error, "Lỗi khi tạo thư mục") };
   }
 }
 
@@ -61,7 +65,8 @@ export async function updateFolder(id: number, data: { name: string; description
     .returning();
 
   revalidatePath("/folders");
-  return JSON.parse(JSON.stringify(result[0]));
+  revalidatePath(`/folders/${id}`);
+  return result[0];
 }
 
 // ─── Delete folder ──────────────────────────────────────────────
