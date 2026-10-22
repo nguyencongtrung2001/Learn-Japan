@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from "date-fns";
 
@@ -7,7 +9,9 @@ interface MonthlyTrackerProps {
 
 export function MonthlyTracker({ folderId }: MonthlyTrackerProps) {
   const storageKey = `studyStreak_${folderId}`;
-  const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
+
+
+  const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set<string>());
 
   // Load from localStorage
   useEffect(() => {
@@ -31,7 +35,7 @@ export function MonthlyTracker({ folderId }: MonthlyTrackerProps) {
 
   const toggleDate = (date: Date) => {
     const key = format(date, "yyyy-MM-dd");
-    const newSet = new Set(selectedDates);
+    const newSet = new Set<string>(selectedDates);
     if (newSet.has(key)) newSet.delete(key);
     else newSet.add(key);
     setSelectedDates(newSet);
