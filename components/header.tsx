@@ -52,10 +52,9 @@ export default function Header() {
                   href={link.href}
                   className={`
                     px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap
-                    ${
-                      isActive
-                        ? "bg-indigo/15 text-indigo-light border border-indigo/30"
-                        : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                    ${isActive
+                      ? "bg-indigo/15 text-indigo-light border border-indigo/30"
+                      : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                     }
                   `}
                 >
@@ -84,19 +83,16 @@ export default function Header() {
               id="mobile-menu-toggle"
             >
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "rotate-45 translate-y-2" : ""
-                }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-2" : ""
+                  }`}
               />
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "opacity-0" : ""
-                }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""
+                  }`}
               />
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                  }`}
               />
             </button>
           </div>
@@ -105,9 +101,8 @@ export default function Header() {
 
       {/* Mobile navigation dropdown */}
       <div
-        className={`lg:hidden border-t border-border overflow-hidden transition-all duration-300 ${
-          isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`lg:hidden border-t border-border overflow-hidden transition-all duration-300 ${isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <nav className="px-4 py-3 space-y-1" id="mobile-nav">
           {navLinks.map((link) => {
@@ -119,10 +114,9 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
                 className={`
                   block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
-                  ${
-                    isActive
-                      ? "bg-indigo/15 text-indigo-light border border-indigo/30"
-                      : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                  ${isActive
+                    ? "bg-indigo/15 text-indigo-light border border-indigo/30"
+                    : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                   }
                 `}
               >

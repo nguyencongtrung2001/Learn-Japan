@@ -157,11 +157,10 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
                   setSelecting((v) => !v);
                   if (selecting) setSelectedIds(new Set());
                 }}
-                className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
-                  selecting
+                className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-bold transition-all duration-300 ${selecting
                     ? "border-rose/20 bg-rose/10 text-rose hover:bg-rose/20"
                     : "border-indigo/20 bg-indigo/10 text-indigo-light hover:bg-indigo/20"
-                }`}
+                  }`}
               >
                 {selecting ? "✖️ Hủy chọn" : "🔀 Chọn để chuyển"}
               </button>
@@ -184,11 +183,10 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
-              className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
-                editing
+              className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-300 ${editing
                   ? "border border-rose/20 bg-rose/10 text-rose hover:bg-rose/20"
                   : "border border-indigo/20 bg-indigo/10 text-indigo-light hover:bg-indigo/20"
-              }`}
+                }`}
             >
               {editing ? "❌ Hủy chỉnh sửa" : "✏️ Chỉnh sửa Thư Mục"}
             </button>

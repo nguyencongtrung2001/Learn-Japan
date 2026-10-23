@@ -695,3 +695,229 @@ body::before {
 .animate-pop-out {
   animation: popOut 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
+
+/* ============================================================
+   VOCAB CARD V2 — Clean, expandable card design
+   ============================================================ */
+.vocab-card-v2 {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 16px 12px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease;
+  overflow: hidden;
+}
+
+.vocab-card-v2:hover:not(.vocab-card-v2--open) {
+  border-color: var(--border-light);
+  background: var(--surface-hover);
+}
+
+/* When expanded: no special shadow, just a distinct border */
+.vocab-card-v2--open {
+  cursor: default;
+  border-color: var(--border-light);
+  background: var(--surface);
+}
+
+/* Due indicator — subtle pulsing border */
+.vocab-card-v2--due {
+  border-color: var(--rose);
+  animation: due-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes due-pulse {
+  0%, 100% { border-color: var(--rose); }
+  50% { border-color: var(--sakura); }
+}
+
+/* Accent bar — left gradient strip */
+.vocab-card-v2__accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 14px 0 0 14px;
+  background: linear-gradient(180deg, var(--accent-from), var(--accent-to));
+  transition: width 0.25s ease;
+}
+
+.vocab-card-v2--open .vocab-card-v2__accent {
+  width: 5px;
+}
+
+/* Header */
+.vocab-card-v2__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vocab-card-v2__word-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vocab-card-v2__word {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+  font-family: var(--font-jp, "Noto Sans JP", serif), var(--font-sans, "Inter", system-ui, sans-serif);
+}
+
+.vocab-card-v2__phonetic {
+  display: inline-block;
+  max-width: fit-content;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  opacity: 0.15;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--foreground);
+  position: relative;
+}
+
+/* Overlay text on top of faded gradient bg */
+.vocab-card-v2__phonetic::after {
+  content: attr(data-ph);
+}
+
+/* Actually just use solid text, the gradient bg is decorative */
+.vocab-card-v2__phonetic {
+  opacity: 1;
+  background: var(--accent-from);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-from) 15%, transparent), color-mix(in srgb, var(--accent-to) 15%, transparent));
+  color: var(--foreground-muted);
+}
+
+.vocab-card-v2__growth {
+  flex-shrink: 0;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Translation */
+.vocab-card-v2__translation {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+  opacity: 0.88;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Expanded details */
+.vocab-card-v2__details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+  animation: card-expand 0.25s ease-out;
+}
+
+@keyframes card-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vocab-card-v2__label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--foreground-dim);
+  margin-bottom: 2px;
+}
+
+.vocab-card-v2__definition p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--foreground-muted);
+}
+
+.vocab-card-v2__example {
+  padding-left: 10px;
+  border-left: 2px solid var(--accent-from);
+}
+
+.vocab-card-v2__example p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--foreground-dim);
+}
+
+/* Footer */
+.vocab-card-v2__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.vocab-card-v2__level {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--foreground-dim);
+  background: color-mix(in srgb, var(--accent-from) 12%, transparent);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.vocab-card-v2__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.vocab-card-v2__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.vocab-card-v2__btn:hover {
+  transform: scale(1.1);
+}
+
+.vocab-card-v2__btn:active {
+  transform: scale(0.95);
+}
+
+.vocab-card-v2__btn--play:hover {
+  background: color-mix(in srgb, var(--indigo) 15%, transparent);
+}
+
+.vocab-card-v2__btn--delete:hover {
+  background: color-mix(in srgb, var(--rose) 15%, transparent);
+}

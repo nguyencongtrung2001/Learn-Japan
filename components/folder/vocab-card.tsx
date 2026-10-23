@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { growthIcon } from "@/lib/growth";
 import type { CardListItem } from "@/lib/card-utils";
 
@@ -9,58 +9,99 @@ interface VocabCardProps {
   onDelete: (id: number) => void;
 }
 
+/** Growth-level accent colours (maps 0-6). */
+const LEVEL_COLORS: Record<number, { from: string; to: string }> = {
+  0: { from: "var(--foreground-dim)", to: "var(--foreground-muted)" },
+  1: { from: "var(--emerald)", to: "#6ee7b7" },
+  2: { from: "var(--emerald)", to: "var(--indigo)" },
+  3: { from: "var(--indigo)", to: "var(--sakura)" },
+  4: { from: "var(--sakura)", to: "var(--gold)" },
+  5: { from: "var(--gold)", to: "var(--rose)" },
+  6: { from: "var(--rose)", to: "var(--sakura)" },
+};
 
 function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
+
+  // Click-outside → collapse
+  useEffect(() => {
+    if (!isExpanded) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isExpanded]);
+
+  const colors = LEVEL_COLORS[Math.min(card.growthLevel, 6)];
+
   return (
     <article
-      className={`${isDue ? "vocab-card vocab-card--due" : "vocab-card"} border border-gray-200 rounded-lg p-4 min-h-[80px] transition-transform duration-200 ${isExpanded ? "scale-200" : ""} cursor-pointer hover:shadow-lg origin-center`}
-      onClick={() => setIsExpanded(prev => !prev)}
+      ref={cardRef}
+      className={`vocab-card-v2 ${isExpanded ? "vocab-card-v2--open" : ""} ${isDue ? "vocab-card-v2--due" : ""}`}
+      style={
+        {
+          "--accent-from": colors.from,
+          "--accent-to": colors.to,
+        } as React.CSSProperties
+      }
+      onClick={() => !isExpanded && setIsExpanded(true)}
     >
-      <header className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3
-            className="truncate text-base font-extrabold leading-tight tracking-tight text-foreground"
-            title={card.word}
-          >
+      {/* Accent bar */}
+      <div className="vocab-card-v2__accent" />
+
+      {/* Header */}
+      <header className="vocab-card-v2__header">
+        <div className="vocab-card-v2__word-group">
+          <h3 className={`vocab-card-v2__word ${isExpanded ? "" : "truncate"}`}>
             {card.word}
           </h3>
           {card.phonetic && (
-            <span className="mt-0.5 inline-block max-w-full truncate rounded bg-indigo/10 px-1.5 py-px text-[11px] font-bold text-indigo-light">
-              {card.phonetic}
-            </span>
+            <span className="vocab-card-v2__phonetic">{card.phonetic}</span>
           )}
         </div>
-        <span className="shrink-0 text-base leading-none" title={`Level ${card.growthLevel}`}>
+        <span className="vocab-card-v2__growth" title={`Level ${card.growthLevel}`}>
           {growthIcon(card.growthLevel)}
         </span>
       </header>
 
-      <p className="truncate text-sm font-semibold text-foreground/90" title={card.translation}>
+      {/* Translation */}
+      <p className={`vocab-card-v2__translation ${isExpanded ? "" : "truncate"}`}>
         {card.translation}
       </p>
 
-      {isExpanded && card.definition && (
-        <p className="line-clamp-1 text-xs leading-snug text-foreground-muted" title={card.definition}>
-          {card.definition}
-        </p>
-      )}
-      {isExpanded && card.example && (
-        <p
-          className="line-clamp-1 border-l-2 border-emerald/50 pl-2 text-xs italic leading-snug text-foreground-dim"
-          title={card.example}
-        >
-          &quot;{card.example}&quot;
-        </p>
+      {/* Expanded content — no line-clamp, no truncation, no shadow */}
+      {isExpanded && (
+        <div className="vocab-card-v2__details">
+          {card.definition && (
+            <div className="vocab-card-v2__definition">
+              <span className="vocab-card-v2__label">Định nghĩa</span>
+              <p>{card.definition}</p>
+            </div>
+          )}
+          {card.example && (
+            <div className="vocab-card-v2__example">
+              <span className="vocab-card-v2__label">Ví dụ</span>
+              <p>&quot;{card.example}&quot;</p>
+            </div>
+          )}
+        </div>
       )}
 
-      <footer className="mt-auto flex items-center justify-between border-t border-border/40 pt-2">
-        <span className="text-[11px] font-semibold text-foreground-muted">Lv.{card.growthLevel}</span>
-        <div className="flex gap-1">
+      {/* Footer */}
+      <footer className="vocab-card-v2__footer">
+        <span className="vocab-card-v2__level">Lv.{card.growthLevel}</span>
+        <div className="vocab-card-v2__actions">
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onPlay(card.word); }}
-            className="cursor-pointer rounded-lg bg-surface-hover/60 px-2 py-1 text-sm text-indigo-light transition-colors hover:bg-indigo/15"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPlay(card.word);
+            }}
+            className="vocab-card-v2__btn vocab-card-v2__btn--play"
             aria-label={`Nghe phát âm ${card.word}`}
             title="Nghe phát âm"
           >
@@ -68,8 +109,11 @@ function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
           </button>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onDelete(card.id); }}
-            className="cursor-pointer rounded-lg bg-surface-hover/60 px-2 py-1 text-sm text-rose/70 transition-colors hover:bg-rose/10 hover:text-rose"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(card.id);
+            }}
+            className="vocab-card-v2__btn vocab-card-v2__btn--delete"
             aria-label={`Xóa thẻ ${card.word}`}
             title="Xóa thẻ"
           >

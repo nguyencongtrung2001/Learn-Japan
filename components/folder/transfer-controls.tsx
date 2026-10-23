@@ -61,14 +61,14 @@ export function TransferControls({
         Đã chọn <span className="text-indigo-light">{selectedCards.length}</span> thẻ
       </p>
 
-      {/* Danh sách từ đã chọn */}
+      Danh sách từ đã chọn
       <div className="flex flex-wrap gap-1">
         {selectedCards.map((c) => (
           <span
             key={c.id}
             className="rounded-md bg-indigo/10 px-2 py-0.5 text-[11px] font-bold text-indigo-light"
           >
-            {c.word}
+            {c.word} 123
           </span>
         ))}
       </div>
