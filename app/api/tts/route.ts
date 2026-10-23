@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const text = searchParams.get("text");
-  const lang = searchParams.get("lang") || "ja";
+  const lang = searchParams.get("lang") || "en";
 
   if (!text) {
     return NextResponse.json({ error: "Missing text parameter" }, { status: 400 });

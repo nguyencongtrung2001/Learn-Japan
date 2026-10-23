@@ -1,95 +1,80 @@
 import Link from "next/link";
+import { InteractiveHeroCard } from "@/components/home/interactive-hero-card";
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-16 overflow-hidden">
-      {/* Hero Section */}
-      <section className="text-center mb-16 sm:mb-24 relative" id="hero-section">
-        {/* Glow effect behind hero */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-indigo/10 blur-[100px] rounded-full pointer-events-none -z-10" />
-        
-        <div className="relative">
-          <div className="absolute inset-0 -top-8 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
-            <span className="text-[10rem] sm:text-[18rem] md:text-[22rem] font-black leading-none tracking-tighter">
-              ENGLISH
-            </span>
-          </div>
+    <main className="relative flex h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] w-full items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-10">
+      {/* Background ambient light effects */}
+      <div className="pointer-events-none absolute -left-20 top-1/4 -z-10 h-72 w-72 rounded-full bg-indigo/15 blur-[120px]" />
+      <div className="pointer-events-none absolute -right-20 bottom-1/4 -z-10 h-72 w-72 rounded-full bg-sakura/15 blur-[120px]" />
 
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-surface/80 border border-white/10 backdrop-blur-md text-indigo-light text-sm sm:text-base font-semibold mb-8 animate-fade-in shadow-lg">
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12 xl:gap-16">
+          {/* ═══════ CỘT TRÁI: TIÊU ĐỀ & HÀNH ĐỘNG ═══════ */}
+          <div className="flex flex-col items-center text-center lg:col-span-7 lg:items-start lg:text-left">
+            {/* Top pill badge */}
+            <div className="animate-fade-in mb-4 inline-flex items-center gap-2 rounded-full border border-indigo/30 bg-surface/80 px-4 py-1.5 text-xs sm:text-sm font-semibold text-indigo-light shadow-md backdrop-blur-md">
               <span className="animate-float inline-block">🚀</span>
-              Master English Faster
+              Spaced Repetition • Ghi nhớ thông minh
             </div>
 
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black mb-6 animate-fade-in-up tracking-tight">
-              <span className="gradient-text">Flashcard App</span>
+            {/* Main Hero Headline */}
+            <h1 className="animate-fade-in-up mb-4 text-3xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-black tracking-tight leading-[1.12]">
+              Học Từ Vựng Nhanh, <br />
+              <span className="gradient-text">Ghi Nhớ Bền Vững</span>
             </h1>
 
-            <p className="text-2xl sm:text-3xl text-foreground-muted mb-6 animate-fade-in-up font-bold" style={{ animationDelay: "0.1s" }}>
-              Học Từ Vựng Thông Minh
+            {/* Subtitle */}
+            <p className="animate-fade-in-up mb-7 max-w-xl text-sm sm:text-base lg:text-lg leading-relaxed text-foreground-muted">
+              Tạo bộ thẻ từ vựng của riêng bạn, ôn tập với thuật toán lặp lại ngắt quãng (SRS), luyện phát âm và nhớ từ vĩnh viễn với bài tập trắc nghiệm đa dạng.
             </p>
 
-            <p
-              className="text-foreground-muted max-w-xl mx-auto text-base sm:text-lg mb-10 animate-fade-in-up opacity-0 leading-relaxed"
-              style={{ animationDelay: "0.2s" }}
-            >
-              Tạo bộ thẻ từ vựng của riêng bạn, ôn tập thông minh với thuật toán lặp lại ngắt quãng (Spaced Repetition), luyện phát âm và nhớ từ vĩnh viễn.
-            </p>
-
-            <div
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up opacity-0"
-              style={{ animationDelay: "0.3s" }}
-            >
+            {/* CTA Buttons */}
+            <div className="animate-fade-in-up flex flex-wrap items-center justify-center gap-3.5 lg:justify-start">
               <Link
                 href="/folders"
-                className="btn-shine group relative px-10 py-4 rounded-2xl bg-gradient-to-r from-emerald to-teal-500 text-white font-bold text-lg
-                           hover:shadow-2xl hover:shadow-emerald/30 hover:scale-105 active:scale-95 transition-all duration-300 overflow-hidden"
+                className="btn-shine group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald to-teal-500 px-7 py-3.5 text-base font-bold text-white shadow-xl shadow-emerald/25 transition-all duration-300 hover:scale-105 active:scale-95"
                 id="hero-start-btn"
               >
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0" />
                 <span className="relative flex items-center gap-2">
-                  📂 Bắt Đầu Học Ngay
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <span>📂</span>
+                  Bắt Đầu Học Ngay
+                  <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
               </Link>
+
+              <Link
+                href="/tracker"
+                className="flex items-center gap-2 rounded-2xl border border-border bg-surface/70 px-6 py-3.5 text-base font-semibold text-foreground-muted backdrop-blur-md transition-all duration-200 hover:border-indigo/40 hover:bg-surface-hover hover:text-foreground"
+              >
+                <span>📅</span>
+                Lịch Ôn Tập
+              </Link>
+            </div>
+
+            {/* Quick Feature Badges */}
+            <div className="animate-fade-in-up mt-8 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 lg:justify-start">
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
+                <span>🧠</span> Thuật toán SRS
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
+                <span>🔊</span> Phát âm chuẩn
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
+                <span>⚡</span> Quiz & Trắc nghiệm
+              </span>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="mb-16 animate-fade-in-up" style={{ animationDelay: "0.4s" }} id="features-section">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-extrabold gradient-text inline-block">
-            ✨ Tính Năng Nổi Bật
-          </h2>
+          {/* ═══════ CỘT PHẢI: INTERACTIVE DEMO CARD ═══════ */}
+          <div className="flex justify-center lg:col-span-5">
+            <InteractiveHeroCard />
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
-            { icon: "📁", title: "Quản Lý Thư Mục", text: "Tổ chức và phân loại từ vựng theo chủ đề dễ dàng", color: "from-blue-500/10 to-indigo/10 border-blue-500/20" },
-            { icon: "🧠", title: "Lặp Lại Ngắt Quãng", text: "Thuật toán Spaced Repetition giúp nhớ từ vĩnh viễn", color: "from-emerald/10 to-teal-500/10 border-emerald/20" },
-            { icon: "🔊", title: "Luyện Phát Âm", text: "Tích hợp Text-to-Speech đọc chuẩn giọng bản xứ", color: "from-sakura/10 to-rose/10 border-sakura/20" },
-            { icon: "✍️", title: "Đa Dạng Bài Tập", text: "Ôn tập qua trắc nghiệm, gõ từ và viết câu thực tế", color: "from-amber-500/10 to-orange-500/10 border-amber-500/20" },
-            { icon: "⚡", title: "Nhập Liệu Siêu Tốc", text: "Dán trực tiếp hàng loạt từ vựng dạng bảng trong tích tắc", color: "from-purple-500/10 to-fuchsia-500/10 border-purple-500/20" },
-            { icon: "📱", title: "Responsive Tuyệt Đối", text: "Trải nghiệm mượt mà trên cả máy tính và điện thoại di động", color: "from-cyan-500/10 to-sky-500/10 border-cyan-500/20" },
-          ].map((feature, i) => (
-            <div
-              key={i}
-              className={`glass-card p-6 flex flex-col items-center text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${feature.color}`}
-            >
-              <div className="w-16 h-16 rounded-2xl bg-surface/80 flex items-center justify-center text-3xl mb-4 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-transform">
-                {feature.icon}
-              </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-foreground-muted text-sm leading-relaxed">
-                {feature.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
+      </div>
+    </main>
   );
 }

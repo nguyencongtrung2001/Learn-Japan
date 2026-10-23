@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { updateFolder } from "@/actions/folder-actions";
-import { createCard, createCardsBulk, deleteCard } from "@/actions/card-actions";
+import { createCard, createCardsBulk, deleteCard, updateCard } from "@/actions/card-actions";
 import { useAudio } from "@/hooks/use-audio";
 import { MAX_GROWTH_LEVEL } from "@/lib/growth";
 import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-utils";
@@ -13,6 +13,7 @@ import { FolderInfoCard } from "./folder-info-card";
 import { QuizActions } from "./quiz-actions";
 import { FolderEditForm } from "./folder-edit-form";
 import { AddCardForm } from "./add-card-form";
+import { EditCardModal } from "./edit-card-modal";
 import { CardsHeader } from "./cards-header";
 import { EmptyCards } from "./empty-cards";
 import { VocabGrid } from "./vocab-grid";
@@ -34,6 +35,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const [cards, setCards] = useState(initialCards);
   const [showCardForm, setShowCardForm] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingCard, setEditingCard] = useState<CardListItem | null>(null);
   const [now] = useState(serverNow);
 
   // ---------- Transfer (multi‑select) state ----------
@@ -120,9 +122,9 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   );
 
   const handleSaveFolder = useCallback(
-    async (data: { description?: string; maxCards?: number }): Promise<boolean> => {
+    async (data: { name: string; description?: string; maxCards?: number }): Promise<boolean> => {
       try {
-        const updated = await updateFolder(folderId, { name: folder.name, ...data });
+        const updated = await updateFolder(folderId, data);
         if (!updated) return false;
         setFolder(updated);
         setEditing(false);
@@ -132,7 +134,45 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
         return false;
       }
     },
-    [folderId, folder.name]
+    [folderId]
+  );
+
+  const handleUpdateCard = useCallback(
+    async (cardId: number, input: CardInput): Promise<boolean> => {
+      try {
+        const updated = await updateCard(cardId, {
+          word: input.word,
+          translation: input.translation,
+          phonetic: input.phonetic,
+          definition: input.definition,
+          example: input.example,
+          folderId,
+        });
+        if (!updated) return false;
+
+        commitCards(
+          cardsRef.current.map((c) =>
+            c.id === cardId
+              ? {
+                  ...c,
+                  word: input.word,
+                  translation: input.translation,
+                  phonetic: input.phonetic || null,
+                  definition: input.definition || null,
+                  example: input.example || null,
+                }
+              : c
+          )
+        );
+        setEditingCard(null);
+        return true;
+      } catch (error) {
+        console.error("Lỗi cập nhật thẻ:", error);
+        alert("Không thể cập nhật thẻ. Vui lòng thử lại.");
+        return false;
+      }
+    },
+    [folderId, commitCards]
   );
 
   return (
@@ -227,6 +267,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               now={now}
               onPlay={playAudio}
               onDelete={handleDelete}
+              onEdit={(card) => setEditingCard(card)}
               selecting={selecting}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
@@ -234,6 +275,14 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
           )}
         </main>
       </div>
+
+      {/* Modal chỉnh sửa thẻ từ vựng */}
+      <EditCardModal
+        card={editingCard}
+        isOpen={!!editingCard}
+        onClose={() => setEditingCard(null)}
+        onSave={handleUpdateCard}
+      />
     </div>
   );
 }

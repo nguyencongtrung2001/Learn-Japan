@@ -186,20 +186,26 @@ export async function updateCard(
     example?: string;
     phonetic?: string;
     imageUrl?: string;
+    folderId?: number;
   }
 ) {
   const result = await db
     .update(cards)
     .set({
-      word: data.word,
-      translation: data.translation,
-      definition: data.definition || null,
-      example: data.example || null,
-      phonetic: data.phonetic || null,
-      imageUrl: data.imageUrl || null,
+      ...(data.word !== undefined && { word: data.word.trim() }),
+      ...(data.translation !== undefined && { translation: data.translation.trim() }),
+      ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
+      ...(data.example !== undefined && { example: data.example?.trim() || null }),
+      ...(data.phonetic !== undefined && { phonetic: data.phonetic?.trim() || null }),
+      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl?.trim() || null }),
     })
     .where(eq(cards.id, id))
     .returning();
+
+  const folderId = data.folderId || result[0]?.folderId;
+  if (folderId) {
+    revalidatePath(`/folders/${folderId}`);
+  }
 
   return result[0];
 }

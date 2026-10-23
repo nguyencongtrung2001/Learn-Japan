@@ -34,16 +34,13 @@ export default function Header() {
             <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
               📚
             </span>
-            <span className="text-lg font-bold gradient-text hidden sm:inline">
+            <span className="text-lg sm:text-xl font-black gradient-text">
               Flashcard App
-            </span>
-            <span className="text-lg font-bold gradient-text sm:hidden">
-              Flashcards
             </span>
           </Link>
 
           {/* Desktop navigation */}
-          <nav className="hidden lg:flex items-center gap-0.5" id="desktop-nav">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-6" id="desktop-nav">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -51,15 +48,15 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={`
-                    px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap
+                    flex items-center gap-1.5 py-1 text-[17px] sm:text-[18px] transition-colors duration-200 whitespace-nowrap
                     ${isActive
-                      ? "bg-indigo/15 text-indigo-light border border-indigo/30"
-                      : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                      ? "text-foreground font-bold"
+                      : "text-foreground-muted hover:text-foreground font-medium"
                     }
                   `}
                 >
-                  <span className="mr-1.5">{link.icon}</span>
-                  {link.label}
+                  <span className="text-base">{link.icon}</span>
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
@@ -78,7 +75,7 @@ export default function Header() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
+              className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
               aria-label="Toggle menu"
               id="mobile-menu-toggle"
             >
@@ -101,10 +98,10 @@ export default function Header() {
 
       {/* Mobile navigation dropdown */}
       <div
-        className={`lg:hidden border-t border-border overflow-hidden transition-all duration-300 ${isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
           }`}
       >
-        <nav className="px-4 py-3 space-y-1" id="mobile-nav">
+        <nav className="px-4 py-3 space-y-2" id="mobile-nav">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -113,15 +110,15 @@ export default function Header() {
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`
-                  block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                  flex items-center gap-2.5 py-2 text-[17px] transition-colors duration-200
                   ${isActive
-                    ? "bg-indigo/15 text-indigo-light border border-indigo/30"
-                    : "text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                    ? "text-foreground font-bold"
+                    : "text-foreground-muted hover:text-foreground font-medium"
                   }
                 `}
               >
-                <span className="mr-2">{link.icon}</span>
-                {link.label}
+                <span className="text-lg">{link.icon}</span>
+                <span>{link.label}</span>
               </Link>
             );
           })}

@@ -7,6 +7,7 @@ interface VocabGridProps {
   now: number;
   onPlay: (text: string) => void;
   onDelete: (id: number) => void;
+  onEdit?: (card: CardListItem) => void;
   /** Selection mode */
   selecting?: boolean;
   selectedIds?: Set<number>;
@@ -19,6 +20,7 @@ function VocabGridBase({
   now,
   onPlay,
   onDelete,
+  onEdit,
   selecting = false,
   selectedIds,
   toggleSelect,
@@ -51,6 +53,7 @@ function VocabGridBase({
               isDue={isCardDue(card, now)}
               onPlay={onPlay}
               onDelete={onDelete}
+              onEdit={onEdit}
             />
           </div>
         );

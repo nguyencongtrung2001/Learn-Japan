@@ -6,7 +6,7 @@ import type { Folder } from "@/db/schema";
 interface FolderEditFormProps {
   folder: Folder;
   total: number;
-  onSave: (data: { description?: string; maxCards?: number }) => Promise<boolean>;
+  onSave: (data: { name: string; description?: string; maxCards?: number }) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -16,15 +16,21 @@ const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wide text-
 
 /** State của form nằm trong chính component này → gõ phím không làm render lại cả trang. */
 export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFormProps) {
+  const [name, setName] = useState(folder.name ?? "");
   const [description, setDescription] = useState(folder.description ?? "");
   const [limit, setLimit] = useState(folder.maxCards ? String(folder.maxCards) : "");
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      alert("Tên thư mục không được để trống!");
+      return;
+    }
     setSaving(true);
     const parsed = limit ? parseInt(limit, 10) : undefined;
     const ok = await onSave({
+      name: name.trim(),
       description: description.trim() || undefined,
       maxCards: parsed && parsed > 0 ? parsed : undefined,
     });
@@ -38,7 +44,22 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
       className="glass-card animate-fade-in relative space-y-4 overflow-hidden p-5 shadow-xl"
     >
       <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-indigo to-sakura opacity-60" />
-      <h3 className="gradient-text flex items-center gap-2 text-base font-extrabold">⚙️ Cài đặt Thư Mục</h3>
+      <h3 className="gradient-text flex items-center gap-2 text-base font-extrabold">⚙️ Chỉnh sửa Thư Mục</h3>
+
+      <div>
+        <label className={labelClass} htmlFor="folder-name">
+          Tên thư mục <span className="text-rose">*</span>
+        </label>
+        <input
+          id="folder-name"
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nhập tên thư mục..."
+          className={inputClass}
+        />
+      </div>
 
       <div>
         <label className={labelClass} htmlFor="folder-description">

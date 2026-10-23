@@ -7,12 +7,13 @@ interface VocabCardProps {
   isDue: boolean;
   onPlay: (text: string) => void;
   onDelete: (id: number) => void;
+  onEdit?: (card: CardListItem) => void;
 }
 
 /** Growth-level accent colours (maps 0-6). */
 const LEVEL_COLORS: Record<number, { from: string; to: string }> = {
   0: { from: "var(--foreground-dim)", to: "var(--foreground-muted)" },
-  1: { from: "var(--emerald)", to: "#6ee7b7" },
+  1: { from: "var(--emerald)", to: "var(--emerald-light)" },
   2: { from: "var(--emerald)", to: "var(--indigo)" },
   3: { from: "var(--indigo)", to: "var(--sakura)" },
   4: { from: "var(--sakura)", to: "var(--gold)" },
@@ -20,7 +21,7 @@ const LEVEL_COLORS: Record<number, { from: string; to: string }> = {
   6: { from: "var(--rose)", to: "var(--sakura)" },
 };
 
-function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
+function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
 
@@ -95,6 +96,20 @@ function VocabCardBase({ card, isDue, onPlay, onDelete }: VocabCardProps) {
       <footer className="vocab-card-v2__footer">
         <span className="vocab-card-v2__level">Lv.{card.growthLevel}</span>
         <div className="vocab-card-v2__actions">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(card);
+              }}
+              className="vocab-card-v2__btn vocab-card-v2__btn--edit"
+              aria-label={`Sửa thẻ ${card.word}`}
+              title="Chỉnh sửa thẻ"
+            >
+              ✏️
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => {

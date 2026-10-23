@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   THEME — Japanese-inspired DARK palette (default)
+   THEME — Japanese-inspired DARK palette (Vibrant / Tươi sáng)
    ============================================================ */
 :root {
   --background: #0c0f1a;
@@ -24,6 +24,7 @@
   --indigo-glow: rgba(129, 140, 248, 0.25);
 
   --emerald: #34d399;
+  --emerald-light: #6ee7b7;
   --emerald-glow: rgba(52, 211, 153, 0.2);
 
   --rose: #fb7185;
@@ -39,7 +40,7 @@
 }
 
 /* ============================================================
-   THEME — Japanese-inspired LIGHT palette
+   THEME — Japanese-inspired LIGHT palette (Vibrant / Tươi sáng)
    ============================================================ */
 [data-theme="light"] {
   --background: #f8f6f3;
@@ -62,6 +63,7 @@
   --indigo-glow: rgba(99, 102, 241, 0.15);
 
   --emerald: #059669;
+  --emerald-light: #10b981;
   --emerald-glow: rgba(5, 150, 105, 0.12);
 
   --rose: #e11d48;
@@ -97,6 +99,7 @@
   --color-indigo-glow: var(--indigo-glow);
 
   --color-emerald: var(--emerald);
+  --color-emerald-light: var(--emerald-light);
   --color-emerald-glow: var(--emerald-glow);
 
   --color-rose: var(--rose);
@@ -773,7 +776,7 @@ body::before {
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--foreground);
-  font-family: var(--font-jp, "Noto Sans JP", serif), var(--font-sans, "Inter", system-ui, sans-serif);
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
 }
 
 .vocab-card-v2__phonetic {
@@ -915,6 +918,10 @@ body::before {
 }
 
 .vocab-card-v2__btn--play:hover {
+  background: color-mix(in srgb, var(--indigo) 15%, transparent);
+}
+
+.vocab-card-v2__btn--edit:hover {
   background: color-mix(in srgb, var(--indigo) 15%, transparent);
 }
 

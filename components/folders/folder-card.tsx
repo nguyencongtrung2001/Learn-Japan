@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DeleteFolderButton } from "./delete-folder-button";
+import { EditFolderButton } from "./edit-folder-button";
 import type { Folder } from "@/db/schema";
 
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
@@ -31,13 +32,14 @@ export function FolderCard({ folder }: { folder: Folder }) {
         </div>
       </Link>
 
-      <div className="relative z-10 flex gap-3 border-t border-border/50 pt-4">
+      <div className="relative z-10 flex items-center gap-2 border-t border-border/50 pt-4">
         <Link
           href={href}
           className="flex-1 rounded-xl bg-indigo/10 py-2.5 text-center text-sm font-bold text-indigo-light transition-all duration-300 hover:bg-indigo hover:text-white"
         >
           Mở Thư Mục
         </Link>
+        <EditFolderButton folder={folder} />
         <DeleteFolderButton folderId={folder.id} />
       </div>
     </div>
