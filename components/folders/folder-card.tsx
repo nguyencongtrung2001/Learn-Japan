@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { DeleteFolderButton } from "./delete-folder-button";
-import { EditFolderButton } from "./edit-folder-button";
 import type { Folder } from "@/db/schema";
 
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
@@ -39,7 +38,6 @@ export function FolderCard({ folder }: { folder: Folder }) {
         >
           Mở Thư Mục
         </Link>
-        <EditFolderButton folder={folder} />
         <DeleteFolderButton folderId={folder.id} />
       </div>
     </div>

@@ -6,6 +6,7 @@ import {
   integer,
   real,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // ─── Folders Table ───────────────────────────────────────────────
@@ -49,8 +50,41 @@ export const cards = pgTable(
   (t) => [index("cards_folder_id_idx").on(t.folderId)]
 );
 
+// ─── Trello Note Columns Table ──────────────────────────────────
+export const noteColumns = pgTable("note_columns", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  order: integer("order").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ─── Trello Note Cards Table ────────────────────────────────────
+export const noteCards = pgTable(
+  "note_cards",
+  {
+    id: text("id").primaryKey(),
+    columnId: text("column_id")
+      .notNull()
+      .references(() => noteColumns.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    color: text("color").default("blue"),
+    checklist: jsonb("checklist")
+      .$type<{ id: string; text: string; completed: boolean }[]>()
+      .default([]),
+    order: integer("order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [index("note_cards_column_id_idx").on(t.columnId)]
+);
+
 // ─── Types ───────────────────────────────────────────────────────
 export type Folder = typeof folders.$inferSelect;
 export type NewFolder = typeof folders.$inferInsert;
 export type Card = typeof cards.$inferSelect;
 export type NewCard = typeof cards.$inferInsert;
+export type NoteColumnDB = typeof noteColumns.$inferSelect;
+export type NewNoteColumnDB = typeof noteColumns.$inferInsert;
+export type NoteCardDB = typeof noteCards.$inferSelect;
+export type NewNoteCardDB = typeof noteCards.$inferInsert;

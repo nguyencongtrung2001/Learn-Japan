@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
   { href: "/folders", label: "Bộ thẻ", icon: "📂" },
   { href: "/tracker", label: "Theo dõi", icon: "📅" },
+  { href: "/note", label: "Ghi chú", icon: "📋" },
 ];
 
 export default function Header() {
@@ -22,7 +23,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-border backdrop-blur-xl bg-background/80">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -48,7 +49,7 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={`
-                    flex items-center gap-1.5 py-1 text-[17px] sm:text-[18px] transition-colors duration-200 whitespace-nowrap
+                    flex items-center gap-1.5 py-1.5 text-sm sm:text-[15px] transition-colors duration-200 whitespace-nowrap
                     ${isActive
                       ? "text-foreground font-bold"
                       : "text-foreground-muted hover:text-foreground font-medium"
@@ -63,7 +64,7 @@ export default function Header() {
           </nav>
 
           {/* Actions: Theme Toggle & Mobile Menu */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <button
               onClick={toggleTheme}
               className="p-2 rounded-xl text-lg hover:bg-surface-hover transition-colors text-foreground-muted hover:text-foreground"
@@ -101,7 +102,7 @@ export default function Header() {
         className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
           }`}
       >
-        <nav className="px-4 py-3 space-y-2" id="mobile-nav">
+        <nav className="px-4 py-3 space-y-1" id="mobile-nav">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -110,14 +111,14 @@ export default function Header() {
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`
-                  flex items-center gap-2.5 py-2 text-[17px] transition-colors duration-200
+                  flex items-center gap-2.5 py-2 text-sm sm:text-[15px] transition-colors duration-200
                   ${isActive
                     ? "text-foreground font-bold"
                     : "text-foreground-muted hover:text-foreground font-medium"
                   }
                 `}
               >
-                <span className="text-lg">{link.icon}</span>
+                <span className="text-base">{link.icon}</span>
                 <span>{link.label}</span>
               </Link>
             );
