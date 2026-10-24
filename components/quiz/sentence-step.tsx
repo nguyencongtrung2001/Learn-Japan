@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { QuestionPanel } from "./question-panel";
 import type { Card } from "@/db/schema";
 import type { Feedback } from "@/lib/quiz";
 import {
@@ -42,7 +41,6 @@ export function SentenceStep({ card, feedback, onSubmit }: SentenceStepProps) {
         const result: SentenceCheckResult = await res.json();
         setCheckResult(result);
       } else {
-        // Fallback kiểm tra nội bộ nếu API gặp lỗi
         const fallback = checkSentenceLocally(
           value.trim(),
           card.word,
@@ -51,7 +49,6 @@ export function SentenceStep({ card, feedback, onSubmit }: SentenceStepProps) {
         setCheckResult(fallback);
       }
     } catch {
-      // Fallback khi offline
       const fallback = checkSentenceLocally(
         value.trim(),
         card.word,
@@ -79,8 +76,186 @@ export function SentenceStep({ card, feedback, onSubmit }: SentenceStepProps) {
     setCheckResult(null);
   };
 
+  // ─── GIAO DIỆN KHI ĐÃ CÓ KẾT QUẢ KIỂM TRA (SIDE-BY-SIDE 2 CỘT, KHÔNG CẦN SCROLL) ───
+  if (checkResult) {
+    return (
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch animate-fade-in">
+        {/* CỘT TRÁI: Phần câu hỏi & Câu người dùng đã đặt */}
+        <div className="glass-card flex flex-col justify-between p-5 sm:p-6 text-center border border-border/80 shadow-xl rounded-3xl">
+          <div>
+            <div className="mb-1 text-2xl sm:text-4xl font-extrabold tracking-tight">
+              {card.word}
+            </div>
+
+            <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
+              {card.partOfSpeech && (
+                <span className="rounded-md bg-indigo/15 border border-indigo/25 px-2 py-0.5 text-xs font-bold text-indigo-light uppercase tracking-wider">
+                  {card.partOfSpeech}
+                </span>
+              )}
+              <span className="text-xs sm:text-sm font-medium text-foreground-dim">
+                ({card.translation})
+              </span>
+            </div>
+
+            <p className="text-xs text-foreground-muted mb-2 text-left font-semibold">
+              ✍️ Câu bạn đã đặt:
+            </p>
+
+            <textarea
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              rows={3}
+              className="w-full resize-none rounded-xl border-2 border-border/70 bg-surface/70 p-3 text-sm font-medium text-foreground outline-none focus:border-indigo"
+              placeholder="Nhập câu của bạn..."
+            />
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="w-full rounded-xl border border-border/80 bg-surface/50 py-2.5 text-xs sm:text-sm font-bold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all cursor-pointer"
+            >
+              ✏️ Sửa & Kiểm tra lại câu này
+            </button>
+          </div>
+        </div>
+
+        {/* CỘT PHẢI: Chi tiết góp ý & Gợi ý sửa lỗi (NẰM NGAY BÊN CẠNH) */}
+        <div className="glass-card flex flex-col justify-between p-5 sm:p-6 text-left border border-border/80 shadow-xl rounded-3xl">
+          <div className="space-y-3">
+            {/* Header: Tiêu đề & Huy hiệu trạng thái */}
+            <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2.5">
+              <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                <span>💡</span> Chi tiết góp ý & Gợi ý sửa lỗi
+              </h4>
+              <span
+                className={`rounded-lg px-2 py-0.5 text-[11px] font-bold ${
+                  checkResult.score === "perfect"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : checkResult.score === "good"
+                    ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
+                    : checkResult.score === "needs_improvement"
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                }`}
+              >
+                {checkResult.score === "perfect" && "🌟 Xuất sắc"}
+                {checkResult.score === "good" && "✅ Rất tốt"}
+                {checkResult.score === "needs_improvement" && "⚠️ Cần cải thiện"}
+                {checkResult.score === "invalid" && "❌ Chưa đạt"}
+              </span>
+            </div>
+
+            {/* Thông điệp đánh giá ngắn gọn */}
+            <p className="text-xs font-semibold text-foreground leading-snug">
+              {checkResult.score === "perfect" &&
+                "Xuất sắc! Câu dùng từ chính xác và ngữ pháp rất chuẩn."}
+              {checkResult.score === "good" &&
+                "Rất tốt! Câu đạt yêu cầu (xem thêm một số gợi ý nhỏ bên dưới)."}
+              {checkResult.score === "needs_improvement" &&
+                "Câu đã dùng từ khóa nhưng phát hiện một số lỗi ngữ pháp/chính tả:"}
+              {checkResult.score === "invalid" &&
+                "Câu chưa chứa từ khóa hoặc cấu trúc chưa đủ chủ ngữ/vị ngữ."}
+            </p>
+
+            {/* Danh sách lỗi và gợi ý (giới hạn chiều cao có scroll nội bộ để không bao giờ scroll trang) */}
+            {checkResult.suggestions.length > 0 ? (
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {checkResult.suggestions.map((sug, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-xl bg-background/70 p-2.5 border border-border/60 text-xs"
+                  >
+                    <p className="text-foreground-muted font-medium">
+                      {sug.type === "grammar"
+                        ? "🔴"
+                        : sug.type === "spelling"
+                        ? "🟡"
+                        : sug.type === "missing_keyword"
+                        ? "⛔"
+                        : "🔵"}{" "}
+                      {sug.message}
+                    </p>
+                    {sug.original && sug.replacement && (
+                      <div className="mt-1 flex items-center gap-1.5 font-mono text-[11px] pl-4">
+                        <span className="line-through text-rose">
+                          {sug.original}
+                        </span>
+                        <span>➔</span>
+                        <span className="font-bold text-emerald-400">
+                          {sug.replacement}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2.5 text-xs text-emerald-400">
+                ✓ Câu văn chuẩn xác, không phát hiện lỗi ngữ pháp nào!
+              </div>
+            )}
+
+            {/* Câu gợi ý sửa hoàn chỉnh */}
+            {checkResult.correctedSentence && (
+              <div className="rounded-xl border border-indigo/30 bg-indigo/10 p-2.5 text-xs">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-bold text-indigo-light text-[11px]">
+                    ✨ Câu gợi ý sửa hoàn chỉnh:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyCorrection(checkResult.correctedSentence!)
+                    }
+                    className="text-[10px] text-indigo-light hover:underline font-semibold cursor-pointer"
+                  >
+                    Áp dụng vào câu
+                  </button>
+                </div>
+                <p className="font-mono text-foreground font-semibold leading-snug">
+                  &quot;{checkResult.correctedSentence}&quot;
+                </p>
+              </div>
+            )}
+
+            {/* Câu mẫu tham khảo từ thẻ */}
+            {card.example && (
+              <div className="rounded-xl border border-border/60 bg-surface/40 p-2 text-xs">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground-dim block">
+                  📖 Câu mẫu từ thẻ:
+                </span>
+                <p className="italic text-foreground-muted text-[11px] mt-0.5">
+                  &quot;{card.example}&quot;
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Nút Tiếp tục */}
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <button
+              type="button"
+              onClick={handleProceed}
+              className={`w-full rounded-xl py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md cursor-pointer ${
+                checkResult.isValid
+                  ? "bg-gradient-to-r from-emerald-500 to-indigo hover:opacity-95"
+                  : "bg-gradient-to-r from-rose to-indigo hover:opacity-95"
+              }`}
+            >
+              Tiếp tục ➔
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── GIAO DIỆN TRƯỚC KHI BẤM KIỂM TRA (TẬP TRUNG GÕ CÂU) ───
   return (
-    <QuestionPanel feedback={feedback} className="p-6 sm:p-10">
+    <div className="mx-auto max-w-xl glass-card p-6 sm:p-8 text-center border border-border/80 shadow-2xl rounded-3xl animate-fade-in">
       {/* Header từ vựng */}
       <div className="mb-2 text-3xl font-extrabold tracking-tight sm:text-5xl">
         {card.word}
@@ -99,7 +274,10 @@ export function SentenceStep({ card, feedback, onSubmit }: SentenceStepProps) {
 
       <p className="mb-5 rounded-xl border border-border/60 bg-surface/50 p-3 text-xs sm:text-sm text-foreground-muted">
         ✍️ Hãy viết một câu tiếng Anh hoàn chỉnh có sử dụng từ{" "}
-        <strong className="text-foreground font-bold">&quot;{card.word}&quot;</strong>.
+        <strong className="text-foreground font-bold">
+          &quot;{card.word}&quot;
+        </strong>
+        .
       </p>
 
       {/* Form nhập câu */}
@@ -108,175 +286,21 @@ export function SentenceStep({ card, feedback, onSubmit }: SentenceStepProps) {
           autoFocus
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          disabled={checkResult !== null}
           rows={3}
           autoComplete="off"
           spellCheck={false}
           placeholder="VD: Through hard work and perseverance, he achieved his goal."
-          className={`w-full resize-none rounded-2xl border-2 bg-surface/50 p-4 text-base sm:text-lg font-medium text-foreground outline-none transition-all placeholder:text-foreground-muted/30 focus:border-indigo focus:ring-4 focus:ring-indigo/10 ${
-            checkResult?.score === "perfect" || checkResult?.score === "good"
-              ? "border-emerald/50 bg-emerald/5"
-              : checkResult?.score === "needs_improvement"
-              ? "border-amber-500/50 bg-amber-500/5"
-              : checkResult?.score === "invalid"
-              ? "border-rose/50 bg-rose/5"
-              : "border-border/60"
-          }`}
+          className="w-full resize-none rounded-2xl border-2 border-border/70 bg-surface/50 p-4 text-base sm:text-lg font-medium text-foreground outline-none transition-all placeholder:text-foreground-muted/30 focus:border-indigo focus:ring-4 focus:ring-indigo/10"
         />
 
-        {/* Nút Kiểm tra (khi chưa kiểm tra) */}
-        {!checkResult && (
-          <button
-            type="submit"
-            disabled={!value.trim() || isChecking}
-            className="w-full cursor-pointer rounded-2xl bg-indigo py-3.5 text-base font-bold text-white transition-all hover:bg-indigo-light hover:shadow-lg hover:shadow-indigo/20 disabled:opacity-50 disabled:hover:shadow-none"
-          >
-            {isChecking ? "⏳ Đang phân tích câu..." : "🔍 Kiểm tra câu & Gợi ý sửa lỗi"}
-          </button>
-        )}
+        <button
+          type="submit"
+          disabled={!value.trim() || isChecking}
+          className="w-full cursor-pointer rounded-2xl bg-indigo py-3.5 text-base font-bold text-white transition-all hover:bg-indigo-light hover:shadow-lg hover:shadow-indigo/20 disabled:opacity-50 disabled:hover:shadow-none"
+        >
+          {isChecking ? "⏳ Đang phân tích câu..." : "🔍 Kiểm tra câu & Gợi ý sửa lỗi"}
+        </button>
       </form>
-
-      {/* ─── KẾT QUẢ PHÂN TÍCH & GỢI Ý SỬA LỖI ───────────────── */}
-      {checkResult && (
-        <div className="mt-6 space-y-4 text-left animate-fade-in">
-          {/* Banner điểm & Trạng thái */}
-          <div
-            className={`rounded-2xl p-4 border flex items-start gap-3 ${
-              checkResult.score === "perfect"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                : checkResult.score === "good"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                : checkResult.score === "needs_improvement"
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                : "bg-rose-500/10 border-rose-500/30 text-rose-400"
-            }`}
-          >
-            <span className="text-2xl shrink-0">
-              {checkResult.score === "perfect"
-                ? "🌟"
-                : checkResult.score === "good"
-                ? "✅"
-                : checkResult.score === "needs_improvement"
-                ? "⚠️"
-                : "❌"}
-            </span>
-            <div>
-              <h4 className="font-bold text-sm sm:text-base">
-                {checkResult.score === "perfect"
-                  ? "Xuất sắc! Câu dùng từ chính xác và ngữ pháp chuẩn."
-                  : checkResult.score === "good"
-                  ? "Rất tốt! Câu đạt yêu cầu (xem một số gợi ý nhỏ bên dưới)."
-                  : checkResult.score === "needs_improvement"
-                  ? "Cần cải thiện: Câu đã dùng từ khóa nhưng có lỗi ngữ pháp hoặc chính tả."
-                  : "Chưa đạt: Câu chưa sử dụng từ khóa hoặc chưa đủ cấu trúc."}
-              </h4>
-              <p className="text-xs opacity-90 mt-0.5">
-                {checkResult.hasKeyword
-                  ? `✓ Đã nhận diện từ khóa: "${checkResult.matchedKeyword || card.word}"`
-                  : `✗ Chưa tìm thấy từ khóa "${card.word}" trong câu.`}
-              </p>
-            </div>
-          </div>
-
-          {/* Danh sách lỗi & Gợi ý sửa */}
-          {checkResult.suggestions.length > 0 && (
-            <div className="rounded-2xl border border-border/80 bg-surface/70 p-4 space-y-2.5">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-foreground-dim flex items-center gap-1.5">
-                <span>💡</span> Chi tiết góp ý & Gợi ý sửa lỗi:
-              </h5>
-              <ul className="space-y-2">
-                {checkResult.suggestions.map((sug, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-2 text-xs sm:text-sm text-foreground-muted rounded-xl bg-background/60 p-2.5 border border-border/50"
-                  >
-                    <span className="shrink-0 mt-0.5">
-                      {sug.type === "grammar"
-                        ? "🔴"
-                        : sug.type === "spelling"
-                        ? "🟡"
-                        : sug.type === "missing_keyword"
-                        ? "⛔"
-                        : "🔵"}
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-foreground font-medium">{sug.message}</p>
-                      {sug.original && sug.replacement && (
-                        <div className="mt-1 flex items-center gap-2 text-xs">
-                          <span className="line-through text-rose font-mono">
-                            {sug.original}
-                          </span>
-                          <span>➔</span>
-                          <span className="font-bold text-emerald font-mono">
-                            {sug.replacement}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Câu gợi ý sửa hoàn chỉnh */}
-          {checkResult.correctedSentence && (
-            <div className="rounded-2xl border border-indigo/30 bg-indigo/10 p-4">
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="text-xs font-bold text-indigo-light flex items-center gap-1.5">
-                  <span>✨</span> Câu gợi ý sửa hoàn chỉnh:
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleApplyCorrection(checkResult.correctedSentence!)
-                  }
-                  className="text-[11px] font-semibold text-indigo-light hover:underline cursor-pointer"
-                >
-                  Áp dụng câu này
-                </button>
-              </div>
-              <p className="text-sm font-semibold text-foreground font-mono bg-background/80 p-2.5 rounded-xl border border-indigo/20">
-                &quot;{checkResult.correctedSentence}&quot;
-              </p>
-            </div>
-          )}
-
-          {/* Câu mẫu tham khảo từ thẻ */}
-          {card.example && (
-            <div className="rounded-2xl border border-border/70 bg-surface/50 p-4">
-              <span className="text-xs font-bold text-foreground-dim block mb-1">
-                📖 Câu mẫu tham khảo từ thẻ:
-              </span>
-              <p className="text-xs sm:text-sm italic text-foreground-muted">
-                &quot;{card.example}&quot;
-              </p>
-            </div>
-          )}
-
-          {/* Nút hành động */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleRetry}
-              className="flex-1 rounded-2xl border border-border py-3 text-sm font-bold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all cursor-pointer"
-            >
-              ✏️ Viết lại câu
-            </button>
-            <button
-              type="button"
-              onClick={handleProceed}
-              className={`flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-all shadow-md cursor-pointer ${
-                checkResult.isValid
-                  ? "bg-gradient-to-r from-emerald-500 to-indigo hover:opacity-95"
-                  : "bg-gradient-to-r from-rose to-indigo hover:opacity-95"
-              }`}
-            >
-              Tiếp tục ➔
-            </button>
-          </div>
-        </div>
-      )}
-    </QuestionPanel>
+    </div>
   );
 }

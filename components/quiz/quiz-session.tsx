@@ -49,9 +49,14 @@ export default function QuizSession({ folderId, initialCards, serverNow }: QuizS
   if (!currentItem) return null;
 
   const { card } = currentItem.word;
+  const isSentence = currentItem.levelType === "sentence";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-10">
+    <div
+      className={`mx-auto px-4 py-4 sm:py-6 transition-all duration-300 ${
+        isSentence ? "max-w-5xl" : "max-w-2xl"
+      }`}
+    >
       <QuizTopBar
         phase={phase}
         levels={quiz.levels}
