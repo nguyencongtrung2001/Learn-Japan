@@ -4,7 +4,7 @@ import { useState } from "react";
 import { QuestionPanel } from "./question-panel";
 import { CorrectAnswer } from "./correct-answer";
 import type { Card } from "@/db/schema";
-import type { Feedback } from "@/lib/quiz";
+import { type Feedback, splitAnswers } from "@/lib/quiz";
 
 interface TypingStepProps {
   card: Card;
@@ -33,9 +33,20 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
         ? "border-rose/50 text-rose"
         : "border-border/50 focus:border-indigo focus:ring-4 focus:ring-indigo/10";
 
+  const acceptableWords = splitAnswers(card.word);
+
   return (
     <QuestionPanel feedback={feedback} className="p-8 sm:p-12">
-      <div className="mb-8 text-2xl font-extrabold sm:text-4xl">{card.translation}</div>
+      <div className="mb-2 text-2xl font-extrabold sm:text-4xl">{card.translation}</div>
+      
+      {card.partOfSpeech && (
+        <div className="mb-4">
+          <span className="rounded-md bg-indigo/15 px-2 py-0.5 text-xs font-bold text-indigo-light uppercase tracking-wider border border-indigo/25">
+            {card.partOfSpeech}
+          </span>
+        </div>
+      )}
+      {!card.partOfSpeech && <div className="mb-6" />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -46,8 +57,8 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
           disabled={answered}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Gõ đáp án của bạn..."
-          className={`w-full rounded-2xl border-2 bg-surface/50 px-6 py-5 text-center text-3xl font-bold text-foreground outline-none transition-all placeholder:text-foreground-muted/30 ${borderTone}`}
+          placeholder="Gõ đáp án của bạn (chỉ cần 1 đáp án)..."
+          className={`w-full rounded-2xl border-2 bg-surface/50 px-6 py-5 text-center text-2xl sm:text-3xl font-bold text-foreground outline-none transition-all placeholder:text-foreground-muted/30 ${borderTone}`}
         />
         <button
           type="submit"
@@ -56,10 +67,24 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
         >
           Kiểm tra
         </button>
+
+        <p className="text-center text-xs text-foreground-dim pt-1">
+          💡 Chấp nhận bất kỳ đáp án nào (cách nhau bởi dấu phẩy <code>,</code> hoặc chấm phẩy <code>;</code>), không phân biệt hoa thường hay khoảng trắng.
+        </p>
       </form>
 
       {feedback === "incorrect" && (
-        <CorrectAnswer textClass="text-3xl sm:text-4xl font-bold text-foreground">{card.word}</CorrectAnswer>
+        <CorrectAnswer textClass="text-2xl sm:text-3xl font-bold text-foreground">
+          <div>{card.word}</div>
+          {acceptableWords.length > 1 && (
+            <div className="mt-1.5 text-xs font-normal text-foreground-muted">
+              Chấp nhận bất kỳ đáp án nào:{" "}
+              <span className="font-semibold text-foreground">
+                {acceptableWords.join("  |  ")}
+              </span>
+            </div>
+          )}
+        </CorrectAnswer>
       )}
     </QuestionPanel>
   );

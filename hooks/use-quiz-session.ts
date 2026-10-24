@@ -175,8 +175,14 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
   );
 
   const submitSentence = useCallback(
-    (value: string) => {
-      if (currentItem) answer(isSentenceCorrect(currentItem.word.card, value));
+    (value: string, isCorrect?: boolean) => {
+      if (currentItem) {
+        const correct =
+          typeof isCorrect === "boolean"
+            ? isCorrect
+            : isSentenceCorrect(currentItem.word.card, value);
+        answer(correct);
+      }
     },
     [currentItem, answer]
   );

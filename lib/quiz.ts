@@ -127,23 +127,105 @@ export function buildReviewItem(card: Card, pool: Card[], uid: number): QuizItem
 }
 
 // ─── Chấm điểm ───────────────────────────────────────────────────
-function normalizeLoose(t: string): string {
-  return t
+export function splitAnswers(target: string): string[] {
+  if (!target) return [];
+
+  // Tách theo dấu phẩy, dấu chấm phẩy, dấu gạch chéo, hoặc xuống dòng
+  const parts = target
+    .split(/[,;/\n|]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  const candidates = new Set<string>();
+  const fullTrimmed = target.trim();
+  if (fullTrimmed) {
+    candidates.add(fullTrimmed);
+  }
+
+  for (const part of parts) {
+    candidates.add(part);
+
+    // Nếu có dạng "(to) accomplish" hoặc "accomplish (v)" -> thêm cả phần không có ngoặc
+    if (part.includes("(") && part.includes(")")) {
+      const withoutParens = part.replace(/\([^)]*\)/g, "").trim().replace(/\s+/g, " ");
+      if (withoutParens) {
+        candidates.add(withoutParens);
+      }
+    }
+
+    // Nếu bắt đầu bằng "to " (động từ tiếng Anh: "to achieve") -> thêm cả "achieve"
+    if (part.toLowerCase().startsWith("to ")) {
+      const withoutTo = part.slice(3).trim();
+      if (withoutTo) {
+        candidates.add(withoutTo);
+      }
+    }
+  }
+
+  return Array.from(candidates);
+}
+
+function normalizeBasic(s: string): string {
+  return s
     .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function normalizeNoAccents(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[đĐ]/g, "d")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
-    .replace(/[.,?!-]/g, "") // bỏ dấu câu
+    .replace(/[\u0300-\u036f]/g, "") // bỏ dấu thanh tiếng Việt
+    .replace(/[.,?!~`'":]/g, "") // bỏ dấu câu
     .trim()
     .replace(/\s+/g, " ");
 }
 
 export function checkAnswerMatch(input: string, target: string): boolean {
   if (!input || !target) return false;
-  const a = normalizeLoose(input);
-  const b = normalizeLoose(target);
-  if (a === b) return true;
-  if (b.includes(a) && a.length >= Math.max(2, b.length * 0.5)) return true;
-  if (a.includes(b) && b.length >= Math.max(2, a.length * 0.5)) return true;
+
+  const rawInput = input.trim();
+  if (!rawInput) return false;
+
+  // Lấy danh sách tất cả các đáp án hợp lệ từ target (tách bởi dấu phẩy, chấm phẩy, v.v.)
+  const candidates = splitAnswers(target);
+
+  const inBasic = normalizeBasic(rawInput);
+  const inBasicNoSpace = inBasic.replace(/\s+/g, "");
+  const inNoAccents = normalizeNoAccents(rawInput);
+  const inNoAccentsNoSpace = inNoAccents.replace(/\s+/g, "");
+
+  for (const cand of candidates) {
+    const candBasic = normalizeBasic(cand);
+    const candBasicNoSpace = candBasic.replace(/\s+/g, "");
+    const candNoAccents = normalizeNoAccents(cand);
+    const candNoAccentsNoSpace = candNoAccents.replace(/\s+/g, "");
+
+    // 1. Khớp không phân biệt hoa/thường
+    if (inBasic === candBasic) return true;
+
+    // 2. Khớp không phân biệt khoảng trắng
+    if (inBasicNoSpace === candBasicNoSpace) return true;
+
+    // 3. Khớp không phân biệt dấu tiếng Việt (kể cả đ/d)
+    if (inNoAccents === candNoAccents) return true;
+
+    // 4. Khớp không phân biệt dấu và khoảng trắng
+    if (inNoAccentsNoSpace === candNoAccentsNoSpace) return true;
+
+    // 5. Khớp nếu bao hàm gần đúng
+    if (
+      candNoAccents.length >= 4 &&
+      inNoAccents.length >= 4 &&
+      (candNoAccents.includes(inNoAccents) || inNoAccents.includes(candNoAccents)) &&
+      Math.abs(candNoAccents.length - inNoAccents.length) <= 3
+    ) {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -153,12 +235,16 @@ export function getChoiceAnswer(item: QuizItem): string {
 }
 
 export function isTypingCorrect(card: Card, input: string): boolean {
-  // Chấp nhận gõ đúng từ tiếng Anh HOẶC sát nghĩa tiếng Việt
+  // Chấp nhận gõ đúng bất kỳ từ nào trong từ tiếng Anh HOẶC sát nghĩa tiếng Việt
   return checkAnswerMatch(input, card.word) || checkAnswerMatch(input, card.translation);
 }
 
 export function isSentenceCorrect(card: Card, input: string): boolean {
-  const normalize = (t: string) => t.toLowerCase().replace(/[.,?!-]/g, "").trim().replace(/\s+/g, " ");
-  const target = normalize(card.word);
-  return target.length > 0 && normalize(input).includes(target);
+  if (!input || !card.word) return false;
+  const inNorm = normalizeNoAccents(input);
+  const candidates = splitAnswers(card.word);
+  return candidates.some((cand) => {
+    const candNorm = normalizeNoAccents(cand);
+    return candNorm.length > 0 && inNorm.includes(candNorm);
+  });
 }
