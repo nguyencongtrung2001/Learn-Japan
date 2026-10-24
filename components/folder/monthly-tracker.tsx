@@ -8,11 +8,6 @@ import {
   eachDayOfInterval,
   getDay,
   isSameDay,
-  addWeeks,
-  subWeeks,
-  startOfWeek,
-  endOfWeek,
-  isSameWeek,
   addMonths,
   subMonths,
 } from "date-fns";
@@ -33,7 +28,6 @@ export function MonthlyTracker() {
     }
     return new Set<string>();
   });
-  const [currentWeekDate, setCurrentWeekDate] = useState<Date>(() => new Date());
   const [viewMonthDate, setViewMonthDate] = useState<Date>(() => new Date());
 
   const save = (set: Set<string>) => {
@@ -63,42 +57,6 @@ export function MonthlyTracker() {
     k.startsWith(currentMonthPrefix)
   ).length;
   const totalStreakCount = selectedDates.size;
-
-  // Week navigation calculation (Monday to Sunday)
-  const weekStart = startOfWeek(currentWeekDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(currentWeekDate, { weekStartsOn: 1 });
-  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
-  const isCurrentWeek = isSameWeek(currentWeekDate, today, { weekStartsOn: 1 });
-
-  const weekCompletedCount = weekDays.filter((d) =>
-    selectedDates.has(format(d, "yyyy-MM-dd"))
-  ).length;
-  const weekPercent = Math.round((weekCompletedCount / 7) * 100);
-
-  const handlePrevWeek = () => {
-    const prev = subWeeks(currentWeekDate, 1);
-    setCurrentWeekDate(prev);
-    // Sync month calendar if week is completely in another month
-    const prevStart = startOfWeek(prev, { weekStartsOn: 1 });
-    if (format(prevStart, "yyyy-MM") !== format(viewMonthDate, "yyyy-MM")) {
-      setViewMonthDate(prevStart);
-    }
-  };
-
-  const handleNextWeek = () => {
-    const next = addWeeks(currentWeekDate, 1);
-    setCurrentWeekDate(next);
-    // Sync month calendar if week is completely in another month
-    const nextStart = startOfWeek(next, { weekStartsOn: 1 });
-    if (format(nextStart, "yyyy-MM") !== format(viewMonthDate, "yyyy-MM")) {
-      setViewMonthDate(nextStart);
-    }
-  };
-
-  const handleResetToCurrentWeek = () => {
-    setCurrentWeekDate(new Date());
-    setViewMonthDate(new Date());
-  };
 
   // Month calendar calculation (Monday to Sunday)
   const viewMonthStart = startOfMonth(viewMonthDate);
@@ -152,144 +110,6 @@ export function MonthlyTracker() {
         </div>
       </div>
 
-      {/* Weekly View with 2 Arrow Buttons on Both Sides */}
-      <div className="card p-5 space-y-4">
-        {/* Navigation Bar: Arrow Left on left, Title in middle, Arrow Right on right */}
-        <div className="flex items-center justify-between gap-2 border-b border-border pb-4">
-          {/* Button Arrow Left: Tuần trước */}
-          <button
-            onClick={handlePrevWeek}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-surface hover:bg-surface-hover border border-border text-foreground transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer select-none"
-            title="Xem tuần trước"
-            aria-label="Xem tuần trước"
-          >
-            <svg
-              className="w-4 h-4 text-foreground-muted"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            <span className="hidden sm:inline">Tuần trước</span>
-          </button>
-
-          {/* Week Info in Center */}
-          <div className="text-center px-1">
-            <div className="flex items-center justify-center gap-2">
-              <h3 className="text-sm sm:text-base font-bold text-foreground">
-                Tuần: {format(weekStart, "dd/MM")} - {format(weekEnd, "dd/MM/yyyy")}
-              </h3>
-              {isCurrentWeek ? (
-                <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap">
-                  Tuần này
-                </span>
-              ) : null}
-            </div>
-            {!isCurrentWeek && (
-              <button
-                onClick={handleResetToCurrentWeek}
-                className="text-xs text-indigo hover:text-indigo-light underline mt-1 transition-colors cursor-pointer"
-              >
-                Quay về tuần hiện tại
-              </button>
-            )}
-          </div>
-
-          {/* Button Arrow Right: Tuần sau */}
-          <button
-            onClick={handleNextWeek}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-surface hover:bg-surface-hover border border-border text-foreground transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-sm cursor-pointer select-none"
-            title="Xem tuần sau"
-            aria-label="Xem tuần sau"
-          >
-            <span className="hidden sm:inline">Tuần sau</span>
-            <svg
-              className="w-4 h-4 text-foreground-muted"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* 7 Days of the Week */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
-          {weekDays.map((d) => {
-            const key = format(d, "yyyy-MM-dd");
-            const isToday = isSameDay(d, today);
-            const selected = selectedDates.has(key);
-            // Day name in VN: T2, T3, T4, T5, T6, T7, CN
-            const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-            const dayLabel = dayNames[getDay(d)];
-
-            return (
-              <button
-                key={key}
-                onClick={() => toggleDate(d)}
-                className={`
-                  flex flex-col items-center justify-between p-1.5 sm:p-2.5 rounded-xl border transition-all duration-200 cursor-pointer select-none
-                  ${
-                    selected
-                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm shadow-emerald-500/20 scale-[1.02]"
-                      : isToday
-                        ? "bg-indigo/10 border-indigo text-indigo-light ring-2 ring-indigo/30"
-                        : "bg-surface hover:bg-surface-hover border-border text-foreground"
-                  }
-                `}
-                title={`${dayLabel} ${format(d, "dd/MM/yyyy")}: ${
-                  selected ? "Đã học" : "Chưa học"
-                }`}
-              >
-                <span className="text-[11px] sm:text-xs font-semibold opacity-75">
-                  {dayLabel}
-                </span>
-                <span className="text-sm sm:text-lg font-bold my-0.5 sm:my-1">
-                  {format(d, "d")}
-                </span>
-                <span
-                  className={`text-[10px] sm:text-xs font-semibold px-1 sm:px-1.5 py-0.5 rounded-md ${
-                    selected
-                      ? "bg-emerald-500 text-white"
-                      : isToday
-                        ? "bg-indigo/20 text-indigo font-bold"
-                        : "text-foreground-muted"
-                  }`}
-                >
-                  {selected ? "✓" : isToday ? "Nay" : "○"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Weekly Completion Progress */}
-        <div className="pt-2">
-          <div className="flex items-center justify-between text-xs text-foreground-muted mb-1.5 font-medium">
-            <span>Tiến độ tuần: {weekCompletedCount}/7 ngày</span>
-            <span>{weekPercent}%</span>
-          </div>
-          <div className="w-full h-2 rounded-full bg-surface border border-border overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300 rounded-full"
-              style={{ width: `${weekPercent}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Monthly Calendar View */}
       <div className="card p-5">
         <div className="flex items-center justify-between mb-4">
@@ -319,10 +139,7 @@ export function MonthlyTracker() {
               </svg>
             </button>
             <button
-              onClick={() => {
-                setViewMonthDate(new Date());
-                setCurrentWeekDate(new Date());
-              }}
+              onClick={() => setViewMonthDate(new Date())}
               className="px-2.5 py-1 text-xs font-medium rounded-lg hover:bg-surface-hover border border-border text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
               title="Về tháng hiện tại"
             >
@@ -372,9 +189,6 @@ export function MonthlyTracker() {
               const key = format(d, "yyyy-MM-dd");
               const isToday = isSameDay(d, today);
               const selected = selectedDates.has(key);
-              const isInCurrentWeek = isSameWeek(d, currentWeekDate, {
-                weekStartsOn: 1,
-              });
 
               return (
                 <button
@@ -389,11 +203,6 @@ export function MonthlyTracker() {
                         : isToday
                           ? "bg-indigo/20 text-indigo-light ring-2 ring-indigo/40"
                           : "bg-surface hover:bg-surface-hover text-foreground"
-                    }
-                    ${
-                      isInCurrentWeek && !selected
-                        ? "border-2 border-dashed border-indigo/40"
-                        : ""
                     }
                   `}
                   title={`${format(d, "dd/MM/yyyy")}: ${
@@ -417,10 +226,6 @@ export function MonthlyTracker() {
         <span className="flex items-center gap-2">
           <span className="w-3 h-3 rounded bg-indigo/20 ring-2 ring-indigo/40 inline-block" />
           Hôm nay
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded border-2 border-dashed border-indigo/50 inline-block" />
-          Tuần đang xem
         </span>
         <span className="flex items-center gap-2">
           <span className="w-3 h-3 rounded bg-surface inline-block border border-border" />
