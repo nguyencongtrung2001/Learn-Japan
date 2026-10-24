@@ -22,8 +22,7 @@ export default function NotePage() {
     totalCardsCount,
   } = useNotesBoard();
 
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState("");
+  // Filter state
   const [selectedColorFilter, setSelectedColorFilter] = useState<
     NoteLabelColor | "all"
   >("all");
@@ -97,58 +96,21 @@ export default function NotePage() {
     setIsAddingColumn(false);
   };
 
-  // Filter cards based on search and color
+  // Filter cards based on color
   const filteredColumns = useMemo(() => {
-    return board.columns.map((col) => {
-      const filteredCards = col.cards.filter((card) => {
-        const matchesSearch =
-          searchQuery.trim() === "" ||
-          card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (card.description &&
-            card.description.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        const matchesColor =
-          selectedColorFilter === "all" || card.color === selectedColorFilter;
-
-        return matchesSearch && matchesColor;
-      });
-
-      return {
-        ...col,
-        cards: filteredCards,
-      };
-    });
-  }, [board.columns, searchQuery, selectedColorFilter]);
+    if (selectedColorFilter === "all") return board.columns;
+    return board.columns.map((col) => ({
+      ...col,
+      cards: col.cards.filter((card) => card.color === selectedColorFilter),
+    }));
+  }, [board.columns, selectedColorFilter]);
 
   return (
     <div className="h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] flex flex-col overflow-hidden bg-background/40">
       {/* ─── Top Minimalist Toolbar ─────────────────────────────── */}
       <div className="border-b border-border/60 bg-surface/30 backdrop-blur-md px-4 sm:px-6 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Left: Search input */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <span className="pointer-events-none absolute left-3 top-2.5 text-xs text-foreground-dim">
-              🔍
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm thẻ ghi chú..."
-              className="w-full rounded-xl border border-border/70 bg-surface/60 py-1.5 pl-8 pr-7 text-xs text-foreground outline-none transition-all placeholder:text-foreground-muted/50 focus:border-indigo/50 focus:ring-2 focus:ring-indigo/10"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-2 text-xs text-foreground-dim hover:text-foreground"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Middle: Color filter tags */}
+          {/* Left: Color filter tags */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
             <button
               type="button"
