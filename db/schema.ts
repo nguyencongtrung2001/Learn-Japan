@@ -31,6 +31,7 @@ export const cards = pgTable(
     // ── Content ──
     word: text("word").notNull(),
     translation: text("translation").notNull(),
+    partOfSpeech: text("part_of_speech"), // NOUN, VERB, ADJ, ADV, CỤM TỪ, STRUCTURE...
     definition: text("definition"),
     example: text("example"),
     phonetic: text("phonetic"),

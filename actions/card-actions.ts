@@ -43,6 +43,7 @@ export async function getCardListByFolder(folderId: number): Promise<CardListIte
       id: cards.id,
       word: cards.word,
       translation: cards.translation,
+      partOfSpeech: cards.partOfSpeech,
       definition: cards.definition,
       example: cards.example,
       phonetic: cards.phonetic,
@@ -126,6 +127,7 @@ function toInsertRow(folderId: number, data: CardInput) {
     folderId,
     word: data.word.trim(),
     translation: data.translation.trim(),
+    partOfSpeech: data.partOfSpeech?.trim() || null,
     definition: data.definition?.trim() || null,
     example: data.example?.trim() || null,
     phonetic: data.phonetic?.trim() || null,
@@ -182,6 +184,7 @@ export async function updateCard(
   data: {
     word?: string;
     translation?: string;
+    partOfSpeech?: string;
     definition?: string;
     example?: string;
     phonetic?: string;
@@ -194,6 +197,7 @@ export async function updateCard(
     .set({
       ...(data.word !== undefined && { word: data.word.trim() }),
       ...(data.translation !== undefined && { translation: data.translation.trim() }),
+      ...(data.partOfSpeech !== undefined && { partOfSpeech: data.partOfSpeech?.trim() || null }),
       ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
       ...(data.example !== undefined && { example: data.example?.trim() || null }),
       ...(data.phonetic !== undefined && { phonetic: data.phonetic?.trim() || null }),

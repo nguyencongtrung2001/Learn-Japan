@@ -143,6 +143,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
         const updated = await updateCard(cardId, {
           word: input.word,
           translation: input.translation,
+          partOfSpeech: input.partOfSpeech,
           phonetic: input.phonetic,
           definition: input.definition,
           example: input.example,
@@ -157,6 +158,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
                   ...c,
                   word: input.word,
                   translation: input.translation,
+                  partOfSpeech: input.partOfSpeech || null,
                   phonetic: input.phonetic || null,
                   definition: input.definition || null,
                   example: input.example || null,

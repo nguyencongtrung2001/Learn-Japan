@@ -17,6 +17,7 @@ const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wide text-
 export function EditCardModal({ card, isOpen, onClose, onSave }: EditCardModalProps) {
   const [word, setWord] = useState("");
   const [translation, setTranslation] = useState("");
+  const [partOfSpeech, setPartOfSpeech] = useState("");
   const [phonetic, setPhonetic] = useState("");
   const [definition, setDefinition] = useState("");
   const [example, setExample] = useState("");
@@ -26,6 +27,7 @@ export function EditCardModal({ card, isOpen, onClose, onSave }: EditCardModalPr
     if (card) {
       setWord(card.word);
       setTranslation(card.translation);
+      setPartOfSpeech(card.partOfSpeech ?? "");
       setPhonetic(card.phonetic ?? "");
       setDefinition(card.definition ?? "");
       setExample(card.example ?? "");
@@ -45,6 +47,7 @@ export function EditCardModal({ card, isOpen, onClose, onSave }: EditCardModalPr
     const ok = await onSave(card.id, {
       word: word.trim(),
       translation: translation.trim(),
+      partOfSpeech: partOfSpeech.trim() || undefined,
       phonetic: phonetic.trim() || undefined,
       definition: definition.trim() || undefined,
       example: example.trim() || undefined,
@@ -96,7 +99,32 @@ export function EditCardModal({ card, isOpen, onClose, onSave }: EditCardModalPr
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className={labelClass} htmlFor="edit-pos">
+                Loại từ
+              </label>
+              <input
+                id="edit-pos"
+                type="text"
+                list="edit-pos-suggestions"
+                value={partOfSpeech}
+                onChange={(e) => setPartOfSpeech(e.target.value)}
+                placeholder="NOUN, VERB, ADJ..."
+                className={`${inputClass} uppercase`}
+              />
+              <datalist id="edit-pos-suggestions">
+                <option value="NOUN" />
+                <option value="VERB" />
+                <option value="ADJ" />
+                <option value="ADV" />
+                <option value="PHRASE" />
+                <option value="CỤM TỪ" />
+                <option value="STRUCTURE" />
+                <option value="IDIOM" />
+                <option value="PREPOSITION" />
+              </datalist>
+            </div>
             <div>
               <label className={labelClass} htmlFor="edit-translation">
                 Nghĩa tiếng Việt <span className="text-rose">*</span>

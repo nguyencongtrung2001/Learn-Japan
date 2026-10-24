@@ -4,6 +4,7 @@ import type { Card } from "@/db/schema";
 export interface CardInput {
   word: string;
   translation: string;
+  partOfSpeech?: string;
   definition?: string;
   example?: string;
   phonetic?: string;
@@ -16,11 +17,11 @@ export interface CardInput {
  */
 export type CardListItem = Pick<
   Card,
-  "id" | "word" | "translation" | "definition" | "example" | "phonetic" | "growthLevel"
+  "id" | "word" | "translation" | "partOfSpeech" | "definition" | "example" | "phonetic" | "growthLevel"
 > & { nextReviewAt: number };
 
 export function toCardListItem(
-  card: Pick<Card, "id" | "word" | "translation" | "definition" | "example" | "phonetic" | "growthLevel"> & {
+  card: Pick<Card, "id" | "word" | "translation" | "partOfSpeech" | "definition" | "example" | "phonetic" | "growthLevel"> & {
     nextReview: Date | string;
   }
 ): CardListItem {
@@ -28,6 +29,7 @@ export function toCardListItem(
     id: card.id,
     word: card.word,
     translation: card.translation,
+    partOfSpeech: card.partOfSpeech,
     definition: card.definition,
     example: card.example,
     phonetic: card.phonetic,

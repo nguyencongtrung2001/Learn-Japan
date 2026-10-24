@@ -33,6 +33,7 @@ export function AddCardForm({ onSubmit }: AddCardFormProps) {
     const ok = await onSubmit({
       word,
       translation,
+      partOfSpeech: get("partOfSpeech") || undefined,
       phonetic: get("phonetic") || undefined,
       definition: get("definition") || undefined,
       example: get("example") || undefined,
@@ -64,6 +65,30 @@ export function AddCardForm({ onSubmit }: AddCardFormProps) {
             placeholder="VD: apple"
             className={`${baseInput} py-4 text-xl font-bold placeholder:font-normal`}
           />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="card-pos">
+            Loại từ (Part of Speech)
+          </label>
+          <input
+            id="card-pos"
+            name="partOfSpeech"
+            type="text"
+            list="pos-suggestions"
+            placeholder="VD: NOUN, VERB, ADJ, CỤM TỪ..."
+            className={`${baseInput} py-3.5 font-medium uppercase`}
+          />
+          <datalist id="pos-suggestions">
+            <option value="NOUN" />
+            <option value="VERB" />
+            <option value="ADJ" />
+            <option value="ADV" />
+            <option value="PHRASE" />
+            <option value="CỤM TỪ" />
+            <option value="STRUCTURE" />
+            <option value="IDIOM" />
+            <option value="PREPOSITION" />
+          </datalist>
         </div>
         <div>
           <label className={labelClass} htmlFor="card-translation">

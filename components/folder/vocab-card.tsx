@@ -57,9 +57,16 @@ function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps
       {/* Header */}
       <header className="vocab-card-v2__header">
         <div className="vocab-card-v2__word-group">
-          <h3 className={`vocab-card-v2__word ${isExpanded ? "" : "truncate"}`}>
-            {card.word}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className={`vocab-card-v2__word ${isExpanded ? "" : "truncate"}`}>
+              {card.word}
+            </h3>
+            {card.partOfSpeech && (
+              <span className="rounded-md bg-indigo/15 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-indigo-light border border-indigo/25">
+                {card.partOfSpeech}
+              </span>
+            )}
+          </div>
           {card.phonetic && (
             <span className="vocab-card-v2__phonetic">{card.phonetic}</span>
           )}
@@ -77,6 +84,12 @@ function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps
       {/* Expanded content — no line-clamp, no truncation, no shadow */}
       {isExpanded && (
         <div className="vocab-card-v2__details">
+          {card.partOfSpeech && (
+            <div className="vocab-card-v2__definition">
+              <span className="vocab-card-v2__label">Loại từ</span>
+              <p className="font-semibold text-xs text-indigo-light uppercase">{card.partOfSpeech}</p>
+            </div>
+          )}
           {card.definition && (
             <div className="vocab-card-v2__definition">
               <span className="vocab-card-v2__label">Định nghĩa</span>
