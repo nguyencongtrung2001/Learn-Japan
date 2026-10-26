@@ -10,8 +10,7 @@ export type LevelType =
   | "abcd-en-vn" // 1→2
   | "audio-select" // 2→3
   | "abcd-vn-en" // 3→4
-  | "typing" // 4→5
-  | "sentence"; // 5→6
+  | "typing"; // 4→5
 
 export type Feedback = "correct" | "incorrect" | null;
 
@@ -40,7 +39,6 @@ export const LEVEL_LABELS: Record<LevelType, { icon: string; text: string; color
   "audio-select": { icon: "🔊", text: "Nghe chọn từ", color: "bg-indigo/10 border-indigo/30 text-indigo-light" },
   "abcd-vn-en": { icon: "🅰️", text: "Việt → Anh", color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
   typing: { icon: "⌨️", text: "Gõ chính xác", color: "bg-violet-500/10 border-violet-500/30 text-violet-400" },
-  sentence: { icon: "📝", text: "Viết câu", color: "bg-rose/10 border-rose/30 text-rose" },
 };
 
 // ─── Level → dạng câu hỏi ────────────────────────────────────────
@@ -54,10 +52,8 @@ export function getLevelType(level: number): LevelType {
       return "audio-select";
     case 3:
       return "abcd-vn-en";
-    case 4:
-      return "typing";
     default:
-      return "sentence";
+      return "typing";
   }
 }
 
@@ -70,7 +66,7 @@ export function countNew(cards: Card[]): number {
 
 export function countDue(cards: Card[], now: number): number {
   let n = 0;
-  for (const c of cards) if (c.growthLevel === MAX_GROWTH_LEVEL && ts(c.nextReview) <= now) n++;
+  for (const c of cards) if (c.growthLevel >= MAX_GROWTH_LEVEL && ts(c.nextReview) <= now) n++;
   return Math.min(n, REVIEW_BATCH_SIZE);
 }
 
@@ -85,7 +81,7 @@ export function pickNewCards(cards: Card[], limit = NEW_BATCH_SIZE): Card[] {
 /** Thẻ đã nở hoa và đến hạn ôn, hạn sớm nhất trước (khớp getReviewCards ở server). */
 export function pickDueCards(cards: Card[], now: number, limit = REVIEW_BATCH_SIZE): Card[] {
   return cards
-    .filter((c) => c.growthLevel === MAX_GROWTH_LEVEL && ts(c.nextReview) <= now)
+    .filter((c) => c.growthLevel >= MAX_GROWTH_LEVEL && ts(c.nextReview) <= now)
     .sort((a, b) => ts(a.nextReview) - ts(b.nextReview))
     .slice(0, limit);
 }
@@ -118,11 +114,12 @@ export function buildLearnQuestion(batch: SessionWord[], pool: Card[], uid: numb
   return { uid, word, levelType, options: withOptions(word.card, levelType, pool) };
 }
 
-// ─── Câu hỏi chế độ ÔN TẬP: ngẫu nhiên giữa ABCD / gõ từ / viết câu ──
+// ─── Câu hỏi chế độ ÔN TẬP: ngẫu nhiên giữa ABCD / gõ từ ──
 export function buildReviewItem(card: Card, pool: Card[], uid: number): QuizItem {
   const word: SessionWord = { card, sessionLevel: MAX_GROWTH_LEVEL };
   const r = Math.random();
-  const levelType: LevelType = r < 0.33 ? "abcd-en-vn" : r < 0.66 ? "typing" : "sentence";
+  const levelType: LevelType =
+    r < 0.35 ? "abcd-en-vn" : r < 0.7 ? "abcd-vn-en" : "typing";
   return { uid, word, levelType, options: withOptions(card, levelType, pool) };
 }
 
@@ -235,16 +232,18 @@ export function getChoiceAnswer(item: QuizItem): string {
 }
 
 export function isTypingCorrect(card: Card, input: string): boolean {
-  // Chấp nhận gõ đúng bất kỳ từ nào trong từ tiếng Anh HOẶC sát nghĩa tiếng Việt
-  return checkAnswerMatch(input, card.word) || checkAnswerMatch(input, card.translation);
-}
+  if (!input || !input.trim()) return false;
+  const rawInput = input.trim();
 
-export function isSentenceCorrect(card: Card, input: string): boolean {
-  if (!input || !card.word) return false;
-  const inNorm = normalizeNoAccents(input);
-  const candidates = splitAnswers(card.word);
-  return candidates.some((cand) => {
-    const candNorm = normalizeNoAccents(cand);
-    return candNorm.length > 0 && inNorm.includes(candNorm);
-  });
+  // 1. Kiểm tra khớp với từ tiếng Anh hoặc nghĩa tiếng Việt
+  if (checkAnswerMatch(rawInput, card.word) || checkAnswerMatch(rawInput, card.translation)) {
+    return true;
+  }
+
+  // 2. Nếu thẻ có phần giải thích / định nghĩa thêm (definition)
+  if (card.definition && checkAnswerMatch(rawInput, card.definition)) {
+    return true;
+  }
+
+  return false;
 }

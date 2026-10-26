@@ -9,7 +9,6 @@ import { LevelBadge } from "./level-badge";
 import { FlashcardStep } from "./flashcard-step";
 import { ChoiceStep } from "./choice-step";
 import { TypingStep } from "./typing-step";
-import { SentenceStep } from "./sentence-step";
 
 interface QuizSessionProps {
   folderId: number;
@@ -49,14 +48,9 @@ export default function QuizSession({ folderId, initialCards, serverNow }: QuizS
   if (!currentItem) return null;
 
   const { card } = currentItem.word;
-  const isSentence = currentItem.levelType === "sentence";
 
   return (
-    <div
-      className={`mx-auto px-4 py-4 sm:py-6 transition-all duration-300 ${
-        isSentence ? "max-w-5xl" : "max-w-2xl"
-      }`}
-    >
+    <div className="mx-auto max-w-2xl px-4 py-4 sm:py-6 transition-all duration-300">
       <QuizTopBar
         phase={phase}
         levels={quiz.levels}
@@ -85,10 +79,6 @@ export default function QuizSession({ folderId, initialCards, serverNow }: QuizS
 
       {currentItem.levelType === "typing" && (
         <TypingStep key={currentItem.uid} card={card} feedback={feedback} onSubmit={quiz.submitTyping} />
-      )}
-
-      {currentItem.levelType === "sentence" && (
-        <SentenceStep key={currentItem.uid} card={card} feedback={feedback} onSubmit={quiz.submitSentence} />
       )}
     </div>
   );

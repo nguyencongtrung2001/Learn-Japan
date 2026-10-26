@@ -2,9 +2,10 @@
 
 import { db } from "@/lib/db";
 import { cards, folders, type Card } from "@/db/schema";
-import { eq, desc, lte, and, lt, sql, inArray } from "drizzle-orm";
+import { eq, desc, lte, and, lt, gte, sql, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-utils";
+import { MAX_GROWTH_LEVEL } from "@/lib/growth";
 
 // ─── Memrise Classic SRS Intervals (in hours) ─────────────────────
 const MEMRISE_INTERVALS_HOURS = [
@@ -56,30 +57,26 @@ export async function getCardListByFolder(folderId: number): Promise<CardListIte
   return rows.map(toCardListItem);
 }
 
-// ─── Get NEW cards (growthLevel < 6 — chưa nở hoa) ──────────────
+// ─── Get NEW cards (growthLevel < MAX_GROWTH_LEVEL — chưa nở hoa) ──────────────
 export async function getNewCards(folderId: number, limit: number = 5): Promise<Card[]> {
-  const maxLevel = 6;
-
   const data = await db
     .select()
     .from(cards)
-    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, maxLevel)))
+    .where(and(eq(cards.folderId, folderId), lt(cards.growthLevel, MAX_GROWTH_LEVEL)))
     .orderBy(cards.createdAt)
     .limit(limit);
   return data;
 }
 
-// ─── Get REVIEW cards (growthLevel == 6 AND due) ─────────────────
+// ─── Get REVIEW cards (growthLevel >= MAX_GROWTH_LEVEL AND due) ─────────────────
 export async function getReviewCards(folderId: number, limit: number = 15): Promise<Card[]> {
-  const maxLevel = 6;
-
   const data = await db
     .select()
     .from(cards)
     .where(
       and(
         eq(cards.folderId, folderId),
-        eq(cards.growthLevel, maxLevel),
+        gte(cards.growthLevel, MAX_GROWTH_LEVEL),
         lte(cards.nextReview, new Date())
       )
     )
@@ -109,15 +106,13 @@ export async function getFolderStats(folderId: number): Promise<{
   plantedCount: number;
   dueCount: number;
 }> {
-  const maxLevel = 6;
-
   const allCards = await getCardsByFolder(folderId);
   const now = new Date();
   return {
     total: allCards.length,
-    newCount: allCards.filter(c => c.growthLevel < maxLevel).length,
-    plantedCount: allCards.filter(c => c.growthLevel === maxLevel).length,
-    dueCount: allCards.filter(c => c.growthLevel === maxLevel && new Date(c.nextReview) <= now).length,
+    newCount: allCards.filter(c => c.growthLevel < MAX_GROWTH_LEVEL).length,
+    plantedCount: allCards.filter(c => c.growthLevel >= MAX_GROWTH_LEVEL).length,
+    dueCount: allCards.filter(c => c.growthLevel >= MAX_GROWTH_LEVEL && new Date(c.nextReview) <= now).length,
   };
 }
 
@@ -226,12 +221,10 @@ export async function updateGrowthLevel(cardId: number, isCorrect: boolean) {
   const card = result[0];
   if (!card) return;
 
-  const maxLevel = 6;
-
   let newLevel = card.growthLevel;
 
   if (isCorrect) {
-    newLevel = Math.min(maxLevel, newLevel + 1);
+    newLevel = Math.min(MAX_GROWTH_LEVEL, newLevel + 1);
   } else {
     newLevel = Math.max(0, newLevel - 1);
   }
@@ -239,7 +232,7 @@ export async function updateGrowthLevel(cardId: number, isCorrect: boolean) {
   const updates: Record<string, unknown> = { growthLevel: newLevel };
 
   // Khi vừa đạt max level lần đầu → bắt đầu SRS cycle
-  if (newLevel === maxLevel && card.growthLevel < maxLevel) {
+  if (newLevel === MAX_GROWTH_LEVEL && card.growthLevel < MAX_GROWTH_LEVEL) {
     updates.consecutiveCorrect = 0;
     updates.nextReview = getNextReviewDate(0); // +4h
   }

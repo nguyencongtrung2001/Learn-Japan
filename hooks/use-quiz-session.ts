@@ -12,7 +12,6 @@ import {
   countDue,
   countNew,
   getChoiceAnswer,
-  isSentenceCorrect,
   isTypingCorrect,
   pickDueCards,
   pickNewCards,
@@ -174,19 +173,6 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
     [currentItem, answer]
   );
 
-  const submitSentence = useCallback(
-    (value: string, isCorrect?: boolean) => {
-      if (currentItem) {
-        const correct =
-          typeof isCorrect === "boolean"
-            ? isCorrect
-            : isSentenceCorrect(currentItem.word.card, value);
-        answer(correct);
-      }
-    },
-    [currentItem, answer]
-  );
-
   const continueFlashcard = useCallback(() => answer(true), [answer]);
 
   // ── Bắt đầu phiên ──
@@ -258,7 +244,6 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
     startReview,
     selectOption,
     submitTyping,
-    submitSentence,
     continueFlashcard,
     refresh,
     exit,
