@@ -3,8 +3,15 @@ import { getCardsByFolder } from "@/actions/card-actions";
 import QuizSession from "@/components/quiz/quiz-session";
 import { getServerNow } from "@/lib/time";
 
-export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuizPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
+}) {
   const { id } = await params;
+  const { mode } = await searchParams;
   const folderId = Number.parseInt(id, 10);
   const folderUrl = `/folders/${id}`;
 
@@ -15,5 +22,12 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
   const cards = await getCardsByFolder(folderId);
   if (cards.length < 4) redirect(folderUrl);
 
-  return <QuizSession folderId={folderId} initialCards={cards} serverNow={getServerNow()} />;
+  return (
+    <QuizSession
+      folderId={folderId}
+      initialCards={cards}
+      serverNow={getServerNow()}
+      initialMode={mode}
+    />
+  );
 }

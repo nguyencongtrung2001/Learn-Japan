@@ -14,10 +14,11 @@ interface QuizSessionProps {
   folderId: number;
   initialCards: Card[];
   serverNow: number;
+  initialMode?: string;
 }
 
 /** Điều phối các màn: chọn chế độ → câu hỏi → kết quả. Logic nằm trong useQuizSession. */
-export default function QuizSession({ folderId, initialCards, serverNow }: QuizSessionProps) {
+export default function QuizSession({ folderId, initialCards, serverNow, initialMode }: QuizSessionProps) {
   const quiz = useQuizSession(folderId, initialCards, serverNow);
   const { phase, currentItem, feedback } = quiz;
 
@@ -26,9 +27,11 @@ export default function QuizSession({ folderId, initialCards, serverNow }: QuizS
       <QuizSelectMode
         newCount={quiz.counts.newCount}
         dueCount={quiz.counts.dueCount}
+        learnedCount={quiz.counts.learnedCount}
         onStartLearn={quiz.startLearn}
         onStartReview={quiz.startReview}
         onBack={quiz.goToFolder}
+        initialMode={initialMode}
       />
     );
   }

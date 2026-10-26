@@ -242,30 +242,44 @@ export async function updateGrowthLevel(cardId: number, isCorrect: boolean) {
 
 // ─── Update SRS (Review mode — Watering) ─────────────────────────
 // Memrise Classic: đúng → consecutive++, sai → hoa héo (level=3, consecutive=0)
-export async function updateSRS(cardId: number, isCorrect: boolean) {
+// Chế độ an toàn (Safe Cram): Không phạt tụt growthLevel của hoa nếu đang ôn tập tự do ngoài giờ SRS
+export async function updateSRS(cardId: number, isCorrect: boolean, isSafeCram: boolean = false) {
   const result = await db.select().from(cards).where(eq(cards.id, cardId));
   const card = result[0];
   if (!card) return;
 
   if (isCorrect) {
-    const newConsecutive = card.consecutiveCorrect + 1;
-    await db
-      .update(cards)
-      .set({
-        consecutiveCorrect: newConsecutive,
-        nextReview: getNextReviewDate(newConsecutive),
-      })
-      .where(eq(cards.id, cardId));
+    if (card.growthLevel >= MAX_GROWTH_LEVEL) {
+      const isDue = new Date(card.nextReview) <= new Date();
+      // Nếu thẻ đã đến hạn ôn hoặc ôn thông thường thì tăng consecutive & giãn cách
+      if (isDue || !isSafeCram) {
+        const newConsecutive = card.consecutiveCorrect + 1;
+        await db
+          .update(cards)
+          .set({
+            consecutiveCorrect: newConsecutive,
+            nextReview: getNextReviewDate(newConsecutive),
+          })
+          .where(eq(cards.id, cardId));
+      }
+    }
   } else {
-    // Hoa héo: growthLevel tụt về 3, consecutive reset
-    await db
-      .update(cards)
-      .set({
-        growthLevel: 3,
-        consecutiveCorrect: 0,
-        nextReview: getNextReviewDate(0), // +4h
-      })
-      .where(eq(cards.id, cardId));
+    // Chế độ an toàn: Không phạt tụt growthLevel của hoa nếu chỉ đang luyện tập tự do
+    if (isSafeCram) {
+      return;
+    }
+
+    if (card.growthLevel >= MAX_GROWTH_LEVEL) {
+      // Hoa héo thông thường trong phiên SRS: growthLevel tụt về 3, consecutive reset
+      await db
+        .update(cards)
+        .set({
+          growthLevel: 3,
+          consecutiveCorrect: 0,
+          nextReview: getNextReviewDate(0), // +4h
+        })
+        .where(eq(cards.id, cardId));
+    }
   }
 }
 

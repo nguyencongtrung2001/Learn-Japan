@@ -63,14 +63,16 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const folderId = folder.id;
   const maxCards = folder.maxCards;
 
-  const { newCount, dueCount } = useMemo(() => {
+  const { newCount, dueCount, learnedCount } = useMemo(() => {
     let fresh = 0;
     let due = 0;
+    let learned = 0;
     for (const c of cards) {
+      if (c.growthLevel > 0) learned++;
       if (c.growthLevel < MAX_GROWTH_LEVEL) fresh++;
       else if (c.nextReviewAt <= now) due++;
     }
-    return { newCount: fresh, dueCount: due };
+    return { newCount: fresh, dueCount: due, learnedCount: learned };
   }, [cards, now]);
 
   const handleCreate = useCallback(
@@ -220,7 +222,13 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               )}
             </div>
 
-            <QuizActions folderId={folderId} total={cards.length} newCount={newCount} dueCount={dueCount} />
+            <QuizActions
+              folderId={folderId}
+              total={cards.length}
+              newCount={newCount}
+              dueCount={dueCount}
+              learnedCount={learnedCount}
+            />
 
             <button
               type="button"

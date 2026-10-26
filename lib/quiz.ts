@@ -70,6 +70,11 @@ export function countDue(cards: Card[], now: number): number {
   return Math.min(n, REVIEW_BATCH_SIZE);
 }
 
+/** Đếm tổng số thẻ đã học (growthLevel > 0). */
+export function countLearned(cards: Card[]): number {
+  return cards.filter((c) => c.growthLevel > 0).length;
+}
+
 /** Thẻ chưa nở hoa, cũ nhất trước (khớp getNewCards ở server). */
 export function pickNewCards(cards: Card[], limit = NEW_BATCH_SIZE): Card[] {
   return cards
@@ -84,6 +89,50 @@ export function pickDueCards(cards: Card[], now: number, limit = REVIEW_BATCH_SI
     .filter((c) => c.growthLevel >= MAX_GROWTH_LEVEL && ts(c.nextReview) <= now)
     .sort((a, b) => ts(a.nextReview) - ts(b.nextReview))
     .slice(0, limit);
+}
+
+/**
+ * Chế độ 2: Ôn tập tự do / Cấp tốc (Quick Cram / Free Practice)
+ * Lấy tất cả các từ có growthLevel > 0 (cả từ đang học và từ đã nở hoa)
+ * Hỗ trợ chọn số lượng từ: 10 từ, 20 từ, 50 từ hoặc Tất cả.
+ * Ưu tiên:
+ * 1. Các thẻ đến hạn tưới nước (nextReview <= now)
+ * 2. Các thẻ vừa làm sai (consecutiveCorrect === 0)
+ * 3. Các thẻ đã học khác (xáo trộn ngẫu nhiên)
+ */
+export function pickLearnedCards(
+  cards: Card[],
+  limit: number | "all" = "all",
+  now: number = Date.now()
+): Card[] {
+  const learned = cards.filter((c) => c.growthLevel > 0);
+  if (learned.length === 0) return [];
+
+  const due: Card[] = [];
+  const weak: Card[] = [];
+  const others: Card[] = [];
+
+  for (const c of learned) {
+    if (c.growthLevel >= MAX_GROWTH_LEVEL && ts(c.nextReview) <= now) {
+      due.push(c);
+    } else if (c.growthLevel >= MAX_GROWTH_LEVEL && c.consecutiveCorrect === 0) {
+      weak.push(c);
+    } else {
+      others.push(c);
+    }
+  }
+
+  const prioritized = [
+    ...shuffleArray(due),
+    ...shuffleArray(weak),
+    ...shuffleArray(others),
+  ];
+
+  if (limit === "all" || limit >= prioritized.length) {
+    return prioritized;
+  }
+
+  return prioritized.slice(0, limit);
 }
 
 // ─── Sinh đáp án nhiễu ───────────────────────────────────────────

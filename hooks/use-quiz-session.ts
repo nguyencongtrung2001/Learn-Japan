@@ -10,10 +10,11 @@ import {
   buildLearnQuestion,
   buildReviewItem,
   countDue,
+  countLearned,
   countNew,
   getChoiceAnswer,
   isTypingCorrect,
-  pickDueCards,
+  pickLearnedCards,
   pickNewCards,
   type Feedback,
   type Phase,
@@ -28,6 +29,22 @@ const MIN_CARDS = 4;
 
 const EMPTY_STATS = { correct: 0, incorrect: 0, completed: 0 };
 
+function recordStudyToday() {
+  if (typeof window === "undefined") return;
+  try {
+    const today = new Date();
+    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const stored = localStorage.getItem("studyStreak_global");
+    const list: string[] = stored ? JSON.parse(stored) : [];
+    if (!list.includes(key)) {
+      list.push(key);
+      localStorage.setItem("studyStreak_global", JSON.stringify(list));
+    }
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Toàn bộ logic phiên học/ôn (Memrise-style) tách khỏi UI.
  *
@@ -39,7 +56,11 @@ const EMPTY_STATS = { correct: 0, incorrect: 0, completed: 0 };
  *    thay vì mutate object trong state; UI chỉ nhận bản sao `levels`.
  *  - Timer được dọn khi unmount/thoát để không setState sau khi rời trang.
  */
-export function useQuizSession(folderId: number, initialCards: Card[], serverNow: number) {
+export function useQuizSession(
+  folderId: number,
+  initialCards: Card[],
+  serverNow: number
+) {
   const router = useRouter();
   const playAudio = useAudio();
 
@@ -48,6 +69,7 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
   const [counts, setCounts] = useState(() => ({
     newCount: countNew(initialCards),
     dueCount: countDue(initialCards, serverNow),
+    learnedCount: countLearned(initialCards),
   }));
   const [currentItem, setCurrentItem] = useState<QuizItem | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -61,6 +83,7 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
   const phaseRef = useRef<Phase>("select-mode");
   const batchRef = useRef<SessionWord[]>([]);
   const reviewRef = useRef<{ queue: QuizItem[]; index: number }>({ queue: [], index: 0 });
+  const isCramRef = useRef(false);
   const uidRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -142,8 +165,10 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
         syncLevels();
         enqueueWrite(() => updateGrowthLevel(word.card.id, isCorrect));
       } else {
-        enqueueWrite(() => updateSRS(word.card.id, isCorrect));
+        enqueueWrite(() => updateSRS(word.card.id, isCorrect, isCramRef.current));
       }
+
+      recordStudyToday();
 
       setStats((s) => ({
         correct: s.correct + (isCorrect ? 1 : 0),
@@ -177,6 +202,7 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
 
   // ── Bắt đầu phiên ──
   const startLearn = useCallback(() => {
+    isCramRef.current = false;
     const fresh = pickNewCards(cardsRef.current);
     if (fresh.length === 0) {
       alert("Tất cả thẻ đã được học xong! Hãy thêm thẻ mới hoặc ôn tập.");
@@ -189,19 +215,25 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
     showItem(buildLearnQuestion(batchRef.current, cardsRef.current, ++uidRef.current));
   }, [syncLevels, changePhase, showItem]);
 
-  const startReview = useCallback(() => {
-    const due = pickDueCards(cardsRef.current, Date.now());
-    if (due.length === 0) {
-      alert("Không có thẻ nào cần ôn tập lúc này!");
-      return;
-    }
-    const queue = shuffleArray(due).map((card) => buildReviewItem(card, cardsRef.current, ++uidRef.current));
-    reviewRef.current = { queue, index: 0 };
-    setReviewPosition({ current: 1, total: queue.length });
-    setStats(EMPTY_STATS);
-    changePhase("review");
-    showItem(queue[0]);
-  }, [changePhase, showItem]);
+  const startReview = useCallback(
+    (limit: number | "all" = 10) => {
+      const cardsToReview = pickLearnedCards(cardsRef.current, limit, Date.now());
+      if (cardsToReview.length === 0) {
+        alert("Chưa có từ nào đã học để ôn tập. Hãy học từ mới trước!");
+        return;
+      }
+      isCramRef.current = true;
+      const queue = shuffleArray(cardsToReview).map((card) =>
+        buildReviewItem(card, cardsRef.current, ++uidRef.current)
+      );
+      reviewRef.current = { queue, index: 0 };
+      setReviewPosition({ current: 1, total: queue.length });
+      setStats(EMPTY_STATS);
+      changePhase("review");
+      showItem(queue[0]);
+    },
+    [changePhase, showItem]
+  );
 
   // ── Quay về màn chọn chế độ với số liệu mới nhất ──
   const refresh = useCallback(async () => {
@@ -215,7 +247,11 @@ export function useQuizSession(folderId: number, initialCards: Card[], serverNow
         return;
       }
       cardsRef.current = all;
-      setCounts({ newCount: countNew(all), dueCount: countDue(all, Date.now()) });
+      setCounts({
+        newCount: countNew(all),
+        dueCount: countDue(all, Date.now()),
+        learnedCount: countLearned(all),
+      });
       showItem(null);
       changePhase("select-mode");
     } catch (error) {
