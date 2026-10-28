@@ -217,9 +217,9 @@ export function useQuizSession(
 
   const startReview = useCallback(
     (limit: number | "all" = 10) => {
-      const cardsToReview = pickLearnedCards(cardsRef.current, limit, Date.now());
+      const cardsToReview = pickLearnedCards(cardsRef.current, limit);
       if (cardsToReview.length === 0) {
-        alert("Chưa có từ nào đã học để ôn tập. Hãy học từ mới trước!");
+        alert("Chưa có từ nào để ôn tập!");
         return;
       }
       isCramRef.current = true;

@@ -72,7 +72,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
       if (c.growthLevel < MAX_GROWTH_LEVEL) fresh++;
       else if (c.nextReviewAt <= now) due++;
     }
-    return { newCount: fresh, dueCount: due, learnedCount: learned };
+    return { newCount: fresh, dueCount: due, learnedCount: learned > 0 ? learned : cards.length };
   }, [cards, now]);
 
   const handleCreate = useCallback(

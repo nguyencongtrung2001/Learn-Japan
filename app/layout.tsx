@@ -57,13 +57,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <BackgroundSelector />
             <Header />
             <main className="flex-1 relative z-10">{children}</main>
-            <footer className="border-t border-border/20 py-6 mt-auto relative z-10">
-              <div className="mx-auto max-w-6xl px-4 text-center">
-                <p className="text-foreground-dim text-xs font-medium">
-                  📚 Flashcard App — Master English Vocabulary
-                </p>
-              </div>
-            </footer>
           </BackgroundProvider>
         </ThemeProvider>
       </body>

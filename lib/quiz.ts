@@ -19,6 +19,29 @@ export interface SessionWord {
   sessionLevel: number;
 }
 
+export interface HintChar {
+  char: string;
+  isRevealed: boolean;
+  isPunctuation: boolean;
+}
+
+export interface HintWord {
+  raw: string;
+  chars: HintChar[];
+  initialLetter: string;
+}
+
+export interface WordHintData {
+  primaryTarget: string;
+  wordCount: number;
+  hintedLettersCount: number;
+  words: HintWord[];
+  initials: string[];
+  initialsText: string;
+  displayText: string;
+  alternatives: { target: string; displayText: string; initialsText: string }[];
+}
+
 export interface QuizItem {
   /** Định danh duy nhất của câu hỏi — dùng làm React key để reset state của ô nhập. */
   uid: number;
@@ -70,9 +93,10 @@ export function countDue(cards: Card[], now: number): number {
   return Math.min(n, REVIEW_BATCH_SIZE);
 }
 
-/** Đếm tổng số thẻ đã học (growthLevel > 0). */
+/** Đếm tổng số thẻ có thể ôn tập (ưu tiên growthLevel > 0, hoặc toàn bộ thẻ trong thư mục). */
 export function countLearned(cards: Card[]): number {
-  return cards.filter((c) => c.growthLevel > 0).length;
+  const learned = cards.filter((c) => c.growthLevel > 0).length;
+  return learned > 0 ? learned : cards.length;
 }
 
 /** Thẻ chưa nở hoa, cũ nhất trước (khớp getNewCards ở server). */
@@ -92,47 +116,26 @@ export function pickDueCards(cards: Card[], now: number, limit = REVIEW_BATCH_SI
 }
 
 /**
- * Chế độ 2: Ôn tập tự do / Cấp tốc (Quick Cram / Free Practice)
- * Lấy tất cả các từ có growthLevel > 0 (cả từ đang học và từ đã nở hoa)
- * Hỗ trợ chọn số lượng từ: 10 từ, 20 từ, 50 từ hoặc Tất cả.
- * Ưu tiên:
- * 1. Các thẻ đến hạn tưới nước (nextReview <= now)
- * 2. Các thẻ vừa làm sai (consecutiveCorrect === 0)
- * 3. Các thẻ đã học khác (xáo trộn ngẫu nhiên)
+ * Chế độ Ôn tập:
+ * Xáo trộn ngẫu nhiên hoàn toàn vị trí các từ (random),
+ * không theo thứ tự danh sách trong thư mục.
  */
 export function pickLearnedCards(
   cards: Card[],
-  limit: number | "all" = "all",
-  now: number = Date.now()
+  limit: number | "all" = "all"
 ): Card[] {
-  const learned = cards.filter((c) => c.growthLevel > 0);
-  if (learned.length === 0) return [];
+  const targetCards = cards.filter((c) => c.growthLevel > 0);
+  const pool = targetCards.length > 0 ? targetCards : cards;
+  if (pool.length === 0) return [];
 
-  const due: Card[] = [];
-  const weak: Card[] = [];
-  const others: Card[] = [];
+  // Xáo trộn ngẫu nhiên toàn bộ danh sách thẻ
+  const shuffled = shuffleArray(pool);
 
-  for (const c of learned) {
-    if (c.growthLevel >= MAX_GROWTH_LEVEL && ts(c.nextReview) <= now) {
-      due.push(c);
-    } else if (c.growthLevel >= MAX_GROWTH_LEVEL && c.consecutiveCorrect === 0) {
-      weak.push(c);
-    } else {
-      others.push(c);
-    }
+  if (limit === "all" || limit >= shuffled.length) {
+    return shuffled;
   }
 
-  const prioritized = [
-    ...shuffleArray(due),
-    ...shuffleArray(weak),
-    ...shuffleArray(others),
-  ];
-
-  if (limit === "all" || limit >= prioritized.length) {
-    return prioritized;
-  }
-
-  return prioritized.slice(0, limit);
+  return shuffled.slice(0, limit);
 }
 
 // ─── Sinh đáp án nhiễu ───────────────────────────────────────────
@@ -295,4 +298,112 @@ export function isTypingCorrect(card: Card, input: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Tính năng Gợi ý từ trong phần gõ đáp án (TypingStep).
+ * Với cụm từ có N từ, gợi ý N chữ cái đầu tương ứng của từng từ (mỗi từ 1 chữ cái).
+ * Hỗ trợ tăng số lượng chữ gợi ý theo từng nấc khi bấm thêm (revealLettersPerWord).
+ */
+export function generateWordHint(
+  rawWord: string,
+  revealLettersPerWord = 1
+): WordHintData {
+  // Tách các từ đồng nghĩa (phân cách bởi dấu phẩy, chấm phẩy, gạch chéo)
+  const segments = rawWord.split(/[,;/|\n]+/).map((s) => s.trim()).filter(Boolean);
+  const cleanSegments = segments
+    .map((s) => s.replace(/^\(to\)\s+/i, "").replace(/\([^)]*\)/g, "").trim())
+    .filter(Boolean);
+
+  const primaryTarget = cleanSegments[0] || rawWord.trim();
+  const rawWords = primaryTarget.split(/\s+/).filter(Boolean);
+
+  const words: HintWord[] = [];
+  const initials: string[] = [];
+  let hintedLettersCount = 0;
+
+  for (const w of rawWords) {
+    const chars: HintChar[] = [];
+    let isSubwordStart = true;
+    let initialLetter = "";
+    let lettersRevealedInSubword = 0;
+
+    for (let i = 0; i < w.length; i++) {
+      const ch = w[i];
+      const isLetter = /\p{L}|\p{N}/u.test(ch);
+
+      if (!isLetter) {
+        chars.push({ char: ch, isRevealed: true, isPunctuation: true });
+        if (ch === "-" || ch === "/") {
+          isSubwordStart = true;
+          lettersRevealedInSubword = 0;
+        }
+      } else {
+        if (isSubwordStart) {
+          if (!initialLetter) initialLetter = ch;
+          initials.push(ch);
+          isSubwordStart = false;
+        }
+
+        if (lettersRevealedInSubword < revealLettersPerWord) {
+          chars.push({ char: ch, isRevealed: true, isPunctuation: false });
+          lettersRevealedInSubword++;
+          hintedLettersCount++;
+        } else {
+          chars.push({ char: ch, isRevealed: false, isPunctuation: false });
+        }
+      }
+    }
+
+    words.push({ raw: w, chars, initialLetter });
+  }
+
+  const displayText = words
+    .map((w) =>
+      w.chars
+        .map((c) => (c.isPunctuation ? c.char : c.isRevealed ? c.char : "_"))
+        .join(" ")
+    )
+    .join("   ");
+
+  const initialsText = initials.map((l) => `${l}...`).join(" ");
+
+  const alternatives = cleanSegments.slice(1).map((alt) => {
+    const altWords = alt.split(/\s+/).filter(Boolean);
+    const altInitials: string[] = [];
+    const altDisplay = altWords
+      .map((w) => {
+        let first = true;
+        return w
+          .split("")
+          .map((ch) => {
+            const isLetter = /\p{L}|\p{N}/u.test(ch);
+            if (!isLetter) return ch;
+            if (first) {
+              first = false;
+              altInitials.push(ch);
+              return ch;
+            }
+            return "_";
+          })
+          .join(" ");
+      })
+      .join("   ");
+    return {
+      target: alt,
+      displayText: altDisplay,
+      initialsText: altInitials.map((l) => `${l}...`).join(" "),
+    };
+  });
+
+  return {
+    primaryTarget,
+    wordCount: words.length,
+    hintedLettersCount,
+    words,
+    initials,
+    initialsText,
+    displayText,
+    alternatives,
+  };
 }
