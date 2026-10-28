@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { InteractiveHeroCard } from "@/components/home/interactive-hero-card";
+import { getGlobalMasteryStats } from "@/actions/card-actions";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const masteryStats = await getGlobalMasteryStats();
+
   return (
     <main className="relative flex h-[calc(100dvh-4rem)] max-h-[calc(100dvh-4rem)] w-full items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-10">
       {/* Background ambient light effects */}
@@ -54,24 +57,11 @@ export default function HomePage() {
                 Lịch Ôn Tập
               </Link>
             </div>
-
-            {/* Quick Feature Badges */}
-            <div className="animate-fade-in-up mt-8 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 lg:justify-start">
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
-                <span>🧠</span> Thuật toán SRS
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
-                <span>🔊</span> Phát âm chuẩn
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 bg-surface/50 px-3 py-1.5 text-xs font-semibold text-foreground-muted shadow-sm">
-                <span>⚡</span> Quiz & Trắc nghiệm
-              </span>
-            </div>
           </div>
 
           {/* ═══════ CỘT PHẢI: INTERACTIVE DEMO CARD ═══════ */}
           <div className="flex justify-center lg:col-span-5">
-            <InteractiveHeroCard />
+            <InteractiveHeroCard initialRetentionRate={masteryStats.retentionRate} />
           </div>
         </div>
       </div>

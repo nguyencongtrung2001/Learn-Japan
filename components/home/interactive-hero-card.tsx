@@ -1,11 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useAudio } from "@/hooks/use-audio";
+import { calculateStudyStreak } from "@/lib/streak";
 
-export function InteractiveHeroCard() {
+interface InteractiveHeroCardProps {
+  initialRetentionRate?: number;
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getSnapshot(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("studyStreak_global");
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
+
+export function InteractiveHeroCard({ initialRetentionRate = 0 }: InteractiveHeroCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const playAudio = useAudio("en-US");
+
+  const streakRaw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const streak = useMemo(() => {
+    if (!streakRaw) return 0;
+    try {
+      const dates = JSON.parse(streakRaw);
+      if (Array.isArray(dates)) {
+        return calculateStudyStreak(dates).displayCount;
+      }
+    } catch {
+      // ignore
+    }
+    return 0;
+  }, [streakRaw]);
 
   const handleAudio = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -17,21 +50,28 @@ export function InteractiveHeroCard() {
       {/* Decorative ambient background glows */}
       <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-r from-sakura/20 via-indigo/20 to-emerald/20 blur-2xl opacity-60 animate-pulse-glow" />
 
-      {/* Floating mini badge: Streak */}
+      {/* Floating mini badge: Streak (lấy từ dữ liệu Theo dõi) */}
       <div className="animate-float absolute -top-4 -left-3 sm:-left-6 z-20 flex items-center gap-2 rounded-2xl border border-border/80 bg-surface/90 px-3.5 py-1.5 shadow-xl backdrop-blur-md">
         <span className="text-base sm:text-lg">🔥</span>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-dim">Chuỗi ngày</p>
-          <p className="text-xs font-black text-gold">12 ngày liên tục</p>
+          <p className="text-xs font-black text-gold">
+            {streak} ngày liên tục
+          </p>
         </div>
       </div>
 
-      {/* Floating mini badge: Mastery */}
-      <div className="animate-float absolute -bottom-3 -right-3 sm:-right-4 z-20 flex items-center gap-2 rounded-2xl border border-border/80 bg-surface/90 px-3.5 py-1.5 shadow-xl backdrop-blur-md" style={{ animationDelay: "1.5s" }}>
+      {/* Floating mini badge: Mastery (tiến độ nhớ thực tế) */}
+      <div
+        className="animate-float absolute -bottom-3 -right-3 sm:-right-4 z-20 flex items-center gap-2 rounded-2xl border border-border/80 bg-surface/90 px-3.5 py-1.5 shadow-xl backdrop-blur-md"
+        style={{ animationDelay: "1.5s" }}
+      >
         <span className="text-base sm:text-lg">🌱</span>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-foreground-dim">Tiến độ</p>
-          <p className="text-xs font-black text-emerald">Đã nhớ 92%</p>
+          <p className="text-xs font-black text-emerald">
+            Đã nhớ {initialRetentionRate}%
+          </p>
         </div>
       </div>
 
@@ -49,7 +89,7 @@ export function InteractiveHeroCard() {
           {/* ═══════ CARD FRONT ═══════ */}
           <div className="glass-card absolute inset-0 flex flex-col justify-between overflow-hidden p-6 sm:p-7 shadow-2xl [backface-visibility:hidden]">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sakura via-indigo to-emerald opacity-75" />
-            
+
             {/* Header of front */}
             <div className="flex items-center justify-between">
               <span className="rounded-full border border-indigo/30 bg-indigo/10 px-3 py-1 text-xs font-bold text-indigo-light">
@@ -81,7 +121,7 @@ export function InteractiveHeroCard() {
               <span className="flex items-center gap-1 font-medium text-foreground-muted">
                 <span>🔄</span> Bấm để lật xem nghĩa
               </span>
-              <span className="font-bold text-sakura">Cấp độ 6 🌸</span>
+              <span className="font-bold text-sakura">Cấp độ 5 🌺</span>
             </div>
           </div>
 

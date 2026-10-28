@@ -116,6 +116,34 @@ export async function getFolderStats(folderId: number): Promise<{
   };
 }
 
+// ─── Get global mastery stats for home page ─────────────────────
+export async function getGlobalMasteryStats(): Promise<{
+  totalCards: number;
+  masteredCards: number;
+  retentionRate: number;
+}> {
+  try {
+    const allCards = await db.select({ growthLevel: cards.growthLevel }).from(cards);
+    if (allCards.length === 0) {
+      return { totalCards: 0, masteredCards: 0, retentionRate: 0 };
+    }
+
+    const totalPossiblePoints = allCards.length * MAX_GROWTH_LEVEL;
+    const earnedPoints = allCards.reduce((sum, c) => sum + c.growthLevel, 0);
+    const retentionRate = Math.round((earnedPoints / totalPossiblePoints) * 100);
+    const masteredCards = allCards.filter((c) => c.growthLevel >= MAX_GROWTH_LEVEL).length;
+
+    return {
+      totalCards: allCards.length,
+      masteredCards,
+      retentionRate,
+    };
+  } catch (error) {
+    console.error("Lỗi lấy thống kê tổng quan:", error);
+    return { totalCards: 0, masteredCards: 0, retentionRate: 0 };
+  }
+}
+
 // ─── Create card ─────────────────────────────────────────────────
 function toInsertRow(folderId: number, data: CardInput) {
   return {
