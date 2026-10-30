@@ -1,7 +1,7 @@
 import { FolderCard } from "./folder-card";
-import type { Folder } from "@/db/schema";
+import type { FolderWithCount } from "@/actions/folder-actions";
 
-export function FoldersGrid({ folders }: { folders: Folder[] }) {
+export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
   if (folders.length === 0) {
     return (
       <div className="glass-card mx-auto max-w-md py-20 text-center">

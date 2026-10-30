@@ -89,7 +89,7 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
           className={inputClass}
         />
         <p className="mt-1.5 text-xs text-foreground-dim">
-          💡 {total} từ hiện tại. {limit ? `Giới hạn: ${limit}.` : "Không giới hạn."}
+          💡 Giới hạn: {total}/{limit ? limit : "∞"} (hiện có {total} từ)
         </p>
       </div>
 

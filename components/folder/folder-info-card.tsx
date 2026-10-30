@@ -30,9 +30,15 @@ export function FolderInfoCard({ folder, total, newCount, dueCount, editing }: F
         {folder.maxCards && !editing && <LimitProgress current={total} max={folder.maxCards} />}
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim shadow-sm">
-            📚 {total} thẻ
-          </span>
+          {folder.maxCards ? (
+            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500 shadow-sm">
+              📊 Giới hạn: {total}/{folder.maxCards}
+            </span>
+          ) : (
+            <span className="rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim shadow-sm">
+              📚 {total} thẻ
+            </span>
+          )}
           <span className="rounded-full border border-emerald/20 bg-emerald/10 px-3 py-1 text-xs font-bold text-emerald shadow-sm">
             🌱 {newCount} chưa học
           </span>

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { DeleteFolderButton } from "./delete-folder-button";
-import type { Folder } from "@/db/schema";
+import type { FolderWithCount } from "@/actions/folder-actions";
 
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 
 /** Server Component — chỉ nút xóa là client. */
-export function FolderCard({ folder }: { folder: Folder }) {
+export function FolderCard({ folder }: { folder: FolderWithCount }) {
   const href = `/folders/${folder.id}`;
   return (
     <div className="glass-card group relative flex h-full flex-col overflow-hidden p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
@@ -23,9 +23,13 @@ export function FolderCard({ folder }: { folder: Folder }) {
           <span className="inline-block rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim">
             🗓️ {dateFormatter.format(folder.createdAt)}
           </span>
-          {folder.maxCards && (
-            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500">
-              📊 Giới hạn: {folder.maxCards} từ
+          {folder.maxCards ? (
+            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500">
+              📊 Giới hạn: {folder.cardCount ?? 0}/{folder.maxCards}
+            </span>
+          ) : (
+            <span className="rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim">
+              📚 {folder.cardCount ?? 0} thẻ
             </span>
           )}
         </div>

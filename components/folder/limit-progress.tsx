@@ -14,10 +14,16 @@ export function LimitProgress({ current, max }: LimitProgressProps) {
 
   return (
     <div className="mb-4">
-      <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wide text-foreground-muted">Giới hạn</span>
-        <span className={`text-xs font-extrabold ${reached ? "text-rose" : "text-emerald"}`}>
-          {current} / {max}
+      <div className="mb-1.5 flex items-center justify-between text-xs">
+        <span className="font-bold text-foreground-muted flex items-center gap-1.5">
+          <span>📊</span>
+          <span>Giới hạn:</span>
+          <span className={`font-black ${reached ? "text-rose" : "text-emerald"}`}>
+            {current}/{max}
+          </span>
+        </span>
+        <span className="text-[11px] font-bold text-foreground-dim">
+          {Math.round((current / max) * 100)}%
         </span>
       </div>
       <div className="h-2.5 w-full overflow-hidden rounded-full border border-border/50 bg-surface">
@@ -26,7 +32,11 @@ export function LimitProgress({ current, max }: LimitProgressProps) {
           style={{ width: `${Math.min((current / max) * 100, 100)}%` }}
         />
       </div>
-      {reached && <p className="mt-1 animate-pulse text-xs font-semibold text-rose">⚠️ Đã đạt giới hạn!</p>}
+      {reached && (
+        <p className="mt-1 animate-pulse text-xs font-bold text-rose">
+          ⚠️ Đã đạt giới hạn ({current}/{max})!
+        </p>
+      )}
     </div>
   );
 }
