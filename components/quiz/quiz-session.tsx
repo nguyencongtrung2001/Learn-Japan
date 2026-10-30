@@ -60,7 +60,7 @@ export default function QuizSession({ folderId, initialCards, serverNow, initial
         reviewPosition={quiz.reviewPosition}
         onExit={quiz.exit}
       />
-      <LevelBadge levelType={currentItem.levelType} />
+      <LevelBadge levelType={currentItem.levelType} isRetry={currentItem.isRetry} />
 
       {/* key={uid}: mỗi câu hỏi mount mới → ô nhập tự reset & autoFocus */}
       {currentItem.levelType === "flashcard" && (

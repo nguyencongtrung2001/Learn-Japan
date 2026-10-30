@@ -48,6 +48,8 @@ export interface QuizItem {
   word: SessionWord;
   levelType: LevelType;
   options?: string[];
+  /** Đánh dấu câu hỏi hỏi lại ở cuối phiên do trả lời sai */
+  isRetry?: boolean;
 }
 
 /** An toàn cả khi giá trị đi qua ranh giới server→client dưới dạng chuỗi. */
@@ -173,6 +175,22 @@ export function buildReviewItem(card: Card, pool: Card[], uid: number): QuizItem
   const levelType: LevelType =
     r < 0.35 ? "abcd-en-vn" : r < 0.7 ? "abcd-vn-en" : "typing";
   return { uid, word, levelType, options: withOptions(card, levelType, pool) };
+}
+
+/**
+ * Tạo câu hỏi hỏi lại ở lượt cuối khi người dùng làm sai ở chế độ ôn tập.
+ * Giữ nguyên từ và dạng câu hỏi (để rèn luyện lại kỹ năng gõ hoặc chọn) với các lựa chọn được xáo trộn lại.
+ */
+export function buildRetryReviewItem(item: QuizItem, pool: Card[], uid: number): QuizItem {
+  const { card } = item.word;
+  const levelType = item.levelType;
+  return {
+    uid,
+    word: { card, sessionLevel: MAX_GROWTH_LEVEL },
+    levelType,
+    options: withOptions(card, levelType, pool),
+    isRetry: true,
+  };
 }
 
 // ─── Chấm điểm ───────────────────────────────────────────────────

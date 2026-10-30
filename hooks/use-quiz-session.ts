@@ -8,6 +8,7 @@ import { MAX_GROWTH_LEVEL } from "@/lib/growth";
 import { shuffleArray } from "@/lib/shuffle";
 import {
   buildLearnQuestion,
+  buildRetryReviewItem,
   buildReviewItem,
   countDue,
   countLearned,
@@ -83,6 +84,7 @@ export function useQuizSession(
   const phaseRef = useRef<Phase>("select-mode");
   const batchRef = useRef<SessionWord[]>([]);
   const reviewRef = useRef<{ queue: QuizItem[]; index: number }>({ queue: [], index: 0 });
+  const reviewedCardIdsRef = useRef<Set<number>>(new Set());
   const isCramRef = useRef(false);
   const uidRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -165,7 +167,19 @@ export function useQuizSession(
         syncLevels();
         enqueueWrite(() => updateGrowthLevel(word.card.id, isCorrect));
       } else {
-        enqueueWrite(() => updateSRS(word.card.id, isCorrect, isCramRef.current));
+        // Chế độ Ôn tập
+        const isFirstAttempt = !reviewedCardIdsRef.current.has(word.card.id);
+        if (isFirstAttempt) {
+          reviewedCardIdsRef.current.add(word.card.id);
+          enqueueWrite(() => updateSRS(word.card.id, isCorrect, isCramRef.current));
+        }
+
+        // Khi viết hoặc chọn sai từ: tự động hỏi lại ở lượt cuối để ôn tập lại
+        if (!isCorrect) {
+          const retryItem = buildRetryReviewItem(currentItem, cardsRef.current, ++uidRef.current);
+          reviewRef.current.queue.push(retryItem);
+          setReviewPosition((prev) => ({ ...prev, total: reviewRef.current.queue.length }));
+        }
       }
 
       recordStudyToday();
@@ -223,6 +237,7 @@ export function useQuizSession(
         return;
       }
       isCramRef.current = true;
+      reviewedCardIdsRef.current.clear();
       const queue = shuffleArray(cardsToReview).map((card) =>
         buildReviewItem(card, cardsRef.current, ++uidRef.current)
       );
@@ -238,6 +253,7 @@ export function useQuizSession(
   // ── Quay về màn chọn chế độ với số liệu mới nhất ──
   const refresh = useCallback(async () => {
     cancelTimer();
+    reviewedCardIdsRef.current.clear();
     await writeQueueRef.current; // đợi ghi DB xong để số liệu chính xác
     try {
       const all = await getCardsByFolder(folderId);
