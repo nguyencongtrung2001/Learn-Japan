@@ -79,24 +79,22 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
               <button
                 type="button"
                 onClick={handleToggleHint}
-                className="inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs sm:text-sm font-bold text-amber-300 transition-all hover:bg-amber-500/20 active:scale-95 cursor-pointer shadow-sm hover:shadow-amber-500/10"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-amber-500/60 bg-amber-100 dark:bg-amber-950/40 px-4 py-2 text-xs sm:text-sm font-black text-amber-950 dark:text-amber-200 transition-all hover:bg-amber-200 dark:hover:bg-amber-900/50 active:scale-95 cursor-pointer shadow-sm hover:shadow-amber-500/20"
               >
-                <span>💡</span>
+                <span className="text-base">💡</span>
                 <span>
                   Gợi ý từ ({hintData.wordCount} từ · {hintData.hintedLettersCount} chữ)
                 </span>
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 p-4 sm:p-5 text-center shadow-md shadow-amber-500/5 animate-fade-in-up">
+            <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-50/95 dark:bg-amber-950/40 p-4 sm:p-5 text-center shadow-lg shadow-amber-500/10 animate-fade-in-up">
               {/* Header gợi ý */}
               <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
-                <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-amber-300">
-                  <span>💡</span>
-                  <span>
-                    Gợi ý {hintData.wordCount} từ:
-                  </span>
-                  <span className="rounded-md bg-amber-500/20 px-2 py-0.5 tracking-wider text-amber-200 uppercase font-mono border border-amber-500/30">
+                <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-black text-amber-950 dark:text-amber-100">
+                  <span className="text-base">💡</span>
+                  <span>Gợi ý {hintData.wordCount} từ:</span>
+                  <span className="rounded-lg bg-amber-300 dark:bg-amber-400 px-2.5 py-0.5 tracking-wider text-neutral-950 uppercase font-mono font-black border border-amber-500 shadow-xs">
                     {hintData.initialsText}
                   </span>
                 </div>
@@ -106,7 +104,7 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
                     <button
                       type="button"
                       onClick={handleRevealMore}
-                      className="cursor-pointer rounded-lg border border-amber-500/40 bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-200 hover:bg-amber-500/30 active:scale-95 transition-all"
+                      className="cursor-pointer rounded-lg border-2 border-amber-600/50 bg-amber-300 dark:bg-amber-400 px-3 py-1 text-xs font-black text-neutral-950 hover:bg-amber-400 dark:hover:bg-amber-300 active:scale-95 transition-all shadow-xs"
                       title="Mở thêm chữ cái"
                     >
                       + Thêm chữ
@@ -115,7 +113,7 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
                   <button
                     type="button"
                     onClick={() => setShowHint(false)}
-                    className="cursor-pointer rounded-lg px-2 py-1 text-xs text-foreground-muted hover:text-foreground hover:bg-surface/50 transition-colors"
+                    className="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-black text-foreground-muted hover:text-foreground hover:bg-surface/70 transition-colors"
                     title="Ẩn gợi ý"
                   >
                     Ẩn ✕
@@ -126,13 +124,13 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
               {/* Các ô ký tự gợi ý theo từng từ */}
               <div className="my-3 flex flex-wrap justify-center items-center gap-3 sm:gap-4 select-none">
                 {hintData.words.map((w, wIdx) => (
-                  <div key={wIdx} className="flex items-center gap-1 shrink-0">
+                  <div key={wIdx} className="flex items-center gap-1.5 shrink-0">
                     {w.chars.map((c, cIdx) => {
                       if (c.isPunctuation) {
                         return (
                           <span
                             key={cIdx}
-                            className="self-center px-0.5 text-lg font-bold text-foreground-muted"
+                            className="self-center px-0.5 text-lg sm:text-xl font-black text-foreground"
                           >
                             {c.char}
                           </span>
@@ -142,7 +140,7 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
                         return (
                           <span
                             key={cIdx}
-                            className="inline-flex h-9 w-7 sm:h-11 sm:w-9 items-center justify-center rounded-xl border border-amber-500/50 bg-amber-500/25 text-base sm:text-lg font-extrabold uppercase text-amber-200 shadow-sm"
+                            className="inline-flex h-10 w-8 sm:h-12 sm:w-10 items-center justify-center rounded-xl border-2 border-amber-500 bg-amber-300 dark:bg-amber-400 text-lg sm:text-2xl font-black uppercase text-neutral-950 shadow-md transition-all scale-105"
                           >
                             {c.char}
                           </span>
@@ -151,7 +149,7 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
                       return (
                         <span
                           key={cIdx}
-                          className="inline-flex h-9 w-7 sm:h-11 sm:w-9 items-center justify-center rounded-xl border border-border/60 bg-surface/80 text-base sm:text-lg font-bold text-foreground-muted/40"
+                          className="inline-flex h-10 w-8 sm:h-12 sm:w-10 items-center justify-center rounded-xl border-2 border-dashed border-border-light bg-surface text-lg sm:text-2xl font-black text-foreground-muted"
                         >
                           _
                         </span>
@@ -163,11 +161,11 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
 
               {/* Đáp án thay thế nếu có */}
               {hintData.alternatives.length > 0 && (
-                <div className="mt-3 pt-2.5 border-t border-amber-500/20 text-center text-xs text-foreground-muted">
-                  <span className="font-semibold text-amber-300/80">Hoặc đáp án khác: </span>
+                <div className="mt-3.5 pt-2.5 border-t border-amber-500/30 text-center text-xs text-foreground">
+                  <span className="font-black text-amber-950 dark:text-amber-200">Hoặc đáp án khác: </span>
                   {hintData.alternatives.map((alt, aIdx) => (
-                    <span key={aIdx} className="font-mono text-amber-200/90 font-medium">
-                      {alt.displayText} ({alt.initialsText})
+                    <span key={aIdx} className="font-mono text-amber-950 dark:text-amber-100 font-bold ml-1.5">
+                      {alt.displayText} <span className="text-foreground-muted font-normal">({alt.initialsText})</span>
                     </span>
                   ))}
                 </div>
