@@ -40,10 +40,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.getItem('theme') === 'light' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-                  document.documentElement.setAttribute('data-theme', 'light')
+                var t = localStorage.getItem('theme');
+                if (t && t !== 'dark') {
+                  document.documentElement.setAttribute('data-theme', t);
+                } else if (!t && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                  document.documentElement.setAttribute('data-theme', 'light');
                 } else {
-                  document.documentElement.removeAttribute('data-theme')
+                  document.documentElement.removeAttribute('data-theme');
                 }
               } catch (_) {}
             `,

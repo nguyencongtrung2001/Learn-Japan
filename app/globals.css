@@ -78,6 +78,162 @@
   --canvas-bg: rgba(255, 255, 255, 0.9);
 }
 
+/* ============================================================
+   THEME — TÍM HUYỀN ẢO (Deep Violet Neon / Cyber Purple)
+   ============================================================ */
+[data-theme="violet"] {
+  --background: #0d0722;
+  --background-secondary: #160c38;
+  --surface: #1e104a;
+  --surface-hover: #291664;
+  --border: #3b1d7d;
+  --border-light: #5227aa;
+
+  --foreground: #faf5ff;
+  --foreground-muted: #c4b5fd;
+  --foreground-dim: #8b5cf6;
+
+  --sakura: #f472b6;
+  --sakura-light: #f9a8d4;
+  --sakura-glow: rgba(244, 114, 182, 0.3);
+
+  --indigo: #a855f7;
+  --indigo-light: #c084fc;
+  --indigo-glow: rgba(168, 85, 247, 0.35);
+
+  --emerald: #34d399;
+  --emerald-light: #6ee7b7;
+  --emerald-glow: rgba(52, 211, 153, 0.2);
+
+  --rose: #fb7185;
+  --rose-glow: rgba(251, 113, 133, 0.2);
+
+  --gold: #fbbf24;
+  --gold-glow: rgba(251, 191, 36, 0.2);
+
+  --grid-dot: rgba(168, 85, 247, 0.08);
+  --glass-bg: rgba(30, 16, 74, 0.82);
+  --glass-bg-hover: rgba(41, 22, 100, 0.9);
+  --canvas-bg: rgba(13, 7, 34, 0.9);
+}
+
+/* ============================================================
+   THEME — THẦN RỪNG (Cyber Emerald / Forest Dark)
+   ============================================================ */
+[data-theme="emerald"] {
+  --background: #04140f;
+  --background-secondary: #09231b;
+  --surface: #0f3327;
+  --surface-hover: #174737;
+  --border: #1e5a46;
+  --border-light: #287a5e;
+
+  --foreground: #ecfdf5;
+  --foreground-muted: #a7f3d0;
+  --foreground-dim: #34d399;
+
+  --sakura: #fb7185;
+  --sakura-light: #fda4af;
+  --sakura-glow: rgba(251, 113, 133, 0.25);
+
+  --indigo: #10b981;
+  --indigo-light: #34d399;
+  --indigo-glow: rgba(16, 185, 129, 0.35);
+
+  --emerald: #10b981;
+  --emerald-light: #6ee7b7;
+  --emerald-glow: rgba(52, 211, 153, 0.25);
+
+  --rose: #f43f5e;
+  --rose-glow: rgba(244, 63, 94, 0.2);
+
+  --gold: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.2);
+
+  --grid-dot: rgba(16, 185, 129, 0.08);
+  --glass-bg: rgba(15, 51, 39, 0.82);
+  --glass-bg-hover: rgba(23, 71, 55, 0.9);
+  --canvas-bg: rgba(4, 20, 15, 0.9);
+}
+
+/* ============================================================
+   THEME — ĐẠI DƯƠNG (Deep Ocean / Sapphire Marine)
+   ============================================================ */
+[data-theme="ocean"] {
+  --background: #040e21;
+  --background-secondary: #081a3b;
+  --surface: #0d2757;
+  --surface-hover: #133675;
+  --border: #1e4a96;
+  --border-light: #2b65cb;
+
+  --foreground: #f0f9ff;
+  --foreground-muted: #bae6fd;
+  --foreground-dim: #38bdf8;
+
+  --sakura: #38bdf8;
+  --sakura-light: #7dd3fc;
+  --sakura-glow: rgba(56, 189, 248, 0.25);
+
+  --indigo: #0284c7;
+  --indigo-light: #38bdf8;
+  --indigo-glow: rgba(2, 132, 199, 0.35);
+
+  --emerald: #34d399;
+  --emerald-light: #6ee7b7;
+  --emerald-glow: rgba(52, 211, 153, 0.2);
+
+  --rose: #fb7185;
+  --rose-glow: rgba(251, 113, 133, 0.2);
+
+  --gold: #fbbf24;
+  --gold-glow: rgba(251, 191, 36, 0.2);
+
+  --grid-dot: rgba(14, 165, 233, 0.08);
+  --glass-bg: rgba(13, 39, 87, 0.82);
+  --glass-bg-hover: rgba(19, 54, 117, 0.9);
+  --canvas-bg: rgba(4, 14, 33, 0.9);
+}
+
+/* ============================================================
+   THEME — HOÀNG HÔN (Sunset Crimson & Amber Glow)
+   ============================================================ */
+[data-theme="sunset"] {
+  --background: #190a12;
+  --background-secondary: #26111d;
+  --surface: #38182b;
+  --surface-hover: #4a2139;
+  --border: #662c4f;
+  --border-light: #88396a;
+
+  --foreground: #fff1f2;
+  --foreground-muted: #fecdd3;
+  --foreground-dim: #fb7185;
+
+  --sakura: #fb7185;
+  --sakura-light: #fda4af;
+  --sakura-glow: rgba(251, 113, 133, 0.25);
+
+  --indigo: #e11d48;
+  --indigo-light: #fb7185;
+  --indigo-glow: rgba(225, 29, 72, 0.35);
+
+  --emerald: #34d399;
+  --emerald-light: #6ee7b7;
+  --emerald-glow: rgba(52, 211, 153, 0.2);
+
+  --rose: #f43f5e;
+  --rose-glow: rgba(244, 63, 94, 0.2);
+
+  --gold: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.2);
+
+  --grid-dot: rgba(225, 29, 72, 0.08);
+  --glass-bg: rgba(56, 24, 43, 0.82);
+  --glass-bg-hover: rgba(74, 33, 57, 0.9);
+  --canvas-bg: rgba(25, 10, 18, 0.9);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);
