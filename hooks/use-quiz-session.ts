@@ -212,6 +212,11 @@ export function useQuizSession(
     [currentItem, answer]
   );
 
+  const handleTimeout = useCallback(() => {
+    if (feedback || !currentItem) return;
+    answer(false);
+  }, [feedback, currentItem, answer]);
+
   const continueFlashcard = useCallback(() => answer(true), [answer]);
 
   // ── Bắt đầu phiên ──
@@ -296,6 +301,7 @@ export function useQuizSession(
     startReview,
     selectOption,
     submitTyping,
+    handleTimeout,
     continueFlashcard,
     refresh,
     exit,

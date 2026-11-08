@@ -5,7 +5,11 @@ import { folders, cards, type Folder } from "@/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-export type FolderWithCount = Folder & { cardCount: number };
+export type FolderWithCount = Folder & {
+  cardCount: number;
+  learnedCount: number;
+  studyingCount: number;
+};
 
 function errorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -26,6 +30,8 @@ export async function getFolders(): Promise<{ success: boolean; data?: FolderWit
         language: folders.language,
         createdAt: folders.createdAt,
         cardCount: sql<number>`count(${cards.id})::int`,
+        learnedCount: sql<number>`count(case when ${cards.growthLevel} >= 5 then 1 end)::int`,
+        studyingCount: sql<number>`count(case when ${cards.growthLevel} > 0 and ${cards.growthLevel} < 5 then 1 end)::int`,
       })
       .from(folders)
       .leftJoin(cards, eq(cards.folderId, folders.id))

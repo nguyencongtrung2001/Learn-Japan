@@ -77,11 +77,18 @@ export default function QuizSession({ folderId, initialCards, serverNow, initial
           selectedOption={quiz.selectedOption}
           onSelect={quiz.selectOption}
           onPlay={quiz.playAudio}
+          onTimeout={quiz.handleTimeout}
         />
       )}
 
       {currentItem.levelType === "typing" && (
-        <TypingStep key={currentItem.uid} card={card} feedback={feedback} onSubmit={quiz.submitTyping} />
+        <TypingStep
+          key={currentItem.uid}
+          card={card}
+          feedback={feedback}
+          onSubmit={quiz.submitTyping}
+          onTimeout={quiz.handleTimeout}
+        />
       )}
     </div>
   );

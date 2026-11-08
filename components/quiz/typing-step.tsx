@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { QuestionPanel } from "./question-panel";
 import { CorrectAnswer } from "./correct-answer";
+import { QuizTimerBar } from "./quiz-timer-bar";
 import type { Card } from "@/db/schema";
 import { type Feedback, generateWordHint, splitAnswers } from "@/lib/quiz";
 
@@ -10,18 +11,27 @@ interface TypingStepProps {
   card: Card;
   feedback: Feedback;
   onSubmit: (value: string) => void;
+  onTimeout: () => void;
 }
 
 /**
  * State của ô nhập nằm trong component; cha gắn `key={item.uid}` nên mỗi câu hỏi
  * mount mới → tự reset + autoFocus (không cần useEffect/setTimeout để focus).
+ * Thời hạn trả lời dạng viết: 20s.
  */
-export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
+export function TypingStep({ card, feedback, onSubmit, onTimeout }: TypingStepProps) {
   const [value, setValue] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [revealLevel, setRevealLevel] = useState(1);
+  const [timedOut, setTimedOut] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const answered = feedback !== null;
+
+  const handleTimeout = useCallback(() => {
+    if (answered) return;
+    setTimedOut(true);
+    onTimeout();
+  }, [answered, onTimeout]);
 
   const hintData = useMemo(
     () => generateWordHint(card.word, revealLevel),
@@ -59,8 +69,25 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
   const acceptableWords = splitAnswers(card.word);
 
   return (
-    <QuestionPanel feedback={feedback} className="max-w-xl p-5 sm:p-8">
-      <div className="mb-2 text-2xl font-extrabold sm:text-4xl">{card.translation}</div>
+    <>
+      {/* Thanh đếm ngược thời gian (Process lùi lại 20 giây cho đáp án viết) */}
+      <div className="mx-auto max-w-xl">
+        <QuizTimerBar
+          totalSeconds={20}
+          isPaused={answered}
+          onTimeout={handleTimeout}
+          isTimedOut={timedOut}
+        />
+      </div>
+
+      <QuestionPanel feedback={feedback} className="max-w-xl p-5 sm:p-8">
+        {timedOut && (
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-rose/40 bg-rose/10 px-3 py-1 text-xs font-bold text-rose animate-bounce">
+            <span>⏰ Hết thời gian viết đáp án (20s)!</span>
+          </div>
+        )}
+
+        <div className="mb-2 text-2xl font-extrabold sm:text-4xl">{card.translation}</div>
 
       {card.partOfSpeech && (
         <div className="mb-3">
@@ -211,5 +238,6 @@ export function TypingStep({ card, feedback, onSubmit }: TypingStepProps) {
         </CorrectAnswer>
       )}
     </QuestionPanel>
+    </>
   );
 }

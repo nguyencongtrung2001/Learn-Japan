@@ -191,6 +191,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               total={cards.length}
               newCount={newCount}
               dueCount={dueCount}
+              learnedCount={learnedCount}
               editing={editing}
             />
 

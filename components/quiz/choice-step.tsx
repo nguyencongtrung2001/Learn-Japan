@@ -1,5 +1,9 @@
+"use client";
+
+import { useState, useCallback } from "react";
 import { QuestionPanel } from "./question-panel";
 import { CorrectAnswer } from "./correct-answer";
+import { QuizTimerBar } from "./quiz-timer-bar";
 import { getChoiceAnswer, type Feedback, type QuizItem } from "@/lib/quiz";
 
 interface ChoiceStepProps {
@@ -8,17 +12,48 @@ interface ChoiceStepProps {
   selectedOption: string | null;
   onSelect: (option: string) => void;
   onPlay: (text: string) => void;
+  onTimeout: () => void;
 }
 
-/** Dùng cho 3 dạng: Anh→Việt, Việt→Anh, Nghe chọn từ. */
-export function ChoiceStep({ item, feedback, selectedOption, onSelect, onPlay }: ChoiceStepProps) {
+/** Dùng cho 3 dạng trắc nghiệm ABCD: Anh→Việt, Việt→Anh, Nghe chọn từ. Thời hạn: 8s. */
+export function ChoiceStep({
+  item,
+  feedback,
+  selectedOption,
+  onSelect,
+  onPlay,
+  onTimeout,
+}: ChoiceStepProps) {
   const { card } = item.word;
   const correctAnswer = getChoiceAnswer(item);
   const answered = feedback !== null;
+  const [timedOut, setTimedOut] = useState(false);
+
+  const handleTimeout = useCallback(() => {
+    if (answered) return;
+    setTimedOut(true);
+    onTimeout();
+  }, [answered, onTimeout]);
 
   return (
     <>
+      {/* Thanh đếm ngược thời gian (Process lùi lại 8 giây) */}
+      <div className="mx-auto max-w-md sm:max-w-lg">
+        <QuizTimerBar
+          totalSeconds={8}
+          isPaused={answered}
+          onTimeout={handleTimeout}
+          isTimedOut={timedOut}
+        />
+      </div>
+
       <QuestionPanel feedback={feedback} className="mb-8 p-8 sm:p-12">
+        {timedOut && (
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-rose/40 bg-rose/10 px-3 py-1 text-xs font-bold text-rose animate-bounce">
+            <span>⏰ Hết thời gian trả lời (8s)!</span>
+          </div>
+        )}
+
         {item.levelType === "audio-select" ? (
           <div className="flex flex-col items-center">
             <button
