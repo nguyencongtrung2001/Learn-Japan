@@ -1,39 +1,22 @@
 import Link from "next/link";
 import { DeleteFolderButton } from "./delete-folder-button";
 import type { FolderWithCount } from "@/actions/folder-actions";
-import { getFolderStatus } from "@/lib/folder-status";
 
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 
-/** Server Component — hiển thị thẻ thư mục cùng trạng thái học tập. */
+/** Server Component — hiển thị thẻ thư mục. */
 export function FolderCard({ folder }: { folder: FolderWithCount }) {
   const href = `/folders/${folder.id}`;
-  const statusInfo = getFolderStatus(
-    folder.cardCount ?? 0,
-    folder.learnedCount ?? 0,
-    folder.studyingCount ?? 0
-  );
 
   return (
     <div className="glass-card group relative flex h-full flex-col overflow-hidden p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
       <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-indigo/5 transition-colors group-hover:bg-indigo/10" />
 
       <Link href={href} className="relative z-10 mb-6 block flex-1">
-        {/* Header: Tên thư mục & Huy hiệu Trạng thái */}
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="flex items-center gap-2 text-xl font-extrabold text-foreground transition-colors group-hover:text-indigo-light min-w-0">
-            <span className="text-2xl transition-transform group-hover:scale-110 shrink-0">📁</span>
-            <span className="truncate">{folder.name}</span>
-          </h3>
-
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold shrink-0 ${statusInfo.badgeClass}`}
-            title={`Trạng thái: ${statusInfo.label}`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusInfo.dotClass}`} />
-            <span>{statusInfo.label}</span>
-          </span>
-        </div>
+        <h3 className="flex items-center gap-2 text-xl font-extrabold text-foreground transition-colors group-hover:text-indigo-light mb-2">
+          <span className="text-2xl transition-transform group-hover:scale-110 shrink-0">📁</span>
+          <span className="truncate">{folder.name}</span>
+        </h3>
 
         {folder.description && (
           <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-foreground-muted">{folder.description}</p>
