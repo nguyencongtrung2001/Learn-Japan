@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./theme-provider";
+import { AppLogo } from "./app-logo";
 
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
@@ -12,15 +13,13 @@ const navLinks = [
   { href: "/note", label: "Ghi chú", icon: "📋" },
 ];
 
+const emptySubscribe = () => () => {};
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border backdrop-blur-xl bg-background/80">
@@ -29,13 +28,13 @@ export default function Header() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2.5 group"
             id="header-logo"
           >
-            <span className="text-2xl transition-transform duration-300 group-hover:scale-110">
-              📚
-            </span>
-            <span className="text-lg sm:text-xl font-black gradient-text">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-indigo/25 transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+              <AppLogo className="w-full h-full" />
+            </div>
+            <span className="text-lg sm:text-xl font-black gradient-text tracking-tight">
               Flashcard App
             </span>
           </Link>
@@ -81,16 +80,19 @@ export default function Header() {
               id="mobile-menu-toggle"
             >
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-2" : ""
-                  }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "rotate-45 translate-y-2" : ""
+                }`}
               />
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""
-                  }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "opacity-0" : ""
+                }`}
               />
               <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                  }`}
+                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
+                  isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
               />
             </button>
           </div>
@@ -99,8 +101,9 @@ export default function Header() {
 
       {/* Mobile navigation dropdown */}
       <div
-        className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${
+          isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
         <nav className="px-4 py-3 space-y-1" id="mobile-nav">
           {navLinks.map((link) => {

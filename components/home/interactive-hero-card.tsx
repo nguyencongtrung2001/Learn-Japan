@@ -121,7 +121,7 @@ export function InteractiveHeroCard({ initialRetentionRate = 0 }: InteractiveHer
               <span className="flex items-center gap-1 font-medium text-foreground-muted">
                 <span>🔄</span> Bấm để lật xem nghĩa
               </span>
-              <span className="font-bold text-sakura">Cấp độ 5 🌺</span>
+              <span className="font-bold text-sakura">Cấp độ 5 ⚡</span>
             </div>
           </div>
 

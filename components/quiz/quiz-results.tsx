@@ -13,9 +13,9 @@ export function QuizResults({ correct, incorrect, completedWords, onContinue, on
   return (
     <div className="animate-fade-in-up mx-auto max-w-lg px-4 py-12 text-center">
       <div className="glass-card mb-8 p-8 sm:p-10">
-        <div className="mb-4 text-5xl">{accuracy >= 80 ? "🌺" : accuracy >= 50 ? "🌸" : "🌱"}</div>
+        <div className="mb-4 text-5xl">{accuracy >= 80 ? "🏆" : accuracy >= 50 ? "⭐" : "🎯"}</div>
         <h2 className="mb-2 text-2xl font-bold">
-          {completedWords > 0 ? `${completedWords} từ đã nở hoa!` : "Phiên ôn tập hoàn tất!"}
+          {completedWords > 0 ? `${completedWords} từ đã thành thạo!` : "Phiên ôn tập hoàn tất!"}
         </h2>
         <p className="mb-6 text-sm text-foreground-muted">
           {accuracy >= 80
