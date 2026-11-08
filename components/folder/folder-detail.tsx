@@ -265,7 +265,12 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
         {/* ═══════ DANH SÁCH THẺ ═══════ */}
         <main className="min-w-0 flex-1">
-          {showCardForm && <AddCardForm onSubmit={handleCreate} />}
+          {showCardForm && (
+            <AddCardForm
+              onSubmit={handleCreate}
+              onClose={() => setShowCardForm(false)}
+            />
+          )}
 
           <CardsHeader count={cards.length} />
 

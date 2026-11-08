@@ -374,14 +374,24 @@ export default function BulkImport({ onImport }: BulkImportProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="glass-card w-full max-w-4xl p-6 shadow-2xl relative animate-fade-in-up border border-border/80">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      onClick={() => setIsOpen(false)}
+    >
+      <div
+        className="glass-card w-full max-w-4xl p-6 shadow-2xl relative animate-fade-in-up border border-border/80"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
+          type="button"
           onClick={() => setIsOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-hover transition-colors text-foreground-muted hover:text-foreground"
+          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted hover:bg-surface-hover hover:text-foreground hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer z-10"
           title="Đóng"
+          aria-label="Đóng bảng nhập nhanh"
         >
-          ✕
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         <div className="mb-4">
