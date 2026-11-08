@@ -191,7 +191,6 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               total={cards.length}
               newCount={newCount}
               dueCount={dueCount}
-              learnedCount={learnedCount}
               editing={editing}
             />
 
@@ -251,38 +250,6 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
                 onCancel={() => setEditing(false)}
               />
             )}
-
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowCardForm((v) => !v);
-                  if (!showCardForm) setShowBulkImport(false);
-                }}
-                className={`w-full cursor-pointer rounded-xl border-2 px-5 py-3 text-sm font-bold shadow-sm transition-all duration-300 ${
-                  showCardForm
-                    ? "border-indigo bg-indigo text-white shadow-lg shadow-indigo/25"
-                    : "border-indigo/20 bg-indigo/5 text-indigo-light hover:border-indigo hover:bg-indigo hover:text-white hover:shadow-lg"
-                }`}
-              >
-                {showCardForm ? "✕ Đóng Thêm Thẻ" : "＋ Thêm Thẻ Mới"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowBulkImport((v) => !v);
-                  if (!showBulkImport) setShowCardForm(false);
-                }}
-                className={`w-full cursor-pointer rounded-xl border-2 px-5 py-3 text-sm font-bold shadow-sm transition-all duration-300 ${
-                  showBulkImport
-                    ? "border-sakura bg-sakura text-white shadow-lg shadow-sakura/25"
-                    : "border-sakura/20 bg-sakura/5 text-sakura-light hover:border-sakura hover:bg-sakura hover:text-white hover:shadow-lg"
-                }`}
-              >
-                {showBulkImport ? "✕ Đóng Nhập Nhanh" : "⚡ Nhập Nhanh Từ Vựng"}
-              </button>
-            </div>
           </div>
         </aside>
 

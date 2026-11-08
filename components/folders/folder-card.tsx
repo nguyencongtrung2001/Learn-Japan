@@ -9,7 +9,7 @@ export function FolderCard({ folder }: { folder: FolderWithCount }) {
   const href = `/folders/${folder.id}`;
 
   return (
-    <div className="glass-card group relative flex h-full flex-col overflow-hidden p-5 sm:p-5.5 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+    <div className="glass-card group relative flex h-full flex-col overflow-hidden p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
       <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-indigo/5 transition-colors group-hover:bg-indigo/10" />
 
       <Link href={href} className="relative z-10 mb-6 block flex-1">
