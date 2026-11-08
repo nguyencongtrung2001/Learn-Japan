@@ -6,6 +6,8 @@ import type { CardInput } from "@/lib/card-utils";
 export interface BulkImportProps {
   /** Trả về số thẻ thực sự được tạo (có thể ít hơn số dòng nếu vượt giới hạn thư mục). */
   onImport: (rows: CardInput[]) => Promise<number | void>;
+  /** Callback đóng form nhập nhanh */
+  onClose?: () => void;
 }
 
 // Regex nhận diện ký tự tiếng Việt (để phân biệt với Phiên âm tiếng Anh)
@@ -318,8 +320,7 @@ function parseCardsFromText(rawText: string): CardInput[] {
   return result;
 }
 
-export default function BulkImport({ onImport }: BulkImportProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function BulkImport({ onImport, onClose }: BulkImportProps) {
   const [text, setText] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
@@ -348,7 +349,7 @@ export default function BulkImport({ onImport }: BulkImportProps) {
               : "")
         );
         setText("");
-        setIsOpen(false);
+        onClose?.();
       } else {
         alert(
           "Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra lại định dạng bảng (sử dụng dấu | hoặc copy từ Excel)."
@@ -362,110 +363,99 @@ export default function BulkImport({ onImport }: BulkImportProps) {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all duration-200 cursor-pointer"
-      >
-        ⚡ Nhập nhanh (Paste Text)
-      </button>
-    );
-  }
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-      onClick={() => setIsOpen(false)}
-    >
-      <div
-        className="glass-card w-full max-w-4xl p-6 shadow-2xl relative animate-fade-in-up border border-border/80"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="glass-card animate-fade-in relative mb-6 overflow-hidden p-6 shadow-2xl sm:p-8 border border-border/80">
+      <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-sakura via-indigo to-emerald opacity-60" />
+
+      {onClose && (
         <button
           type="button"
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
           className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted hover:bg-surface-hover hover:text-foreground hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer z-10"
-          title="Đóng"
+          title="Đóng bảng nhập nhanh"
           aria-label="Đóng bảng nhập nhanh"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+      )}
 
-        <div className="mb-4">
-          <h2 className="text-xl font-extrabold mb-1.5 gradient-text flex items-center gap-2">
-            ⚡ Nhập nhanh từ vựng
-          </h2>
-          <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
-            Dán bảng Markdown (dấu <code>|</code>) hoặc copy trực tiếp từ Excel.
-            Thứ tự 6 cột chuẩn:{" "}
-            <strong className="text-foreground">
-              Từ vựng | Phiên âm | Loại từ | Nghĩa | Định nghĩa | Ví dụ
-            </strong>
-          </p>
+      <div className="mb-4 pr-10">
+        <h3 className="text-xl font-extrabold mb-1.5 gradient-text flex items-center gap-2">
+          ⚡ Nhập Nhanh Từ Vựng
+        </h3>
+        <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
+          Dán bảng Markdown (dấu <code>|</code>) hoặc copy trực tiếp từ Excel.
+          Thứ tự 6 cột chuẩn:{" "}
+          <strong className="text-foreground">
+            Từ vựng | Phiên âm | Loại từ | Nghĩa | Định nghĩa | Ví dụ
+          </strong>
+        </p>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-foreground-dim">
-            <span className="font-semibold text-foreground-muted">Ví dụ Loại từ:</span>
-            {["NOUN", "VERB", "ADJ", "ADV", "CỤM TỪ", "STRUCTURE", "IDIOM"].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded bg-indigo/10 border border-indigo/20 px-1.5 py-0.5 font-bold text-indigo-light"
-                >
-                  {tag}
-                </span>
-              )
-            )}
-            <span className="ml-2 font-semibold text-foreground-muted">Phiên âm:</span>
-            <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 font-mono font-bold text-emerald-400">
-              /ˌpɜː.sɪˈvɪə.rəns/
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-foreground-dim">
+          <span className="font-semibold text-foreground-muted">Ví dụ Loại từ:</span>
+          {["NOUN", "VERB", "ADJ", "ADV", "CỤM TỪ", "STRUCTURE", "IDIOM"].map(
+            (tag) => (
+              <span
+                key={tag}
+                className="rounded bg-indigo/10 border border-indigo/20 px-1.5 py-0.5 font-bold text-indigo-light"
+              >
+                {tag}
+              </span>
+            )
+          )}
+          <span className="ml-2 font-semibold text-foreground-muted">Phiên âm:</span>
+          <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 font-mono font-bold text-emerald-400">
+            /ˌpɜː.sɪˈvɪə.rəns/
+          </span>
+        </div>
+      </div>
+
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={`Ví dụ bảng Markdown 6 cột chuẩn:\n| Perseverance | /ˌpɜː.sɪˈvɪə.rəns/ | NOUN | Sự kiên trì | Continued effort to achieve something | Through perseverance, he succeeded. |\n| Accomplish | /əˈkʌm.plɪʃ/ | VERB | Hoàn thành | To complete successfully | Mission accomplished! |\n| Resilient | /rɪˈzɪl.jəns/ | ADJ | Kiên cường | Able to recover quickly from difficulties | She is very resilient in tough times. |\n| Tag along | /tæɡ əˈlɒŋ/ | CỤM TỪ | Đi cùng | To accompany someone | Do you wanna tag along with us? |\n| Break a leg | /breɪk ə leɡ/ | IDIOM | Chúc may mắn | Used to wish someone good luck | Break a leg on your test! |\n| Be used to | /biː juːzd tuː/ | STRUCTURE | Quen với việc gì | Accustomed to something | I am used to waking up early. |\n\nHoặc copy trực tiếp 6 cột từ Excel (phân cách bằng Tab):\nPerseverance\t/ˌpɜː.sɪˈvɪə.rəns/\tNOUN\tSự kiên trì\tContinued effort...\tThrough perseverance...`}
+        className="w-full h-64 sm:h-72 p-4 rounded-xl bg-surface/70 border border-border/80 text-foreground text-xs sm:text-sm font-mono outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all resize-y leading-relaxed"
+      />
+
+      {/* Live detection preview bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-border/50">
+        <div className="text-xs font-semibold text-foreground-muted">
+          {parsedPreview.length > 0 ? (
+            <span className="text-emerald-400 flex items-center gap-1.5 flex-wrap">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              Đã phát hiện <strong>{parsedPreview.length}</strong> thẻ hợp lệ (
+              {parsedPreview.filter((p) => p.phonetic).length} có Phiên âm,{" "}
+              {parsedPreview.filter((p) => p.partOfSpeech).length} có Loại từ)
             </span>
-          </div>
+          ) : (
+            <span className="text-foreground-dim">
+              Chưa có dữ liệu (hãy dán văn bản vào ô trên)
+            </span>
+          )}
         </div>
 
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={`Ví dụ bảng Markdown 6 cột chuẩn:\n| Perseverance | /ˌpɜː.sɪˈvɪə.rəns/ | NOUN | Sự kiên trì | Continued effort to achieve something | Through perseverance, he succeeded. |\n| Accomplish | /əˈkʌm.plɪʃ/ | VERB | Hoàn thành | To complete successfully | Mission accomplished! |\n| Resilient | /rɪˈzɪl.jəns/ | ADJ | Kiên cường | Able to recover quickly from difficulties | She is very resilient in tough times. |\n| Tag along | /tæɡ əˈlɒŋ/ | CỤM TỪ | Đi cùng | To accompany someone | Do you wanna tag along with us? |\n| Break a leg | /breɪk ə leɡ/ | IDIOM | Chúc may mắn | Used to wish someone good luck | Break a leg on your test! |\n| Be used to | /biː juːzd tuː/ | STRUCTURE | Quen với việc gì | Accustomed to something | I am used to waking up early. |\n\nHoặc copy trực tiếp 6 cột từ Excel (phân cách bằng Tab):\nPerseverance\t/ˌpɜː.sɪˈvɪə.rəns/\tNOUN\tSự kiên trì\tContinued effort...\tThrough perseverance...`}
-          className="w-full h-72 p-4 rounded-xl bg-surface/70 border border-border/80 text-foreground text-xs sm:text-sm font-mono outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all resize-none leading-relaxed"
-        />
-
-        {/* Live detection preview bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-2 border-t border-border/50">
-          <div className="text-xs font-semibold text-foreground-muted">
-            {parsedPreview.length > 0 ? (
-              <span className="text-emerald-400 flex items-center gap-1.5 flex-wrap">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Đã phát hiện <strong>{parsedPreview.length}</strong> thẻ hợp lệ (
-                {parsedPreview.filter((p) => p.phonetic).length} có Phiên âm,{" "}
-                {parsedPreview.filter((p) => p.partOfSpeech).length} có Loại từ)
-              </span>
-            ) : (
-              <span className="text-foreground-dim">
-                Chưa có dữ liệu (hãy dán văn bản vào ô trên)
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5">
+          {onClose && (
             <button
-              onClick={() => setIsOpen(false)}
-              className="px-4 py-2 rounded-xl border border-border text-xs sm:text-sm font-semibold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all cursor-pointer"
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl border border-border text-xs sm:text-sm font-semibold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all cursor-pointer"
             >
-              Hủy
+              ✕ Hủy bỏ
             </button>
-            <button
-              onClick={handleParseAndImport}
-              disabled={isImporting || parsedPreview.length === 0}
-              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-md cursor-pointer"
-            >
-              {isImporting
-                ? "⏳ Đang tạo thẻ..."
-                : `✅ Tạo danh sách (${parsedPreview.length} thẻ)`}
-            </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={handleParseAndImport}
+            disabled={isImporting || parsedPreview.length === 0}
+            className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-md cursor-pointer"
+          >
+            {isImporting
+              ? "⏳ Đang tạo thẻ..."
+              : `✅ Tạo danh sách (${parsedPreview.length} thẻ)`}
+          </button>
         </div>
       </div>
     </div>

@@ -34,6 +34,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const [folder, setFolder] = useState(initialFolder);
   const [cards, setCards] = useState(initialCards);
   const [showCardForm, setShowCardForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editingCard, setEditingCard] = useState<CardListItem | null>(null);
   const [now] = useState(serverNow);
@@ -253,18 +254,40 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             <div className="flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => setShowCardForm((v) => !v)}
-                className="w-full cursor-pointer rounded-xl border-2 border-indigo/20 bg-indigo/5 px-5 py-3 text-sm font-bold text-indigo-light shadow-sm transition-all duration-300 hover:border-indigo hover:bg-indigo hover:text-white hover:shadow-lg"
+                onClick={() => {
+                  setShowCardForm((v) => !v);
+                  if (!showCardForm) setShowBulkImport(false);
+                }}
+                className={`w-full cursor-pointer rounded-xl border-2 px-5 py-3 text-sm font-bold shadow-sm transition-all duration-300 ${
+                  showCardForm
+                    ? "border-indigo bg-indigo text-white shadow-lg shadow-indigo/25"
+                    : "border-indigo/20 bg-indigo/5 text-indigo-light hover:border-indigo hover:bg-indigo hover:text-white hover:shadow-lg"
+                }`}
               >
-                {showCardForm ? "✕ Đóng Form" : "＋ Thêm Thẻ Mới"}
+                {showCardForm ? "✕ Đóng Thêm Thẻ" : "＋ Thêm Thẻ Mới"}
               </button>
-              <BulkImport onImport={handleImport} />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowBulkImport((v) => !v);
+                  if (!showBulkImport) setShowCardForm(false);
+                }}
+                className={`w-full cursor-pointer rounded-xl border-2 px-5 py-3 text-sm font-bold shadow-sm transition-all duration-300 ${
+                  showBulkImport
+                    ? "border-sakura bg-sakura text-white shadow-lg shadow-sakura/25"
+                    : "border-sakura/20 bg-sakura/5 text-sakura-light hover:border-sakura hover:bg-sakura hover:text-white hover:shadow-lg"
+                }`}
+              >
+                {showBulkImport ? "✕ Đóng Nhập Nhanh" : "⚡ Nhập Nhanh Từ Vựng"}
+              </button>
             </div>
           </div>
         </aside>
 
         {/* ═══════ DANH SÁCH THẺ ═══════ */}
         <main className="min-w-0 flex-1">
+          {/* Form Thêm Thẻ Từ Vựng */}
           {showCardForm && (
             <AddCardForm
               onSubmit={handleCreate}
@@ -272,10 +295,39 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             />
           )}
 
-          <CardsHeader count={cards.length} />
+          {/* Form Nhập Nhanh Từ Vựng - Nằm ở trên grid list card thẻ từ vựng */}
+          {showBulkImport && (
+            <BulkImport
+              onImport={handleImport}
+              onClose={() => setShowBulkImport(false)}
+            />
+          )}
+
+          <CardsHeader
+            count={cards.length}
+            onToggleAddCard={() => {
+              setShowCardForm((v) => !v);
+              if (!showCardForm) setShowBulkImport(false);
+            }}
+            onToggleBulkImport={() => {
+              setShowBulkImport((v) => !v);
+              if (!showBulkImport) setShowCardForm(false);
+            }}
+            showCardForm={showCardForm}
+            showBulkImport={showBulkImport}
+          />
 
           {cards.length === 0 ? (
-            <EmptyCards />
+            <EmptyCards
+              onAddCard={() => {
+                setShowCardForm(true);
+                setShowBulkImport(false);
+              }}
+              onBulkImport={() => {
+                setShowBulkImport(true);
+                setShowCardForm(false);
+              }}
+            />
           ) : (
             <VocabGrid
               cards={cards}
