@@ -9,7 +9,7 @@ export default async function FoldersPage() {
   const res = await getFolders();
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <FoldersHeader />
       <CreateFolderSection />
 

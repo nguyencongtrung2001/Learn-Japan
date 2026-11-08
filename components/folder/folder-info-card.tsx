@@ -67,11 +67,6 @@ export function FolderInfoCard({
           <span className="rounded-full border border-sakura/20 bg-sakura/10 px-3 py-1 text-xs font-bold text-sakura-light shadow-sm">
             💧 {dueCount} cần ôn
           </span>
-          {learnedCount > 0 && (
-            <span className="rounded-full border border-indigo/20 bg-indigo/10 px-3 py-1 text-xs font-bold text-indigo-light shadow-sm">
-              ✨ {learnedCount} đã thuộc
-            </span>
-          )}
         </div>
       </div>
     </div>
