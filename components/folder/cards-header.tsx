@@ -47,7 +47,7 @@ export function CardsHeader({
                   : "bg-sakura/10 border border-sakura/25 text-sakura-light hover:bg-sakura/20"
               }`}
             >
-              {showBulkImport ? "✕ Đóng Nhập Nhanh" : "⚡ Nhập Nhanh"}
+              {showBulkImport ? "✕ Đóng Nhập Excel" : "📊 Nhập File Excel"}
             </button>
           )}
         </div>

@@ -271,6 +271,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
           {/* Form Nhập Nhanh Từ Vựng - Nằm ở trên grid list card thẻ từ vựng */}
           {showBulkImport && (
             <BulkImport
+              folderLanguage={folder.language}
               onImport={handleImport}
               onClose={() => setShowBulkImport(false)}
             />

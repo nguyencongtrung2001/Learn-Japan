@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import * as XLSX from "xlsx";
 import type { CardInput } from "@/lib/card-utils";
 
 export interface BulkImportProps {
@@ -8,6 +9,7 @@ export interface BulkImportProps {
   onImport: (rows: CardInput[]) => Promise<number | void>;
   /** Callback đóng form nhập nhanh */
   onClose?: () => void;
+  folderLanguage?: string;
 }
 
 // Regex nhận diện ký tự tiếng Việt (để phân biệt với Phiên âm tiếng Anh)
@@ -119,11 +121,21 @@ function normalizePos(value: string): string {
   return clean.toUpperCase();
 }
 
-function parseCardsFromText(rawText: string): CardInput[] {
-  const lines = rawText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+/**
+ * Xử lý dữ liệu bảng (2D array của các ô chuỗi/số) từ Excel hoặc Text
+ */
+function parseCardsFromRows(rows: (string | number | undefined)[][]): CardInput[] {
+  if (!rows || rows.length === 0) return [];
   const result: CardInput[] = [];
 
-  // Kiểm tra dòng tiêu đề header (nếu người dùng copy cả hàng header)
+  // Lọc bỏ hàng rỗng
+  const cleanRows = rows
+    .map((r) => r.map((cell) => String(cell ?? "").replace(/\*\*/g, "").replace(/\*/g, "").trim()))
+    .filter((r) => r.some((c) => c.length > 0));
+
+  if (cleanRows.length === 0) return [];
+
+  // 1. Kiểm tra dòng header
   let headerMap: {
     word?: number;
     kanji?: number;
@@ -135,123 +147,97 @@ function parseCardsFromText(rawText: string): CardInput[] {
     imageUrl?: number;
   } | null = null;
 
-  if (lines.length > 0) {
-    const firstLineLower = lines[0].toLowerCase();
-    if (
-      (firstLineLower.includes("word") ||
-        firstLineLower.includes("từ vựng") ||
-        firstLineLower.includes("kanji") ||
-        firstLineLower.includes("kana") ||
-        firstLineLower.includes("tiếng nhật")) &&
-      (firstLineLower.includes("translation") ||
-        firstLineLower.includes("nghĩa") ||
-        firstLineLower.includes("dịch") ||
-        firstLineLower.includes("meaning"))
-    ) {
-      const headerCols = lines[0].includes("|")
-        ? lines[0].split("|").map((c) => c.trim()).filter(Boolean)
-        : lines[0].split("\t").map((c) => c.trim());
+  const firstLine = cleanRows[0];
+  const firstLineJoined = firstLine.join(" ").toLowerCase();
 
-      headerMap = {};
-      headerCols.forEach((col, idx) => {
-        const cLower = col.toLowerCase();
-        if (
-          cLower.includes("ảnh") ||
-          cLower.includes("hình") ||
-          cLower.includes("image") ||
-          cLower.includes("img") ||
-          cLower.includes("pic") ||
-          cLower.includes("photo")
-        ) {
-          headerMap!.imageUrl = idx;
-        } else if (
-          cLower.includes("kanji") ||
-          cLower.includes("hán tự") ||
-          cLower.includes("chữ hán") ||
-          cLower.includes("han tu")
-        ) {
-          headerMap!.kanji = idx;
-        } else if (
-          cLower.includes("word") ||
-          cLower.includes("từ vựng") ||
-          cLower.includes("kana") ||
-          cLower.includes("tiếng nhật") ||
-          cLower.includes("term")
-        ) {
-          headerMap!.word = idx;
-        } else if (
-          cLower.includes("phiên âm") ||
-          cLower.includes("phonetic") ||
-          cLower.includes("ipa") ||
-          cLower.includes("phát âm") ||
-          cLower.includes("romaji") ||
-          cLower.includes("furigana") ||
-          cLower.includes("reading")
-        ) {
-          headerMap!.phonetic = idx;
-        } else if (
-          cLower.includes("loại từ") ||
-          cLower.includes("từ loại") ||
-          cLower.includes("pos") ||
-          cLower.includes("type")
-        ) {
-          headerMap!.pos = idx;
-        } else if (
-          cLower.includes("nghĩa") ||
-          cLower.includes("translation") ||
-          cLower.includes("meaning") ||
-          cLower.includes("dịch")
-        ) {
-          headerMap!.translation = idx;
-        } else if (
-          cLower.includes("định nghĩa") ||
-          cLower.includes("definition") ||
-          cLower.includes("ngữ cảnh") ||
-          cLower.includes("sắc thái") ||
-          cLower.includes("context") ||
-          cLower.includes("explain")
-        ) {
-          headerMap!.definition = idx;
-        } else if (
-          cLower.includes("ví dụ") ||
-          cLower.includes("example") ||
-          cLower.includes("sentence") ||
-          cLower.includes("câu")
-        ) {
-          headerMap!.example = idx;
-        }
-      });
-    }
+  if (
+    (firstLineJoined.includes("word") ||
+      firstLineJoined.includes("từ vựng") ||
+      firstLineJoined.includes("kanji") ||
+      firstLineJoined.includes("kana") ||
+      firstLineJoined.includes("tiếng nhật")) &&
+    (firstLineJoined.includes("translation") ||
+      firstLineJoined.includes("nghĩa") ||
+      firstLineJoined.includes("dịch") ||
+      firstLineJoined.includes("meaning"))
+  ) {
+    headerMap = {};
+    firstLine.forEach((col, idx) => {
+      const cLower = col.toLowerCase();
+      if (
+        cLower.includes("ảnh") ||
+        cLower.includes("hình") ||
+        cLower.includes("image") ||
+        cLower.includes("img") ||
+        cLower.includes("pic") ||
+        cLower.includes("photo")
+      ) {
+        headerMap!.imageUrl = idx;
+      } else if (
+        cLower.includes("kanji") ||
+        cLower.includes("hán tự") ||
+        cLower.includes("chữ hán") ||
+        cLower.includes("han tu")
+      ) {
+        headerMap!.kanji = idx;
+      } else if (
+        cLower.includes("word") ||
+        cLower.includes("từ vựng") ||
+        cLower.includes("kana") ||
+        cLower.includes("tiếng nhật") ||
+        cLower.includes("term")
+      ) {
+        headerMap!.word = idx;
+      } else if (
+        cLower.includes("phiên âm") ||
+        cLower.includes("phonetic") ||
+        cLower.includes("ipa") ||
+        cLower.includes("phát âm") ||
+        cLower.includes("romaji") ||
+        cLower.includes("furigana") ||
+        cLower.includes("reading")
+      ) {
+        headerMap!.phonetic = idx;
+      } else if (
+        cLower.includes("loại từ") ||
+        cLower.includes("từ loại") ||
+        cLower.includes("pos") ||
+        cLower.includes("type")
+      ) {
+        headerMap!.pos = idx;
+      } else if (
+        cLower.includes("nghĩa") ||
+        cLower.includes("translation") ||
+        cLower.includes("meaning") ||
+        cLower.includes("dịch")
+      ) {
+        headerMap!.translation = idx;
+      } else if (
+        cLower.includes("định nghĩa") ||
+        cLower.includes("definition") ||
+        cLower.includes("ngữ cảnh") ||
+        cLower.includes("sắc thái") ||
+        cLower.includes("context") ||
+        cLower.includes("explain")
+      ) {
+        headerMap!.definition = idx;
+      } else if (
+        cLower.includes("ví dụ") ||
+        cLower.includes("example") ||
+        cLower.includes("sentence") ||
+        cLower.includes("câu")
+      ) {
+        headerMap!.example = idx;
+      }
+    });
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  const startIdx = headerMap ? 1 : 0;
 
+  for (let i = startIdx; i < cleanRows.length; i++) {
+    const cols = cleanRows[i];
     // Bỏ qua dòng phân cách Markdown table: |---|---|...
-    if (line.match(/^\|?[-:\s|]+\|?$/) && line.includes("-")) continue;
-    // Bỏ qua dòng header đã nhận diện
-    if (i === 0 && headerMap) continue;
-
-    let cols: string[] = [];
-
-    if (line.includes("|")) {
-      // Định dạng Markdown Table
-      const rawCols = line.split("|").map((c) => c.trim());
-      const start = line.startsWith("|") ? 1 : 0;
-      const end = line.endsWith("|") ? rawCols.length - 1 : rawCols.length;
-      cols = rawCols.slice(start, end).map((c) => c.trim());
-    } else if (line.includes("\t")) {
-      // Định dạng copy từ Excel (phân cách bằng Tab)
-      cols = line.split("\t").map((c) => c.trim());
-    } else if (line.includes(";")) {
-      // Hỗ trợ CSV với dấu ;
-      cols = line.split(";").map((c) => c.trim());
-    } else {
-      continue;
-    }
-
-    // Làm sạch ký tự định dạng markdown như **bold** hoặc *italic*
-    cols = cols.map((c) => c.replace(/\*\*/g, "").replace(/\*/g, "").trim());
+    if (cols.length === 1 && cols[0].match(/^\|?[-:\s|]+\|?$/)) continue;
     if (cols.length < 2) continue;
 
     let word = "";
@@ -399,51 +385,239 @@ function parseCardsFromText(rawText: string): CardInput[] {
   return result;
 }
 
-export default function BulkImport({ onImport, onClose }: BulkImportProps) {
-  const [text, setText] = useState("");
-  const [isImporting, setIsImporting] = useState(false);
+function parseCardsFromText(rawText: string): CardInput[] {
+  const lines = rawText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+  const rows: string[][] = [];
 
-  // Đếm nhanh số thẻ nhận diện được theo thời gian thực
-  const parsedPreview = useMemo(() => {
+  for (const line of lines) {
+    if (line.match(/^\|?[-:\s|]+\|?$/) && line.includes("-")) continue;
+
+    let cols: string[] = [];
+    if (line.includes("|")) {
+      const rawCols = line.split("|").map((c) => c.trim());
+      const start = line.startsWith("|") ? 1 : 0;
+      const end = line.endsWith("|") ? rawCols.length - 1 : rawCols.length;
+      cols = rawCols.slice(start, end).map((c) => c.trim());
+    } else if (line.includes("\t")) {
+      cols = line.split("\t").map((c) => c.trim());
+    } else if (line.includes(";")) {
+      cols = line.split(";").map((c) => c.trim());
+    } else {
+      continue;
+    }
+    if (cols.length >= 2) {
+      rows.push(cols);
+    }
+  }
+
+  return parseCardsFromRows(rows);
+}
+
+/** Tải file Excel mẫu (.xlsx) chuẩn cho người dùng */
+function downloadSampleExcel(isJapanese: boolean) {
+  const wb = XLSX.utils.book_new();
+  const data = isJapanese
+    ? [
+        [
+          "Từ vựng (Kana)",
+          "Chữ Hán (Kanji)",
+          "Furigana / Romaji",
+          "Loại từ",
+          "Nghĩa tiếng Việt",
+          "Ngữ cảnh sử dụng & Sắc thái",
+          "Câu ví dụ thực tế",
+          "Link ảnh minh họa",
+        ],
+        [
+          "さくら",
+          "桜",
+          "sakura",
+          "Danh từ",
+          "Hoa anh đào",
+          "Biểu tượng mùa xuân nước Nhật, vẻ đẹp ngắn ngủi thanh khiết",
+          "春になると桜が綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.)",
+          "https://images.unsplash.com/photo-1522383225653-ed111181a951",
+        ],
+        [
+          "たべる",
+          "食べる",
+          "taberu",
+          "Động từ N2",
+          "Ăn",
+          "Hành động ăn uống hàng ngày, lịch sự là 食べます",
+          "毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.)",
+          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+        ],
+        [
+          "いちごいちえ",
+          "一期一会",
+          "ichigoichie",
+          "Thành ngữ",
+          "Đời người chỉ gặp một lần",
+          "Bắt nguồn từ trà đạo, trân trọng từng phút giây hội ngộ",
+          "一期一会の精神でおもてなしをする。(Tiếp đãi bằng tinh thần trân quý từng phút giây gặp gỡ.)",
+          "",
+        ],
+        [
+          "なつかしい",
+          "懐かしい",
+          "natsukashii",
+          "Tính từ -i",
+          "Hoài niệm / Nhớ nhung",
+          "Nhớ về kỷ niệm xưa cũ đẹp đẽ với cảm xúc ấm áp",
+          "昔の写真を見て、懐かしくなりました。(Nhìn lại tấm ảnh xưa lòng lại thấy bồi hồi.)",
+          "",
+        ],
+      ]
+    : [
+        [
+          "Từ vựng",
+          "Phiên âm IPA",
+          "Loại từ",
+          "Nghĩa tiếng Việt",
+          "Định nghĩa / Ngữ cảnh",
+          "Ví dụ câu",
+          "Link ảnh",
+        ],
+        [
+          "Perseverance",
+          "/ˌpɜː.sɪˈvɪə.rəns/",
+          "NOUN",
+          "Sự kiên trì",
+          "Continued effort to do or achieve something despite difficulties",
+          "Through hard work and perseverance, he succeeded.",
+          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd",
+        ],
+        [
+          "Accomplish",
+          "/əˈkʌm.plɪʃ/",
+          "VERB",
+          "Hoàn thành",
+          "To achieve or complete successfully",
+          "We accomplished all our goals this year.",
+          "",
+        ],
+      ];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws["!cols"] = [
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 25 },
+    { wch: 40 },
+    { wch: 50 },
+    { wch: 40 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, "TuVung");
+  XLSX.writeFile(wb, isJapanese ? "mau_tu_vung_tieng_nhat.xlsx" : "mau_tu_vung_tieng_anh.xlsx");
+}
+
+export default function BulkImport({ onImport, onClose, folderLanguage = "japanese" }: BulkImportProps) {
+  const [activeTab, setActiveTab] = useState<"excel" | "text">("excel");
+  const [text, setText] = useState("");
+  const [excelCards, setExcelCards] = useState<CardInput[]>([]);
+  const [fileName, setFileName] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [isParsingFile, setIsParsingFile] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isJapanese = folderLanguage === "japanese";
+
+  // Đếm thẻ từ văn bản
+  const parsedTextPreview = useMemo(() => {
     if (!text.trim()) return [];
     return parseCardsFromText(text);
   }, [text]);
 
-  const handleParseAndImport = async () => {
-    if (!text.trim()) return;
+  const activeCards = activeTab === "excel" ? excelCards : parsedTextPreview;
+
+  // Xử lý file Excel được tải lên
+  const processExcelFile = async (file: File) => {
+    try {
+      setIsParsingFile(true);
+      setFileName(file.name);
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) {
+        alert("File không chứa trang tính (sheet) hợp lệ.");
+        return;
+      }
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rawRows: (string | number | undefined)[][] = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: "",
+      });
+
+      const parsed = parseCardsFromRows(rawRows);
+      if (parsed.length === 0) {
+        alert("Không tìm thấy từ vựng hợp lệ trong file Excel. Vui lòng kiểm tra lại cấu trúc cột hoặc tải file mẫu.");
+      }
+      setExcelCards(parsed);
+    } catch (err) {
+      console.error("Lỗi đọc file Excel:", err);
+      alert("Đã xảy ra lỗi khi đọc file Excel. Vui lòng đảm bảo file có định dạng .xlsx, .xls hoặc .csv.");
+    } finally {
+      setIsParsingFile(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processExcelFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processExcelFile(file);
+    }
+  };
+
+  // Thực hiện import vào Database
+  const executeImport = async (cardsToImport: CardInput[]) => {
+    if (cardsToImport.length === 0) return;
     setIsImporting(true);
 
     try {
-      const importedCards = parseCardsFromText(text);
-
-      if (importedCards.length > 0) {
-        const created = await onImport(importedCards);
-        const createdCount =
-          typeof created === "number" ? created : importedCards.length;
-        const skipped = importedCards.length - createdCount;
-        alert(
-          `Đã nhập nhanh thành công ${createdCount} thẻ!` +
-            (skipped > 0
-              ? ` (${skipped} thẻ bị bỏ qua do đã đạt giới hạn thư mục)`
-              : "")
-        );
-        setText("");
-        onClose?.();
-      } else {
-        alert(
-          "Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra lại định dạng bảng (sử dụng dấu | hoặc copy từ Excel)."
-        );
-      }
+      const created = await onImport(cardsToImport);
+      const createdCount = typeof created === "number" ? created : cardsToImport.length;
+      const skipped = cardsToImport.length - createdCount;
+      alert(
+        `Đã nhập thành công ${createdCount} thẻ từ vựng!` +
+          (skipped > 0 ? ` (${skipped} thẻ bị bỏ qua do đã đạt giới hạn thư mục)` : "")
+      );
+      setText("");
+      setExcelCards([]);
+      setFileName("");
+      onClose?.();
     } catch (error) {
-      console.error("Lỗi khi nhập nhanh:", error);
-      alert("Đã xảy ra lỗi khi xử lý văn bản.");
+      console.error("Lỗi khi nhập thẻ:", error);
+      alert("Đã xảy ra lỗi trong quá trình lưu thẻ.");
     } finally {
       setIsImporting(false);
     }
   };
 
   return (
-    <div className="glass-card animate-fade-in relative mb-6 overflow-hidden p-6 shadow-2xl sm:p-8 border border-border/80">
+    <div className="glass-card animate-fade-in relative mb-6 overflow-hidden p-5 sm:p-7 shadow-2xl border border-border/80">
       <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-sakura via-indigo to-emerald opacity-60" />
 
       {onClose && (
@@ -460,63 +634,220 @@ export default function BulkImport({ onImport, onClose }: BulkImportProps) {
         </button>
       )}
 
-      <div className="mb-4 pr-10">
-        <h3 className="text-xl font-extrabold mb-1.5 gradient-text flex items-center gap-2">
-          ⚡ Nhập Nhanh Từ Vựng (Hỗ trợ 🇯🇵 Tiếng Nhật & 🇬🇧 Tiếng Anh)
+      {/* Header & Tabs */}
+      <div className="mb-5 pr-10">
+        <h3 className="text-xl font-black mb-2 gradient-text flex items-center gap-2">
+          <span>⚡</span> Nhập Từ Vựng Hàng Loạt
         </h3>
-        <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
-          Dán bảng Markdown (dấu <code>|</code>) hoặc copy trực tiếp từ Excel.
-          Cấu trúc chuẩn tiếng Nhật đầy đủ 8 cột:{" "}
-          <strong className="text-foreground">
-            Từ vựng (Kana) | Chữ Hán (Kanji) | Furigana/Romaji | Loại từ | Nghĩa | Ngữ cảnh sử dụng | Câu ví dụ | Link ảnh
-          </strong>
-        </p>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-foreground-dim">
-          <span className="font-semibold text-foreground-muted">Chữ Hán:</span>
-          <span className="rounded bg-sakura/15 border border-sakura/30 px-1.5 py-0.5 font-bold text-sakura-light">
-            Kanji: 桜 / 食べる
-          </span>
-          <span className="ml-1 font-semibold text-foreground-muted">Loại từ tiếng Nhật:</span>
-          {["Danh từ", "Động từ N1/N2/N3", "Tính từ -i/-na", "Phó từ", "Cụm từ", "Thành ngữ"].map(
-            (tag) => (
-              <span
-                key={tag}
-                className="rounded bg-rose/10 border border-rose/25 px-1.5 py-0.5 font-bold text-rose"
-              >
-                {tag}
-              </span>
-            )
-          )}
-          <span className="ml-1 font-semibold text-foreground-muted">Furigana / Romaji:</span>
-          <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 font-bold text-emerald-400">
-            さくら / sakura
-          </span>
+        {/* Tab switchers */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("excel")}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeTab === "excel"
+                ? "bg-gradient-to-r from-emerald to-teal-500 text-white shadow-md shadow-emerald/20"
+                : "border border-border/60 bg-surface/50 text-foreground-muted hover:bg-surface hover:text-foreground"
+            }`}
+          >
+            <span>📊</span> Nhập Bằng File Excel (.xlsx, .xls, .csv)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("text")}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              activeTab === "text"
+                ? "bg-gradient-to-r from-sakura to-indigo text-white shadow-md shadow-indigo/20"
+                : "border border-border/60 bg-surface/50 text-foreground-muted hover:bg-surface hover:text-foreground"
+            }`}
+          >
+            <span>📝</span> Dán Bảng / Text Nhanh
+          </button>
         </div>
       </div>
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={`Ví dụ bảng Markdown 8 cột tiếng Nhật chuẩn (Từ vựng | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh):\n| さくら | 桜 | sakura | Danh từ | Hoa anh đào | Biểu tượng mùa xuân, triết lý vẻ đẹp ngắn ngủi | 春になると桜が綺麗に咲きます。 | https://images.unsplash.com/photo-1522383225653-ed111181a951 |\n| たべる | 食べる | taberu | Động từ N2 | Ăn | Hành động ăn uống hàng ngày, dạng lịch sử là 食べます | 毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.) | https://images.unsplash.com/photo-1546069901-ba9599a7e63c |\n| いちごいちえ | 一期一会 | ichigoichie | Thành ngữ | Đời người chỉ gặp một lần | Bắt nguồn từ trà đạo, trân trọng mọi cuộc gặp gỡ | 一期一会の精神でおもてなしをする。(Tiếp đãi bằng tinh thần trân quý từng phút giây hội ngộ.) | |\n| なつかしい | 懐かしい | natsukashii | Tính từ -i | Nhớ nhung / Hoài niệm | Dùng khi nhớ về kỉ niệm xưa cũ | 昔の写真を見て、懐かしくなりました。 | |\n\nHoặc bảng tiếng Anh:\n| Perseverance | | /ˌpɜː.sɪˈvɪə.rəns/ | NOUN | Sự kiên trì | Continued effort to achieve | Through perseverance, he succeeded. |`}
-        className="w-full h-64 sm:h-72 p-4 rounded-xl bg-surface/70 border border-border/80 text-foreground text-xs sm:text-sm font-mono outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all resize-y leading-relaxed"
-      />
+      {/* ══════════ TAB 1: NHẬP BẰNG FILE EXCEL ══════════ */}
+      {activeTab === "excel" && (
+        <div className="space-y-4 animate-fade-in">
+          {/* Dropzone hoặc thông tin file */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`relative flex flex-col items-center justify-center p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
+              isDragging
+                ? "border-emerald bg-emerald/10 scale-[1.01]"
+                : "border-border/80 bg-surface/40 hover:border-indigo hover:bg-surface/70"
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-      {/* Live detection preview bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-border/50">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald/15 text-3xl text-emerald mb-3 shadow-inner">
+              📊
+            </div>
+
+            <p className="text-base font-bold text-foreground text-center mb-1">
+              {fileName ? (
+                <span className="text-emerald-400">Đã chọn: {fileName}</span>
+              ) : (
+                "Kéo thả file Excel vào đây, hoặc click để chọn file"
+              )}
+            </p>
+            <p className="text-xs text-foreground-muted text-center">
+              Hỗ trợ định dạng Excel <strong>.xlsx</strong>, <strong>.xls</strong>, và <strong>.csv</strong>
+            </p>
+
+            {isParsingFile && (
+              <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-emerald-400 animate-pulse">
+                <span>⏳ Đang phân tích dữ liệu Excel...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action Row: Tải file mẫu + Nút đổi file */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => downloadSampleExcel(isJapanese)}
+              className="inline-flex items-center gap-2 rounded-xl border border-indigo/30 bg-indigo/10 px-3.5 py-2 text-xs font-bold text-indigo-light hover:bg-indigo hover:text-white transition-all cursor-pointer shadow-xs"
+              title="Tải file Excel mẫu có sẵn cấu trúc cột và dữ liệu mẫu"
+            >
+              <span>📥</span> Tải File Excel Mẫu Chuẩn ({isJapanese ? "Tiếng Nhật" : "Tiếng Anh"})
+            </button>
+
+            {fileName && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFileName("");
+                  setExcelCards([]);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="text-xs font-semibold text-rose hover:underline cursor-pointer"
+              >
+                ✕ Hủy chọn file này
+              </button>
+            )}
+          </div>
+
+          {/* Bảng xem trước danh sách thẻ đọc được từ file Excel */}
+          {excelCards.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-border/80 bg-surface/60 overflow-hidden shadow-lg animate-fade-in-up">
+              <div className="p-3 bg-surface/80 border-b border-border/70 flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <span>👀</span> Xem trước dữ liệu ({excelCards.length} thẻ được phát hiện):
+                </span>
+                <span className="text-[11px] text-foreground-dim">
+                  {excelCards.filter((c) => c.kanji).length} có Kanji ·{" "}
+                  {excelCards.filter((c) => c.phonetic).length} có Furigana/Romaji ·{" "}
+                  {excelCards.filter((c) => c.imageUrl).length} có Ảnh
+                </span>
+              </div>
+
+              <div className="max-h-64 overflow-x-auto overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-surface sticky top-0 border-b border-border/60 text-foreground-muted font-bold text-[11px] uppercase tracking-wider">
+                    <tr>
+                      <th className="p-2.5 w-10 text-center">#</th>
+                      <th className="p-2.5">Từ vựng (Kana)</th>
+                      {isJapanese && <th className="p-2.5">Chữ Hán (Kanji)</th>}
+                      <th className="p-2.5">Phiên âm / Furigana</th>
+                      <th className="p-2.5">Loại từ</th>
+                      <th className="p-2.5">Nghĩa tiếng Việt</th>
+                      <th className="p-2.5">Ảnh</th>
+                      <th className="p-2.5">Ngữ cảnh & Ví dụ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40 font-medium">
+                    {excelCards.map((c, idx) => (
+                      <tr key={idx} className="hover:bg-surface-hover/50 transition-colors">
+                        <td className="p-2.5 text-center text-foreground-dim">{idx + 1}</td>
+                        <td className="p-2.5 font-bold text-foreground">{c.word}</td>
+                        {isJapanese && (
+                          <td className="p-2.5 font-bold text-sakura-light">{c.kanji || "—"}</td>
+                        )}
+                        <td className="p-2.5 text-indigo-light font-mono">{c.phonetic || "—"}</td>
+                        <td className="p-2.5">
+                          {c.partOfSpeech ? (
+                            <span className="rounded bg-indigo/15 px-1.5 py-0.5 text-[10px] font-bold text-indigo-light">
+                              {c.partOfSpeech}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="p-2.5 font-semibold text-foreground">{c.translation}</td>
+                        <td className="p-2.5">
+                          {c.imageUrl ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-bold" title={c.imageUrl}>
+                              <span>🖼️</span> Có ảnh
+                            </span>
+                          ) : (
+                            <span className="text-foreground-dim">—</span>
+                          )}
+                        </td>
+                        <td className="p-2.5 text-foreground-muted max-w-xs truncate">
+                          {c.definition || c.example || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════ TAB 2: DÁN BẢNG / TEXT NHANH ══════════ */}
+      {activeTab === "text" && (
+        <div className="space-y-4 animate-fade-in">
+          <div>
+            <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
+              Dán bảng Markdown (dấu <code>|</code>) hoặc copy trực tiếp các cột từ Excel.
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-foreground-dim">
+              <span className="font-semibold text-foreground-muted">Cấu trúc 8 cột:</span>
+              <span className="rounded bg-surface px-2 py-0.5 border border-border text-foreground font-mono">
+                Từ vựng | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh
+              </span>
+            </div>
+          </div>
+
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={`Ví dụ bảng Markdown 8 cột tiếng Nhật chuẩn (Từ vựng | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh):\n| さくら | 桜 | sakura | Danh từ | Hoa anh đào | Biểu tượng mùa xuân nước Nhật | 春になると桜が綺麗に咲きます。 | https://images.unsplash.com/photo-1522383225653-ed111181a951 |\n| たべる | 食べる | taberu | Động từ N2 | Ăn | Hành động ăn uống hàng ngày | 毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.) | https://images.unsplash.com/photo-1546069901-ba9599a7e63c |\n| いちごいちえ | 一期一会 | ichigoichie | Thành ngữ | Đời người chỉ gặp một lần | Bắt nguồn từ trà đạo | 一期一会の精神でおもてなしをする。 | |`}
+            className="w-full h-64 sm:h-72 p-4 rounded-xl bg-surface/70 border border-border/80 text-foreground text-xs sm:text-sm font-mono outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all resize-y leading-relaxed"
+          />
+        </div>
+      )}
+
+      {/* Thanh điều khiển Submit chung phía dưới */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-border/50">
         <div className="text-xs font-semibold text-foreground-muted">
-          {parsedPreview.length > 0 ? (
+          {activeCards.length > 0 ? (
             <span className="text-emerald-400 flex items-center gap-1.5 flex-wrap">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Đã phát hiện <strong>{parsedPreview.length}</strong> thẻ hợp lệ (
-              {parsedPreview.filter((p) => p.kanji).length} có Kanji,{" "}
-              {parsedPreview.filter((p) => p.phonetic).length} có Phiên âm/Furigana,{" "}
-              {parsedPreview.filter((p) => p.imageUrl).length} có Hình ảnh,{" "}
-              {parsedPreview.filter((p) => p.partOfSpeech).length} có Loại từ)
+              Đã sẵn sàng <strong>{activeCards.length}</strong> thẻ hợp lệ (
+              {activeCards.filter((p) => p.kanji).length} có Kanji,{" "}
+              {activeCards.filter((p) => p.phonetic).length} có Phiên âm/Furigana,{" "}
+              {activeCards.filter((p) => p.imageUrl).length} có Hình ảnh)
             </span>
           ) : (
             <span className="text-foreground-dim">
-              Chưa có dữ liệu (hãy dán văn bản vào ô trên)
+              {activeTab === "excel"
+                ? "Chưa có file nào được tải lên (hãy kéo thả hoặc click chọn file Excel)"
+                : "Chưa có dữ liệu (hãy dán văn bản vào ô trên)"}
             </span>
           )}
         </div>
@@ -533,13 +864,13 @@ export default function BulkImport({ onImport, onClose }: BulkImportProps) {
           )}
           <button
             type="button"
-            onClick={handleParseAndImport}
-            disabled={isImporting || parsedPreview.length === 0}
+            onClick={() => executeImport(activeCards)}
+            disabled={isImporting || activeCards.length === 0}
             className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-md cursor-pointer"
           >
             {isImporting
               ? "⏳ Đang tạo thẻ..."
-              : `✅ Tạo danh sách (${parsedPreview.length} thẻ)`}
+              : `✅ Lưu danh sách (${activeCards.length} thẻ)`}
           </button>
         </div>
       </div>

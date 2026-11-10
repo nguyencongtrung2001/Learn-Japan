@@ -28,7 +28,7 @@ export function EmptyCards({ onAddCard, onBulkImport }: EmptyCardsProps = {}) {
               onClick={onBulkImport}
               className="cursor-pointer rounded-xl bg-gradient-to-r from-sakura/20 to-indigo/20 border border-sakura/30 px-5 py-2.5 text-sm font-bold text-sakura-light hover:border-sakura hover:scale-105 transition-all shadow-sm"
             >
-              ⚡ Nhập Nhanh Từ Vựng
+              📊 Nhập Từ File Excel / Nhanh
             </button>
           )}
         </div>
