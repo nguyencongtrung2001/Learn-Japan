@@ -36,6 +36,15 @@ export function FolderInfoCard({
         {folder.maxCards && !editing && <LimitProgress current={total} max={folder.maxCards} />}
 
         <div className="flex flex-wrap items-center gap-2">
+          {folder.language === "japanese" ? (
+            <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose shadow-sm">
+              🇯🇵 Tiếng Nhật
+            </span>
+          ) : (
+            <span className="rounded-full border border-indigo/30 bg-indigo/10 px-3 py-1 text-xs font-bold text-indigo-light shadow-sm">
+              🇬🇧 Tiếng Anh
+            </span>
+          )}
           {folder.maxCards ? (
             <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500 shadow-sm">
               📊 Giới hạn: {total}/{folder.maxCards}

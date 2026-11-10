@@ -60,9 +60,9 @@ export const REVIEW_BATCH_SIZE = 15;
 
 export const LEVEL_LABELS: Record<LevelType, { icon: string; text: string; color: string }> = {
   flashcard: { icon: "📖", text: "Giới thiệu từ mới", color: "bg-emerald/10 border-emerald/30 text-emerald" },
-  "abcd-en-vn": { icon: "🅰️", text: "Anh → Việt", color: "bg-gold/10 border-gold/30 text-gold" },
+  "abcd-en-vn": { icon: "🅰️", text: "Từ vựng → Nghĩa", color: "bg-gold/10 border-gold/30 text-gold" },
   "audio-select": { icon: "🔊", text: "Nghe chọn từ", color: "bg-indigo/10 border-indigo/30 text-indigo-light" },
-  "abcd-vn-en": { icon: "🅰️", text: "Việt → Anh", color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
+  "abcd-vn-en": { icon: "🅰️", text: "Nghĩa → Từ vựng", color: "bg-sakura/10 border-sakura/30 text-sakura-light" },
   typing: { icon: "⌨️", text: "Gõ chính xác", color: "bg-violet-500/10 border-violet-500/30 text-violet-400" },
 };
 
@@ -305,12 +305,21 @@ export function isTypingCorrect(card: Card, input: string): boolean {
   if (!input || !input.trim()) return false;
   const rawInput = input.trim();
 
-  // 1. Kiểm tra khớp với từ tiếng Anh hoặc nghĩa tiếng Việt
-  if (checkAnswerMatch(rawInput, card.word) || checkAnswerMatch(rawInput, card.translation)) {
+  // 1. Kiểm tra khớp với từ (Kana/Anh), chữ Hán (Kanji), hoặc nghĩa tiếng Việt
+  if (
+    checkAnswerMatch(rawInput, card.word) ||
+    (card.kanji && checkAnswerMatch(rawInput, card.kanji)) ||
+    checkAnswerMatch(rawInput, card.translation)
+  ) {
     return true;
   }
 
-  // 2. Nếu thẻ có phần giải thích / định nghĩa thêm (definition)
+  // 2. Kiểm tra khớp với phiên âm / Furigana / Romaji (hỗ trợ đắc lực cho học tiếng Nhật)
+  if (card.phonetic && checkAnswerMatch(rawInput, card.phonetic)) {
+    return true;
+  }
+
+  // 3. Nếu thẻ có phần giải thích / định nghĩa thêm (definition)
   if (card.definition && checkAnswerMatch(rawInput, card.definition)) {
     return true;
   }

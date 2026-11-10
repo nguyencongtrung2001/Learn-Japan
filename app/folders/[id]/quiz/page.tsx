@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCardsByFolder } from "@/actions/card-actions";
+import { getFolderById } from "@/actions/folder-actions";
 import QuizSession from "@/components/quiz/quiz-session";
 import { getServerNow } from "@/lib/time";
 
@@ -19,7 +20,10 @@ export default async function QuizPage({
 
   // Cần ≥ 4 thẻ để sinh đủ đáp án ABCD. Thư mục không tồn tại cũng rơi vào nhánh này
   // và sẽ hiện trang "không tìm thấy" ở trang thư mục.
-  const cards = await getCardsByFolder(folderId);
+  const [cards, folder] = await Promise.all([
+    getCardsByFolder(folderId),
+    getFolderById(folderId),
+  ]);
   if (cards.length < 4) redirect(folderUrl);
 
   return (
@@ -28,6 +32,7 @@ export default async function QuizPage({
       initialCards={cards}
       serverNow={getServerNow()}
       initialMode={mode}
+      folderLanguage={folder?.language ?? "japanese"}
     />
   );
 }

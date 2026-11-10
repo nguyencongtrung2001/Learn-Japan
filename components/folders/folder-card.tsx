@@ -23,6 +23,15 @@ export function FolderCard({ folder }: { folder: FolderWithCount }) {
         )}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
+          {folder.language === "japanese" ? (
+            <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose">
+              🇯🇵 Tiếng Nhật
+            </span>
+          ) : (
+            <span className="rounded-full border border-indigo/30 bg-indigo/10 px-2.5 py-1 text-xs font-bold text-indigo-light">
+              🇬🇧 Tiếng Anh
+            </span>
+          )}
           <span className="inline-block rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim">
             🗓️ {dateFormatter.format(folder.createdAt)}
           </span>

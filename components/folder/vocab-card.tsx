@@ -58,9 +58,19 @@ function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps
       <header className="vocab-card-v2__header">
         <div className="vocab-card-v2__word-group">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className={`vocab-card-v2__word ${isExpanded ? "" : "truncate"}`}>
+            <h3 className={`vocab-card-v2__word text-lg font-extrabold ${isExpanded ? "" : "truncate"}`}>
               {card.word}
             </h3>
+            {card.kanji && (
+              <span className="rounded-md bg-sakura/15 px-2 py-0.5 text-xs font-bold text-sakura-light border border-sakura/30" title="Chữ Hán (Kanji)">
+                Kanji: {card.kanji}
+              </span>
+            )}
+            {card.imageUrl && (
+              <span className="text-xs" title="Có hình ảnh minh họa nghĩa">
+                🖼️
+              </span>
+            )}
             {card.partOfSpeech && (
               <span className="rounded-md bg-indigo/15 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-indigo-light border border-indigo/25">
                 {card.partOfSpeech}
@@ -77,13 +87,38 @@ function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps
       </header>
 
       {/* Translation */}
-      <p className={`vocab-card-v2__translation ${isExpanded ? "" : "truncate"}`}>
+      <p className={`vocab-card-v2__translation font-medium ${isExpanded ? "" : "truncate"}`}>
         {card.translation}
       </p>
 
       {/* Expanded content — no line-clamp, no truncation, no shadow */}
       {isExpanded && (
         <div className="vocab-card-v2__details">
+          {card.kanji && (
+            <div className="vocab-card-v2__definition">
+              <span className="vocab-card-v2__label">🈁 Chữ Hán (Kanji)</span>
+              <p className="text-xl font-bold text-foreground tracking-wide">{card.kanji}</p>
+            </div>
+          )}
+
+          {card.imageUrl && (
+            <div className="rounded-xl overflow-hidden border border-border/70 bg-surface/40 p-2.5">
+              <span className="vocab-card-v2__label mb-1.5 flex items-center gap-1.5">
+                <span>🖼️</span> Hình ảnh nghĩa cốt lõi
+              </span>
+              <div className="flex justify-center max-h-48 overflow-hidden rounded-lg bg-black/20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={card.imageUrl}
+                  alt={card.word}
+                  loading="lazy"
+                  decoding="async"
+                  className="max-h-44 w-auto object-contain rounded transition-transform hover:scale-105 duration-200"
+                />
+              </div>
+            </div>
+          )}
+
           {card.partOfSpeech && (
             <div className="vocab-card-v2__definition">
               <span className="vocab-card-v2__label">Loại từ</span>
@@ -92,13 +127,13 @@ function VocabCardBase({ card, isDue, onPlay, onDelete, onEdit }: VocabCardProps
           )}
           {card.definition && (
             <div className="vocab-card-v2__definition">
-              <span className="vocab-card-v2__label">Định nghĩa</span>
+              <span className="vocab-card-v2__label">💡 Ngữ cảnh & Sắc thái</span>
               <p>{card.definition}</p>
             </div>
           )}
           {card.example && (
             <div className="vocab-card-v2__example">
-              <span className="vocab-card-v2__label">Ví dụ</span>
+              <span className="vocab-card-v2__label">💬 Câu ví dụ thực tế</span>
               <p>&quot;{card.example}&quot;</p>
             </div>
           )}

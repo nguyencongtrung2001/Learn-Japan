@@ -6,7 +6,7 @@ import type { Folder } from "@/db/schema";
 interface FolderEditFormProps {
   folder: Folder;
   total: number;
-  onSave: (data: { name: string; description?: string; maxCards?: number }) => Promise<boolean>;
+  onSave: (data: { name: string; description?: string; maxCards?: number; language?: string }) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -19,6 +19,7 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
   const [name, setName] = useState(folder.name ?? "");
   const [description, setDescription] = useState(folder.description ?? "");
   const [limit, setLimit] = useState(folder.maxCards ? String(folder.maxCards) : "");
+  const [language, setLanguage] = useState<string>(folder.language || "japanese");
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +34,7 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
       name: name.trim(),
       description: description.trim() || undefined,
       maxCards: parsed && parsed > 0 ? parsed : undefined,
+      language,
     });
     setSaving(false);
     if (!ok) alert("Cập nhật thất bại");
@@ -45,6 +47,34 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
     >
       <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-indigo to-sakura opacity-60" />
       <h3 className="gradient-text flex items-center gap-2 text-base font-extrabold">⚙️ Chỉnh sửa Thư Mục</h3>
+
+      <div>
+        <label className={labelClass}>Ngôn ngữ học tập</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setLanguage("japanese")}
+            className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2 px-3 text-xs font-bold transition-all cursor-pointer ${
+              language === "japanese"
+                ? "border-rose bg-rose/15 text-rose shadow-sm"
+                : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+            }`}
+          >
+            <span>🇯🇵</span> Tiếng Nhật
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("english")}
+            className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2 px-3 text-xs font-bold transition-all cursor-pointer ${
+              language === "english"
+                ? "border-indigo bg-indigo/15 text-indigo-light shadow-sm"
+                : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+            }`}
+          >
+            <span>🇬🇧</span> Tiếng Anh
+          </button>
+        </div>
+      </div>
 
       <div>
         <label className={labelClass} htmlFor="folder-name">

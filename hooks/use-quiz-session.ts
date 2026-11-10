@@ -60,10 +60,11 @@ function recordStudyToday() {
 export function useQuizSession(
   folderId: number,
   initialCards: Card[],
-  serverNow: number
+  serverNow: number,
+  folderLanguage: string = "japanese"
 ) {
   const router = useRouter();
-  const playAudio = useAudio();
+  const playAudio = useAudio(folderLanguage === "japanese" ? "ja" : "en-US");
 
   // ── State phục vụ render ──
   const [phase, setPhase] = useState<Phase>("select-mode");

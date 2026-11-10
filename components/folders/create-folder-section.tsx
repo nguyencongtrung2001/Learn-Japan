@@ -14,6 +14,7 @@ const labelClass = "mb-2 block text-sm font-semibold uppercase tracking-wide tex
 export function CreateFolderSection() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [language, setLanguage] = useState<"japanese" | "english">("japanese");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,6 +30,7 @@ export function CreateFolderSection() {
         name,
         description: description || undefined,
         maxCards: limitRaw ? parseInt(limitRaw, 10) : undefined,
+        language,
       });
       if (res.success) {
         setOpen(false);
@@ -65,6 +67,34 @@ export function CreateFolderSection() {
           <h3 className="mb-2 text-center text-2xl font-bold">Thêm Thư Mục</h3>
 
           <div>
+            <label className={labelClass}>Ngôn ngữ học tập</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setLanguage("japanese")}
+                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3 px-4 text-sm font-bold transition-all cursor-pointer ${
+                  language === "japanese"
+                    ? "border-rose bg-rose/15 text-rose shadow-md"
+                    : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                }`}
+              >
+                <span className="text-xl">🇯🇵</span> Tiếng Nhật
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("english")}
+                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3 px-4 text-sm font-bold transition-all cursor-pointer ${
+                  language === "english"
+                    ? "border-indigo bg-indigo/15 text-indigo-light shadow-md"
+                    : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                }`}
+              >
+                <span className="text-xl">🇬🇧</span> Tiếng Anh
+              </button>
+            </div>
+          </div>
+
+          <div>
             <label className={labelClass} htmlFor="folder-name">
               Tên thư mục <span className="text-rose">*</span>
             </label>
@@ -74,7 +104,7 @@ export function CreateFolderSection() {
               type="text"
               required
               autoComplete="off"
-              placeholder="VD: Từ vựng N5 Bài 1"
+              placeholder={language === "japanese" ? "VD: Minna no Nihongo Bài 1 / N3 Kanji" : "VD: Oxford 3000 Words"}
               className={inputClass}
             />
           </div>
@@ -86,7 +116,11 @@ export function CreateFolderSection() {
               id="folder-desc"
               name="description"
               rows={2}
-              placeholder="VD: Từ vựng chủ đề gia đình, giao tiếp cơ bản..."
+              placeholder={
+                language === "japanese"
+                  ? "VD: Từ vựng giao tiếp, Kanji, ngữ cảnh & câu ví dụ thực tế..."
+                  : "VD: Từ vựng chủ đề gia đình, giao tiếp cơ bản..."
+              }
               className={`${inputClass} resize-none`}
             />
           </div>

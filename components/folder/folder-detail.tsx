@@ -60,7 +60,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
     setCards(next);
   }, []);
 
-  const playAudio = useAudio();
+  const playAudio = useAudio(folder.language === "japanese" ? "ja" : "en-US");
   const folderId = folder.id;
   const maxCards = folder.maxCards;
 
@@ -145,11 +145,13 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
       try {
         const updated = await updateCard(cardId, {
           word: input.word,
+          kanji: input.kanji,
           translation: input.translation,
           partOfSpeech: input.partOfSpeech,
           phonetic: input.phonetic,
           definition: input.definition,
           example: input.example,
+          imageUrl: input.imageUrl,
           folderId,
         });
         if (!updated) return false;
@@ -160,11 +162,13 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               ? {
                   ...c,
                   word: input.word,
+                  kanji: input.kanji || null,
                   translation: input.translation,
                   partOfSpeech: input.partOfSpeech || null,
                   phonetic: input.phonetic || null,
                   definition: input.definition || null,
                   example: input.example || null,
+                  imageUrl: input.imageUrl || null,
                 }
               : c
           )
@@ -258,6 +262,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
           {/* Form Thêm Thẻ Từ Vựng */}
           {showCardForm && (
             <AddCardForm
+              folderLanguage={folder.language}
               onSubmit={handleCreate}
               onClose={() => setShowCardForm(false)}
             />
@@ -314,6 +319,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
       {/* Modal chỉnh sửa thẻ từ vựng */}
       <EditCardModal
         card={editingCard}
+        folderLanguage={folder.language}
         isOpen={!!editingCard}
         onClose={() => setEditingCard(null)}
         onSave={handleUpdateCard}

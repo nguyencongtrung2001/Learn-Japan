@@ -15,11 +15,18 @@ interface QuizSessionProps {
   initialCards: Card[];
   serverNow: number;
   initialMode?: string;
+  folderLanguage?: string;
 }
 
 /** Điều phối các màn: chọn chế độ → câu hỏi → kết quả. Logic nằm trong useQuizSession. */
-export default function QuizSession({ folderId, initialCards, serverNow, initialMode }: QuizSessionProps) {
-  const quiz = useQuizSession(folderId, initialCards, serverNow);
+export default function QuizSession({
+  folderId,
+  initialCards,
+  serverNow,
+  initialMode,
+  folderLanguage = "japanese",
+}: QuizSessionProps) {
+  const quiz = useQuizSession(folderId, initialCards, serverNow, folderLanguage);
   const { phase, currentItem, feedback } = quiz;
 
   if (phase === "select-mode") {

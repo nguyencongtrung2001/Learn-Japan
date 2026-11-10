@@ -43,11 +43,13 @@ export async function getCardListByFolder(folderId: number): Promise<CardListIte
     .select({
       id: cards.id,
       word: cards.word,
+      kanji: cards.kanji,
       translation: cards.translation,
       partOfSpeech: cards.partOfSpeech,
       definition: cards.definition,
       example: cards.example,
       phonetic: cards.phonetic,
+      imageUrl: cards.imageUrl,
       growthLevel: cards.growthLevel,
       nextReview: cards.nextReview,
     })
@@ -149,6 +151,7 @@ function toInsertRow(folderId: number, data: CardInput) {
   return {
     folderId,
     word: data.word.trim(),
+    kanji: data.kanji?.trim() || null,
     translation: data.translation.trim(),
     partOfSpeech: data.partOfSpeech?.trim() || null,
     definition: data.definition?.trim() || null,
@@ -206,6 +209,7 @@ export async function updateCard(
   id: number,
   data: {
     word?: string;
+    kanji?: string;
     translation?: string;
     partOfSpeech?: string;
     definition?: string;
@@ -219,6 +223,7 @@ export async function updateCard(
     .update(cards)
     .set({
       ...(data.word !== undefined && { word: data.word.trim() }),
+      ...(data.kanji !== undefined && { kanji: data.kanji?.trim() || null }),
       ...(data.translation !== undefined && { translation: data.translation.trim() }),
       ...(data.partOfSpeech !== undefined && { partOfSpeech: data.partOfSpeech?.trim() || null }),
       ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
