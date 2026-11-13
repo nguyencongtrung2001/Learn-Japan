@@ -1,47 +1,42 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "./theme-provider";
 import { AppLogo } from "./app-logo";
 
 const navLinks = [
-  { href: "/", label: "Trang chủ", icon: "🏠" },
-  { href: "/folders", label: "Bộ thẻ", icon: "📂" },
-  { href: "/alphabet", label: "Bảng chữ cái", icon: "🇯🇵" },
-  { href: "/tracker", label: "Theo dõi", icon: "📅" },
-  { href: "/note", label: "Ghi chú", icon: "📋" },
+  { href: "/", label: "Trang chủ" },
+  { href: "/folders", label: "Bộ thẻ" },
+  { href: "/alphabet", label: "Bảng chữ cái" },
+  { href: "/tracker", label: "Theo dõi" },
+  { href: "/note", label: "Ghi chú" },
 ];
-
-const emptySubscribe = () => () => {};
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border backdrop-blur-xl bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-[#E2E4E9] bg-white/95 backdrop-blur-md">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           {/* Logo */}
           <Link
             href="/"
             className="flex items-center gap-2.5 group"
             id="header-logo"
           >
-            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-indigo/25 transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
+            <div className="relative w-8 h-8 rounded-xl overflow-hidden transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
               <AppLogo className="w-full h-full" />
             </div>
-            <span className="text-lg sm:text-xl font-black gradient-text tracking-tight">
-              Flashcard App
+            <span className="text-lg font-black text-[#1A1D28] tracking-tight">
+              Q
             </span>
           </Link>
 
           {/* Desktop navigation */}
-          <nav className="hidden md:flex items-center gap-4 lg:gap-6" id="desktop-nav">
+          <nav className="hidden md:flex items-center gap-1" id="desktop-nav">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -49,60 +44,48 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={`
-                    flex items-center gap-1.5 py-1.5 text-sm sm:text-[15px] transition-colors duration-200 whitespace-nowrap
+                    px-3.5 py-2 rounded-lg text-sm transition-all duration-200
                     ${isActive
-                      ? "text-foreground font-bold"
-                      : "text-foreground-muted hover:text-foreground font-medium"
+                      ? "bg-[#EDEFF4] text-[#1A1D28] font-bold"
+                      : "text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] font-medium"
                     }
                   `}
                 >
-                  <span className="text-base">{link.icon}</span>
-                  <span>{link.label}</span>
+                  {link.label}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Actions: Theme Toggle & Mobile Menu */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl text-lg hover:bg-surface-hover transition-colors text-foreground-muted hover:text-foreground"
-              aria-label="Toggle theme"
-            >
-              {mounted ? (theme === "dark" ? "🌙" : "☀️") : "⚪"}
-            </button>
-
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-surface-hover transition-colors"
-              aria-label="Toggle menu"
-              id="mobile-menu-toggle"
-            >
-              <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "rotate-45 translate-y-2" : ""
-                }`}
-              />
-              <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "opacity-0" : ""
-                }`}
-              />
-              <span
-                className={`w-5 h-0.5 bg-foreground-muted transition-all duration-300 ${
-                  isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                }`}
-              />
-            </button>
-          </div>
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-[#EDEFF4] transition-colors"
+            aria-label="Toggle menu"
+            id="mobile-menu-toggle"
+          >
+            <span
+              className={`w-5 h-0.5 bg-[#586380] transition-all duration-300 ${
+                isMenuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
+            />
+            <span
+              className={`w-5 h-0.5 bg-[#586380] transition-all duration-300 ${
+                isMenuOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`w-5 h-0.5 bg-[#586380] transition-all duration-300 ${
+                isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
+            />
+          </button>
         </div>
       </div>
 
       {/* Mobile navigation dropdown */}
       <div
-        className={`md:hidden border-t border-border overflow-hidden transition-all duration-300 ${
+        className={`md:hidden border-t border-[#E2E4E9] overflow-hidden transition-all duration-300 bg-white ${
           isMenuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
@@ -115,15 +98,14 @@ export default function Header() {
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`
-                  flex items-center gap-2.5 py-2 text-sm sm:text-[15px] transition-colors duration-200
+                  block py-2 px-3 rounded-lg text-sm transition-colors duration-200
                   ${isActive
-                    ? "text-foreground font-bold"
-                    : "text-foreground-muted hover:text-foreground font-medium"
+                    ? "bg-[#EDEFF4] text-[#1A1D28] font-bold"
+                    : "text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] font-medium"
                   }
                 `}
               >
-                <span className="text-base">{link.icon}</span>
-                <span>{link.label}</span>
+                {link.label}
               </Link>
             );
           })}

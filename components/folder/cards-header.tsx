@@ -15,9 +15,9 @@ export function CardsHeader({
 }: CardsHeaderProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <h2 className="gradient-text text-xl font-extrabold">🃏 Danh Sách Thẻ</h2>
-        <span className="rounded-full border border-border/50 bg-surface px-3 py-1 text-sm font-semibold text-foreground-muted">
+      <div className="flex items-center gap-2.5">
+        <h2 className="text-lg font-bold text-[#1A1D28]">Danh Sách Thẻ</h2>
+        <span className="rounded-full bg-[#EDEFF4] px-2.5 py-0.5 text-xs font-bold text-[#586380]">
           {count} Thẻ
         </span>
       </div>
@@ -28,23 +28,23 @@ export function CardsHeader({
             <button
               type="button"
               onClick={onToggleAddCard}
-              className={`cursor-pointer rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-sm ${
+              className={`cursor-pointer rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-xs ${
                 showCardForm
-                  ? "bg-indigo text-white shadow-indigo/20 shadow-md"
-                  : "bg-indigo/10 border border-indigo/25 text-indigo-light hover:bg-indigo/20"
+                  ? "bg-[#1A1D28] text-white"
+                  : "bg-white border border-[#E2E4E9] text-[#1A1D28] hover:bg-[#EDEFF4]"
               }`}
             >
-              {showCardForm ? "✕ Đóng Form Thêm" : "＋ Thêm Thẻ"}
+              {showCardForm ? "✕ Đóng Form" : "＋ Thêm Thẻ"}
             </button>
           )}
           {onToggleBulkImport && (
             <button
               type="button"
               onClick={onToggleBulkImport}
-              className={`cursor-pointer rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-sm ${
+              className={`cursor-pointer rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-xs ${
                 showBulkImport
-                  ? "bg-gradient-to-r from-sakura to-indigo text-white shadow-sakura/20 shadow-md"
-                  : "bg-sakura/10 border border-sakura/25 text-sakura-light hover:bg-sakura/20"
+                  ? "bg-[#4255FF] text-white"
+                  : "bg-[#4255FF] text-white hover:bg-[#3344DD]"
               }`}
             >
               {showBulkImport ? "✕ Đóng Nhập Excel" : "📊 Nhập File Excel"}

@@ -4,13 +4,9 @@ import { useState } from "react";
 import { createFolder } from "@/actions/folder-actions";
 
 const inputClass =
-  "w-full rounded-2xl border-2 border-border/50 bg-surface/50 px-5 py-4 font-medium text-foreground outline-none transition-all placeholder:text-foreground-muted/40 focus:border-indigo focus:ring-4 focus:ring-indigo/10";
-const labelClass = "mb-2 block text-sm font-semibold uppercase tracking-wide text-foreground-muted";
+  "w-full rounded-xl border border-[#E2E4E9] bg-white px-4 py-3 font-medium text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 text-sm";
+const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#586380]";
 
-/**
- * Nút + form tạo thư mục. Form không controlled (FormData) nên không render lại khi gõ.
- * createFolder đã gọi revalidatePath("/folders") → danh sách (Server Component) tự cập nhật.
- */
 export function CreateFolderSection() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -47,24 +43,25 @@ export function CreateFolderSection() {
 
   return (
     <>
-      <div className="mb-10 flex justify-center">
+      <div className="mb-8 flex justify-center">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="group relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full px-8 py-4 font-bold text-white shadow-xl transition-all duration-300 hover:scale-105 active:scale-95"
+          className="group relative inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#4255FF] px-7 py-3 text-sm font-bold text-white shadow-md shadow-[#4255FF]/20 transition-all duration-200 hover:bg-[#3344DD] hover:scale-105 active:scale-95"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-sakura to-indigo transition-transform duration-300 group-hover:scale-110" />
-          <span className="relative z-10">{open ? "✕ Đóng" : "＋ Tạo Thư Mục Mới"}</span>
+          <span>{open ? "✕ Đóng" : "＋ Tạo Thư Mục Mới"}</span>
         </button>
       </div>
 
       {open && (
         <form
           onSubmit={handleSubmit}
-          className="glass-card animate-fade-in relative mx-auto mb-12 max-w-lg space-y-6 overflow-hidden p-8 shadow-2xl sm:p-10"
+          className="animate-fade-in relative mx-auto mb-10 max-w-lg space-y-5 rounded-2xl border border-[#E2E4E9] bg-white p-6 sm:p-8 shadow-lg"
         >
-          <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-sakura to-indigo opacity-50" />
-          <h3 className="mb-2 text-center text-2xl font-bold">Thêm Thư Mục</h3>
+          <div className="border-b border-[#E2E4E9] pb-3">
+            <h3 className="text-xl font-bold text-[#1A1D28]">Thêm Thư Mục Mới</h3>
+            <p className="text-xs text-[#586380] mt-0.5">Tạo không gian học tập cho chủ đề của bạn</p>
+          </div>
 
           <div>
             <label className={labelClass}>Ngôn ngữ học tập</label>
@@ -72,31 +69,31 @@ export function CreateFolderSection() {
               <button
                 type="button"
                 onClick={() => setLanguage("japanese")}
-                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3 px-4 text-sm font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 px-3 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   language === "japanese"
-                    ? "border-rose bg-rose/15 text-rose shadow-md"
-                    : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                    ? "border-red-500 bg-red-50 text-red-600"
+                    : "border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4]"
                 }`}
               >
-                <span className="text-xl">🇯🇵</span> Tiếng Nhật
+                <span className="text-lg">🇯🇵</span> Tiếng Nhật
               </button>
               <button
                 type="button"
                 onClick={() => setLanguage("english")}
-                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3 px-4 text-sm font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 px-3 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   language === "english"
-                    ? "border-indigo bg-indigo/15 text-indigo-light shadow-md"
-                    : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                    ? "border-[#4255FF] bg-blue-50 text-[#4255FF]"
+                    : "border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4]"
                 }`}
               >
-                <span className="text-xl">🇬🇧</span> Tiếng Anh
+                <span className="text-lg">🇬🇧</span> Tiếng Anh
               </button>
             </div>
           </div>
 
           <div>
             <label className={labelClass} htmlFor="folder-name">
-              Tên thư mục <span className="text-rose">*</span>
+              Tên thư mục <span className="text-red-500">*</span>
             </label>
             <input
               id="folder-name"
@@ -108,6 +105,7 @@ export function CreateFolderSection() {
               className={inputClass}
             />
           </div>
+
           <div>
             <label className={labelClass} htmlFor="folder-desc">
               Mô tả (tùy chọn)
@@ -118,12 +116,13 @@ export function CreateFolderSection() {
               rows={2}
               placeholder={
                 language === "japanese"
-                  ? "VD: Từ vựng giao tiếp, Kanji, ngữ cảnh & câu ví dụ thực tế..."
+                  ? "VD: Từ vựng giao tiếp, Kanji, ngữ cảnh & câu ví dụ..."
                   : "VD: Từ vựng chủ đề gia đình, giao tiếp cơ bản..."
               }
               className={`${inputClass} resize-none`}
             />
           </div>
+
           <div>
             <label className={labelClass} htmlFor="folder-max">
               Giới hạn số từ (tùy chọn)
@@ -134,7 +133,7 @@ export function CreateFolderSection() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full cursor-pointer rounded-2xl bg-gradient-to-r from-sakura to-indigo py-4 text-lg font-bold text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-sakura/30 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+            className="w-full cursor-pointer rounded-xl bg-[#4255FF] py-3 text-sm font-bold text-white transition-all duration-200 hover:bg-[#3344DD] active:scale-98 disabled:opacity-50"
           >
             {submitting ? "⏳ Đang tạo..." : "✅ Lưu Thư Mục"}
           </button>

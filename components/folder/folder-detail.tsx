@@ -326,10 +326,11 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
                   setSelecting((v) => !v);
                   if (selecting) setSelectedIds(new Set());
                 }}
-                className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 text-sm font-bold transition-all duration-300 ${selecting
-                    ? "border-rose/20 bg-rose/10 text-rose hover:bg-rose/20"
-                    : "border-indigo/20 bg-indigo/10 text-indigo-light hover:bg-indigo/20"
-                  }`}
+                className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+                  selecting
+                    ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                    : "border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28]"
+                }`}
               >
                 {selecting ? "✖️ Hủy chọn" : "🔀 Chọn để chuyển"}
               </button>
@@ -358,10 +359,11 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             <button
               type="button"
               onClick={() => setEditing((v) => !v)}
-              className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-300 ${editing
-                  ? "border border-rose/20 bg-rose/10 text-rose hover:bg-rose/20"
-                  : "border border-indigo/20 bg-indigo/10 text-indigo-light hover:bg-indigo/20"
-                }`}
+              className={`inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all ${
+                editing
+                  ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                  : "border border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28]"
+              }`}
             >
               {editing ? "❌ Hủy chỉnh sửa" : "✏️ Chỉnh sửa Thư Mục"}
             </button>

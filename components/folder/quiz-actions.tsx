@@ -11,19 +11,19 @@ interface QuizActionsProps {
 export function QuizActions({ folderId, total, newCount, dueCount, learnedCount }: QuizActionsProps) {
   const hasEnough = total >= 4;
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       {/* 🌱 Học Mới */}
       {hasEnough && newCount > 0 ? (
         <Link
           href={`/folders/${folderId}/quiz`}
-          className="btn-shine rounded-2xl bg-gradient-to-r from-emerald to-teal-500 px-6 py-3 text-center font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald/30 active:scale-95"
+          className="rounded-xl bg-[#23B26D] px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-white transition-all duration-200 hover:bg-[#1fa362] shadow-xs active:scale-98"
         >
           🌱 Học Mới ({Math.min(newCount, 5)})
         </Link>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-emerald/20 px-6 py-3 text-center opacity-50">
-          <p className="text-sm font-bold text-emerald">🌱 Học Mới</p>
-          <p className="text-xs text-foreground-muted mt-0.5">
+        <div className="rounded-xl border border-dashed border-[#E2E4E9] bg-white px-4 py-2.5 text-center opacity-60">
+          <p className="text-xs font-bold text-[#586380]">🌱 Học Mới</p>
+          <p className="text-[11px] text-[#939BB4] mt-0.5">
             {!hasEnough
               ? `Cần ít nhất 4 thẻ (hiện có ${total})`
               : "Tất cả thẻ đã được học!"}
@@ -35,14 +35,14 @@ export function QuizActions({ folderId, total, newCount, dueCount, learnedCount 
       {hasEnough && learnedCount > 0 ? (
         <Link
           href={`/folders/${folderId}/quiz?mode=review`}
-          className="btn-shine rounded-2xl bg-gradient-to-r from-sakura to-indigo px-6 py-3 text-center font-bold text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-sakura/30 active:scale-95"
+          className="rounded-xl bg-[#4255FF] px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-white transition-all duration-200 hover:bg-[#3344DD] shadow-xs active:scale-98"
         >
           {dueCount > 0 ? `💧 Ôn Tập (${dueCount} đến hạn)` : `⚡ Ôn Tập Tự Do (${learnedCount})`}
         </Link>
       ) : (
-        <div className="rounded-2xl border-2 border-dashed border-sakura/20 px-6 py-3 text-center opacity-50">
-          <p className="text-sm font-bold text-sakura-light">⚡ Ôn Tập</p>
-          <p className="text-xs text-foreground-muted mt-0.5">
+        <div className="rounded-xl border border-dashed border-[#E2E4E9] bg-white px-4 py-2.5 text-center opacity-60">
+          <p className="text-xs font-bold text-[#586380]">⚡ Ôn Tập</p>
+          <p className="text-[11px] text-[#939BB4] mt-0.5">
             {!hasEnough
               ? `Cần ít nhất 4 thẻ (hiện có ${total})`
               : "Chưa có từ nào đã học"}

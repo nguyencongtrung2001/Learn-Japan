@@ -1,237 +1,43 @@
 @import "tailwindcss";
 
 /* ============================================================
-   THEME — Japanese-inspired DARK palette (Vibrant / Tươi sáng)
+   SINGLE THEME — Quizlet-inspired Minimalist Palette
+   WCAG 2.1 AA compliant · Anti-fatigue for long study sessions
    ============================================================ */
 :root {
-  --background: #0c0f1a;
-  --background-secondary: #131729;
-  --surface: #1a1f35;
-  --surface-hover: #222845;
-  --border: #2a3155;
-  --border-light: #3d4575;
+  --background: #F6F7FB;
+  --background-secondary: #EDEFF4;
+  --surface: #FFFFFF;
+  --surface-hover: #F0F2F5;
+  --border: #E2E4E9;
+  --border-light: #D1D5DB;
 
-  --foreground: #e8eaf6;
-  --foreground-muted: #9fa8da;
-  --foreground-dim: #6b75a8;
+  --foreground: #1A1D28;
+  --foreground-muted: #586380;
+  --foreground-dim: #939BB4;
 
-  --sakura: #f472b6;
-  --sakura-light: #f9a8d4;
-  --sakura-glow: rgba(244, 114, 182, 0.25);
+  --sakura: #4255FF;
+  --sakura-light: #4255FF;
+  --sakura-glow: rgba(66, 85, 255, 0.15);
 
-  --indigo: #818cf8;
-  --indigo-light: #a5b4fc;
-  --indigo-glow: rgba(129, 140, 248, 0.25);
+  --indigo: #4255FF;
+  --indigo-light: #4255FF;
+  --indigo-glow: rgba(66, 85, 255, 0.15);
 
-  --emerald: #34d399;
-  --emerald-light: #6ee7b7;
-  --emerald-glow: rgba(52, 211, 153, 0.2);
+  --emerald: #23B26D;
+  --emerald-light: #23B26D;
+  --emerald-glow: rgba(35, 178, 109, 0.15);
 
-  --rose: #fb7185;
-  --rose-glow: rgba(251, 113, 133, 0.2);
+  --rose: #FF7873;
+  --rose-glow: rgba(255, 120, 115, 0.15);
 
-  --gold: #fbbf24;
-  --gold-glow: rgba(251, 191, 36, 0.2);
+  --gold: #FFCD1F;
+  --gold-glow: rgba(255, 205, 31, 0.15);
 
-  --grid-dot: rgba(129, 140, 248, 0.05);
-  --glass-bg: rgba(26, 31, 53, 0.8);
-  --glass-bg-hover: rgba(34, 40, 69, 0.9);
-  --canvas-bg: rgba(12, 15, 26, 0.85);
-}
-
-/* ============================================================
-   THEME — Japanese-inspired LIGHT palette (Vibrant / Tươi sáng)
-   ============================================================ */
-[data-theme="light"] {
-  --background: #f8f6f3;
-  --background-secondary: #f0ede8;
-  --surface: #ffffff;
-  --surface-hover: #f3f0ec;
-  --border: #ddd6cb;
-  --border-light: #c7bfb3;
-
-  --foreground: #1e1b16;
-  --foreground-muted: #5c564d;
-  --foreground-dim: #8a8278;
-
-  --sakura: #db2777;
-  --sakura-light: #ec4899;
-  --sakura-glow: rgba(219, 39, 119, 0.15);
-
-  --indigo: #6366f1;
-  --indigo-light: #4f46e5;
-  --indigo-glow: rgba(99, 102, 241, 0.15);
-
-  --emerald: #059669;
-  --emerald-light: #10b981;
-  --emerald-glow: rgba(5, 150, 105, 0.12);
-
-  --rose: #e11d48;
-  --rose-glow: rgba(225, 29, 72, 0.12);
-
-  --gold: #d97706;
-  --gold-glow: rgba(217, 119, 6, 0.12);
-
-  --grid-dot: rgba(99, 102, 241, 0.06);
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-bg-hover: rgba(255, 255, 255, 0.9);
-  --canvas-bg: rgba(255, 255, 255, 0.9);
-}
-
-/* ============================================================
-   THEME — TÍM HUYỀN ẢO (Deep Violet Neon / Cyber Purple)
-   ============================================================ */
-[data-theme="violet"] {
-  --background: #0d0722;
-  --background-secondary: #160c38;
-  --surface: #1e104a;
-  --surface-hover: #291664;
-  --border: #3b1d7d;
-  --border-light: #5227aa;
-
-  --foreground: #faf5ff;
-  --foreground-muted: #c4b5fd;
-  --foreground-dim: #8b5cf6;
-
-  --sakura: #f472b6;
-  --sakura-light: #f9a8d4;
-  --sakura-glow: rgba(244, 114, 182, 0.3);
-
-  --indigo: #a855f7;
-  --indigo-light: #c084fc;
-  --indigo-glow: rgba(168, 85, 247, 0.35);
-
-  --emerald: #34d399;
-  --emerald-light: #6ee7b7;
-  --emerald-glow: rgba(52, 211, 153, 0.2);
-
-  --rose: #fb7185;
-  --rose-glow: rgba(251, 113, 133, 0.2);
-
-  --gold: #fbbf24;
-  --gold-glow: rgba(251, 191, 36, 0.2);
-
-  --grid-dot: rgba(168, 85, 247, 0.08);
-  --glass-bg: rgba(30, 16, 74, 0.82);
-  --glass-bg-hover: rgba(41, 22, 100, 0.9);
-  --canvas-bg: rgba(13, 7, 34, 0.9);
-}
-
-/* ============================================================
-   THEME — THẦN RỪNG (Cyber Emerald / Forest Dark)
-   ============================================================ */
-[data-theme="emerald"] {
-  --background: #04140f;
-  --background-secondary: #09231b;
-  --surface: #0f3327;
-  --surface-hover: #174737;
-  --border: #1e5a46;
-  --border-light: #287a5e;
-
-  --foreground: #ecfdf5;
-  --foreground-muted: #a7f3d0;
-  --foreground-dim: #34d399;
-
-  --sakura: #fb7185;
-  --sakura-light: #fda4af;
-  --sakura-glow: rgba(251, 113, 133, 0.25);
-
-  --indigo: #10b981;
-  --indigo-light: #34d399;
-  --indigo-glow: rgba(16, 185, 129, 0.35);
-
-  --emerald: #10b981;
-  --emerald-light: #6ee7b7;
-  --emerald-glow: rgba(52, 211, 153, 0.25);
-
-  --rose: #f43f5e;
-  --rose-glow: rgba(244, 63, 94, 0.2);
-
-  --gold: #f59e0b;
-  --gold-glow: rgba(245, 158, 11, 0.2);
-
-  --grid-dot: rgba(16, 185, 129, 0.08);
-  --glass-bg: rgba(15, 51, 39, 0.82);
-  --glass-bg-hover: rgba(23, 71, 55, 0.9);
-  --canvas-bg: rgba(4, 20, 15, 0.9);
-}
-
-/* ============================================================
-   THEME — ĐẠI DƯƠNG (Deep Ocean / Sapphire Marine)
-   ============================================================ */
-[data-theme="ocean"] {
-  --background: #040e21;
-  --background-secondary: #081a3b;
-  --surface: #0d2757;
-  --surface-hover: #133675;
-  --border: #1e4a96;
-  --border-light: #2b65cb;
-
-  --foreground: #f0f9ff;
-  --foreground-muted: #bae6fd;
-  --foreground-dim: #38bdf8;
-
-  --sakura: #38bdf8;
-  --sakura-light: #7dd3fc;
-  --sakura-glow: rgba(56, 189, 248, 0.25);
-
-  --indigo: #0284c7;
-  --indigo-light: #38bdf8;
-  --indigo-glow: rgba(2, 132, 199, 0.35);
-
-  --emerald: #34d399;
-  --emerald-light: #6ee7b7;
-  --emerald-glow: rgba(52, 211, 153, 0.2);
-
-  --rose: #fb7185;
-  --rose-glow: rgba(251, 113, 133, 0.2);
-
-  --gold: #fbbf24;
-  --gold-glow: rgba(251, 191, 36, 0.2);
-
-  --grid-dot: rgba(14, 165, 233, 0.08);
-  --glass-bg: rgba(13, 39, 87, 0.82);
-  --glass-bg-hover: rgba(19, 54, 117, 0.9);
-  --canvas-bg: rgba(4, 14, 33, 0.9);
-}
-
-/* ============================================================
-   THEME — HOÀNG HÔN (Sunset Crimson & Amber Glow)
-   ============================================================ */
-[data-theme="sunset"] {
-  --background: #190a12;
-  --background-secondary: #26111d;
-  --surface: #38182b;
-  --surface-hover: #4a2139;
-  --border: #662c4f;
-  --border-light: #88396a;
-
-  --foreground: #fff1f2;
-  --foreground-muted: #fecdd3;
-  --foreground-dim: #fb7185;
-
-  --sakura: #fb7185;
-  --sakura-light: #fda4af;
-  --sakura-glow: rgba(251, 113, 133, 0.25);
-
-  --indigo: #e11d48;
-  --indigo-light: #fb7185;
-  --indigo-glow: rgba(225, 29, 72, 0.35);
-
-  --emerald: #34d399;
-  --emerald-light: #6ee7b7;
-  --emerald-glow: rgba(52, 211, 153, 0.2);
-
-  --rose: #f43f5e;
-  --rose-glow: rgba(244, 63, 94, 0.2);
-
-  --gold: #f59e0b;
-  --gold-glow: rgba(245, 158, 11, 0.2);
-
-  --grid-dot: rgba(225, 29, 72, 0.08);
-  --glass-bg: rgba(56, 24, 43, 0.82);
-  --glass-bg-hover: rgba(74, 33, 57, 0.9);
-  --canvas-bg: rgba(25, 10, 18, 0.9);
+  --grid-dot: transparent;
+  --glass-bg: #FFFFFF;
+  --glass-bg-hover: #FFFFFF;
+  --canvas-bg: #FFFFFF;
 }
 
 @theme inline {
@@ -278,7 +84,6 @@
 
 html {
   scroll-behavior: smooth;
-  transition: background 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
 }
 
@@ -288,21 +93,6 @@ body {
   font-family: var(--font-sans, "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif);
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-/* Background pattern — subtle grid */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    var(--grid-dot) 1px,
-    transparent 0
-  );
-  background-size: 40px 40px;
 }
 
 /* ============================================================
@@ -343,10 +133,10 @@ body::before {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 20px var(--sakura-glow);
+    box-shadow: 0 0 20px var(--indigo-glow);
   }
   50% {
-    box-shadow: 0 0 40px var(--sakura-glow), 0 0 60px var(--indigo-glow);
+    box-shadow: 0 0 40px var(--indigo-glow), 0 0 60px var(--indigo-glow);
   }
 }
 
@@ -430,21 +220,19 @@ body::before {
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 
-/* Glass card effect */
+/* Card — Soft Neumorphism style (replaces glass-card) */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #FFFFFF;
   border: 1px solid var(--border);
   border-radius: 16px;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .glass-card:hover {
   border-color: var(--border-light);
-  background: var(--glass-bg-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
 }
 
 /* Flashcard 3D flip */
@@ -481,9 +269,9 @@ body::before {
   transform: rotateY(180deg);
 }
 
-/* Gradient text */
+/* Gradient text — brand indigo */
 .gradient-text {
-  background: linear-gradient(135deg, var(--sakura) 0%, var(--indigo) 100%);
+  background: linear-gradient(135deg, #4255FF 0%, #6C63FF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -501,7 +289,7 @@ body::before {
   position: absolute;
   inset: -1px;
   border-radius: 17px;
-  background: linear-gradient(135deg, var(--sakura), var(--indigo));
+  background: linear-gradient(135deg, #4255FF, #6C63FF);
   z-index: -1;
 }
 
@@ -510,7 +298,7 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
+    rgba(66, 85, 255, 0.04) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -548,9 +336,9 @@ body::before {
   background: linear-gradient(
     105deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.1) 45%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.1) 55%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
     transparent 60%
   );
   background-size: 200% 100%;
@@ -582,7 +370,7 @@ body::before {
 
 .drawing-canvas-wrapper.is-drawing {
   border-color: var(--indigo);
-  box-shadow: 0 0 20px var(--indigo-glow), 0 0 40px rgba(129, 140, 248, 0.1);
+  box-shadow: 0 0 20px var(--indigo-glow);
 }
 
 .drawing-canvas-wrapper.is-disabled {
@@ -754,10 +542,8 @@ body::before {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 12px;
-  background: var(--glass-bg);
+  background: #FFFFFF;
   border: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   width: 280px;
 }
 
@@ -808,7 +594,7 @@ body::before {
 }
 
 .candidate-item.is-selected {
-  background: linear-gradient(135deg, var(--indigo), var(--sakura));
+  background: #4255FF;
   border-color: transparent;
   color: #fff;
   box-shadow: 0 0 14px var(--indigo-glow);
@@ -836,9 +622,9 @@ body::before {
 }
 
 @keyframes micPulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.4); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(129, 140, 248, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 85, 255, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(66, 85, 255, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(66, 85, 255, 0); }
 }
 
 .animate-mic-pulse {
@@ -868,13 +654,15 @@ body::before {
   border: 1px solid var(--border);
   background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.25s ease, background 0.25s ease;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .vocab-card-v2:hover:not(.vocab-card-v2--open) {
   border-color: var(--border-light);
   background: var(--surface-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 /* When expanded: no special shadow, just a distinct border */
@@ -892,7 +680,7 @@ body::before {
 
 @keyframes due-pulse {
   0%, 100% { border-color: var(--rose); }
-  50% { border-color: var(--sakura); }
+  50% { border-color: #4255FF; }
 }
 
 /* Accent bar — left gradient strip */

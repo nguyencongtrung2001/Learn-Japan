@@ -12,8 +12,8 @@ interface EditCardModalProps {
 }
 
 const inputClass =
-  "w-full rounded-xl border-2 border-border/50 bg-surface/50 px-4 py-3 text-sm font-medium text-foreground outline-none transition-all placeholder:text-foreground-muted/40 focus:border-indigo focus:ring-4 focus:ring-indigo/10";
-const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wide text-foreground-muted";
+  "w-full rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2.5 text-xs sm:text-sm font-medium text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10";
+const labelClass = "mb-1 block text-xs font-bold uppercase tracking-wider text-[#586380]";
 
 function EditCardFormContent({
   card,
@@ -64,19 +64,17 @@ function EditCardFormContent({
 
   return (
     <div
-      className="glass-card relative w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-scale-bounce sm:p-8"
+      className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-[#E2E4E9] bg-white p-5 sm:p-7 shadow-2xl animate-scale-bounce"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-indigo to-sakura opacity-70" />
-
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="gradient-text text-xl font-extrabold flex items-center gap-2">
+      <div className="mb-5 flex items-center justify-between border-b border-[#E2E4E9] pb-3">
+        <h3 className="text-lg font-bold text-[#1A1D28] flex items-center gap-2">
           <span>✏️</span> {isJapanese ? "Chỉnh Sửa Thẻ Tiếng Nhật" : "Chỉnh Sửa Thẻ Từ Vựng"}
         </h3>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] transition-colors"
           title="Đóng"
         >
           ✕
@@ -84,11 +82,11 @@ function EditCardFormContent({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className={isJapanese ? "grid grid-cols-1 sm:grid-cols-2 gap-4" : ""}>
+        <div className={isJapanese ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
           <div>
             <label className={labelClass} htmlFor="edit-word">
               {isJapanese ? "Từ vựng / Kana (Hiragana/Katakana)" : "Từ vựng"}{" "}
-              <span className="text-rose">*</span>
+              <span className="text-red-500">*</span>
             </label>
             <input
               id="edit-word"
@@ -97,7 +95,7 @@ function EditCardFormContent({
               value={word}
               onChange={(e) => setWord(e.target.value)}
               placeholder={isJapanese ? "VD: さくら / たべる" : "VD: apple"}
-              className={`${inputClass} text-lg font-bold`}
+              className={`${inputClass} text-base font-bold`}
             />
           </div>
 
@@ -112,13 +110,13 @@ function EditCardFormContent({
                 value={kanji}
                 onChange={(e) => setKanji(e.target.value)}
                 placeholder="VD: 桜 hoặc 食べる hoặc 一期一会"
-                className={`${inputClass} text-lg font-bold text-sakura-light`}
+                className={`${inputClass} text-base font-bold text-red-600`}
               />
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label className={labelClass} htmlFor="edit-pos">
               Loại từ
@@ -155,7 +153,7 @@ function EditCardFormContent({
           </div>
           <div>
             <label className={labelClass} htmlFor="edit-translation">
-              Nghĩa tiếng Việt <span className="text-rose">*</span>
+              Nghĩa tiếng Việt <span className="text-red-500">*</span>
             </label>
             <input
               id="edit-translation"
@@ -177,26 +175,26 @@ function EditCardFormContent({
               value={phonetic}
               onChange={(e) => setPhonetic(e.target.value)}
               placeholder={isJapanese ? "さくら / sakura" : "/ˈæp.əl/"}
-              className={`${inputClass} text-indigo-light`}
+              className={`${inputClass} text-[#4255FF]`}
             />
           </div>
         </div>
 
         <div>
           <label className={labelClass} htmlFor="edit-imageUrl">
-            🖼️ Hình ảnh nghĩa cốt lõi (Link URL)
+            🖼️ Hình ảnh minh họa (Link URL)
           </label>
           <input
             id="edit-imageUrl"
             type="url"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://... (link hình ảnh minh họa cốt lõi)"
+            placeholder="https://... (link hình ảnh minh họa)"
             className={`${inputClass} font-mono text-xs`}
           />
           {imageUrl.trim() && (
-            <div className="mt-2 flex items-center gap-3 rounded-xl border border-border/80 bg-surface/50 p-2">
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/80 bg-black/20">
+            <div className="mt-2 flex items-center gap-3 rounded-xl border border-[#E2E4E9] bg-[#F6F7FB] p-2">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[#E2E4E9] bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl.trim()}
@@ -205,7 +203,7 @@ function EditCardFormContent({
                   onError={() => {}}
                 />
               </div>
-              <div className="text-xs text-foreground-dim line-clamp-2 font-mono">
+              <div className="text-xs text-[#586380] line-clamp-2 font-mono">
                 {imageUrl.trim()}
               </div>
             </div>
@@ -248,18 +246,18 @@ function EditCardFormContent({
           />
         </div>
 
-        <div className="flex gap-3 pt-3">
+        <div className="flex gap-2.5 pt-2">
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 cursor-pointer rounded-xl bg-gradient-to-r from-sakura to-indigo py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-indigo/30 active:scale-[0.98] disabled:opacity-50"
+            className="flex-1 cursor-pointer rounded-xl bg-[#4255FF] py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:bg-[#3344DD] active:scale-98 disabled:opacity-50"
           >
             {saving ? "⏳ Đang lưu..." : "💾 Lưu Thay Đổi"}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-xl border border-border/50 bg-surface px-5 py-3 text-sm font-bold text-foreground-muted transition-all duration-300 hover:border-rose/20 hover:bg-rose/10 hover:text-rose"
+            className="cursor-pointer rounded-xl border border-[#E2E4E9] bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-[#586380] hover:bg-[#EDEFF4]"
           >
             Hủy
           </button>
@@ -274,7 +272,7 @@ export function EditCardModal({ card, isOpen, onClose, onSave, folderLanguage = 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in"
       onClick={onClose}
     >
       <EditCardFormContent

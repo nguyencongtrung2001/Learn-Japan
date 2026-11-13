@@ -14,14 +14,14 @@ export function ViewSwitcher({
   cardsCount,
 }: ViewSwitcherProps) {
   return (
-    <div className="inline-flex items-center p-1 rounded-2xl bg-surface/80 border border-border shadow-sm">
+    <div className="inline-flex items-center p-1 rounded-xl bg-white border border-[#E2E4E9] shadow-xs">
       <button
         type="button"
         onClick={() => onChangeMode("classic")}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
           currentMode === "classic"
-            ? "bg-indigo text-white shadow-sm"
-            : "text-foreground-muted hover:text-foreground hover:bg-surface"
+            ? "bg-[#1A1D28] text-white shadow-xs"
+            : "text-[#586380] hover:text-[#1A1D28] hover:bg-[#EDEFF4]"
         }`}
         title="Giao diện 1: Quản lý thư mục, thêm/sửa/xóa thẻ & danh sách dạng lưới"
       >
@@ -33,10 +33,10 @@ export function ViewSwitcher({
         type="button"
         disabled={cardsCount === 0}
         onClick={() => onChangeMode("minimal")}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
           currentMode === "minimal"
-            ? "bg-[#4255FF] text-white shadow-sm"
-            : "text-foreground-muted hover:text-foreground hover:bg-surface"
+            ? "bg-[#4255FF] text-white shadow-xs"
+            : "text-[#586380] hover:text-[#1A1D28] hover:bg-[#EDEFF4]"
         }`}
         title="Giao diện 2: Flashcard Tối giản & Tập trung (Quizlet Clean UI)"
       >
@@ -48,10 +48,10 @@ export function ViewSwitcher({
         type="button"
         disabled={cardsCount === 0}
         onClick={() => onChangeMode("split")}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hidden sm:flex ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hidden sm:flex ${
           currentMode === "split"
-            ? "bg-[#4255FF] text-white shadow-sm"
-            : "text-foreground-muted hover:text-foreground hover:bg-surface"
+            ? "bg-[#4255FF] text-white shadow-xs"
+            : "text-[#586380] hover:text-[#1A1D28] hover:bg-[#EDEFF4]"
         }`}
         title="Giao diện 2 Mở rộng: Chia đôi màn hình 3:7 (Danh sách cuộn đồng bộ + Thẻ)"
       >

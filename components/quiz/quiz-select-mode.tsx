@@ -40,15 +40,15 @@ export function QuizSelectMode({
 
   return (
     <div className="animate-fade-in-up mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <h1 className="gradient-text mb-2 text-center text-3xl font-bold">Chọn Chế Độ</h1>
-      <p className="mb-10 text-center text-sm text-foreground-muted">Học từ mới hoặc ôn tập từ đã học</p>
+      <h1 className="mb-2 text-center text-3xl font-bold text-[#1A1D28]">Chọn Chế Độ</h1>
+      <p className="mb-10 text-center text-sm text-[#586380]">Học từ mới hoặc ôn tập từ đã học</p>
 
       <div className="mx-auto grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Card 1: Học từ mới */}
         <div
-          className={`glass-card flex flex-col justify-between p-6 transition-all ${
+          className={`flex flex-col justify-between rounded-2xl border border-[#E2E4E9] bg-white p-6 shadow-xs transition-all ${
             newCount > 0
-              ? "hover:border-emerald/30 hover:shadow-lg hover:shadow-emerald/10"
+              ? "hover:border-[#23B26D]/50 hover:shadow-md"
               : "opacity-50"
           }`}
         >
@@ -56,17 +56,17 @@ export function QuizSelectMode({
             <div className="mb-3 flex items-center justify-between">
               <span className="text-4xl">🌱</span>
               {newCount > 0 ? (
-                <span className="rounded-full bg-emerald/15 px-3 py-1 text-xs font-bold text-emerald">
+                <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-[#23B26D]">
                   {newCount} từ mới
                 </span>
               ) : (
-                <span className="rounded-full bg-foreground-muted/10 px-3 py-1 text-xs text-foreground-muted">
+                <span className="rounded-lg bg-[#EDEFF4] px-2.5 py-0.5 text-xs text-[#586380]">
                   Đã hết từ mới
                 </span>
               )}
             </div>
-            <h3 className="mb-1 text-lg font-bold text-foreground">Học từ mới</h3>
-            <p className="text-sm text-foreground-muted mb-4">
+            <h3 className="mb-1 text-lg font-bold text-[#1A1D28]">Học từ mới</h3>
+            <p className="text-xs sm:text-sm text-[#586380] mb-4">
               {newCount > 0
                 ? `Gieo hạt ${newCount} từ vựng mới theo từng lô 5 từ (từ mức 🌰 đến 🌺).`
                 : "Tất cả từ đã được học! Thêm thẻ mới hoặc chọn ôn tập."}
@@ -77,10 +77,10 @@ export function QuizSelectMode({
             type="button"
             onClick={onStartLearn}
             disabled={newCount === 0}
-            className={`w-full cursor-pointer rounded-xl py-3 px-4 text-center text-sm font-bold transition-all duration-300 ${
+            className={`w-full cursor-pointer rounded-xl py-2.5 px-4 text-center text-xs sm:text-sm font-bold transition-all ${
               newCount > 0
-                ? "bg-gradient-to-r from-emerald to-teal-500 text-white shadow-md hover:scale-[1.02] hover:shadow-emerald/20 active:scale-95"
-                : "cursor-not-allowed bg-foreground-muted/10 text-foreground-muted"
+                ? "bg-[#23B26D] text-white shadow-xs hover:bg-[#1fa362] active:scale-98"
+                : "cursor-not-allowed bg-[#EDEFF4] text-[#939BB4]"
             }`}
           >
             {newCount > 0 ? "Bắt đầu học (5 từ) →" : "Đã học hết"}
@@ -89,11 +89,11 @@ export function QuizSelectMode({
 
         {/* Card 2: Ôn tập & Luyện tập tự do */}
         <div
-          className={`glass-card flex flex-col justify-between p-6 transition-all ${
-            isReviewFocused ? "border-sakura/50 shadow-lg shadow-sakura/20 ring-1 ring-sakura/30" : ""
+          className={`flex flex-col justify-between rounded-2xl border border-[#E2E4E9] bg-white p-6 shadow-xs transition-all ${
+            isReviewFocused ? "border-[#4255FF] shadow-md ring-2 ring-[#4255FF]/10" : ""
           } ${
             learnedCount > 0
-              ? "hover:border-sakura/30 hover:shadow-lg hover:shadow-sakura/10"
+              ? "hover:border-[#4255FF]/50 hover:shadow-md"
               : "opacity-50"
           }`}
         >
@@ -102,22 +102,22 @@ export function QuizSelectMode({
               <span className="text-4xl">{dueCount > 0 ? "💧" : "⚡"}</span>
               <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 {dueCount > 0 && (
-                  <span className="rounded-full bg-rose-500/15 border border-rose-500/25 px-2.5 py-0.5 text-xs font-bold text-rose-400">
+                  <span className="rounded-lg bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs font-bold text-red-600">
                     💧 {dueCount} đến hạn
                   </span>
                 )}
                 {learnedCount > 0 && (
-                  <span className="rounded-full bg-sakura/15 border border-sakura/25 px-2.5 py-0.5 text-xs font-bold text-sakura-light">
+                  <span className="rounded-lg bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-[#4255FF]">
                     📚 {learnedCount} đã học
                   </span>
                 )}
               </div>
             </div>
 
-            <h3 className="mb-1 text-lg font-bold text-foreground">
+            <h3 className="mb-1 text-lg font-bold text-[#1A1D28]">
               {dueCount > 0 ? "Ôn tập đến hạn & Tự do" : "⚡ Ôn tập tự do / Cấp tốc"}
             </h3>
-            <p className="text-sm text-foreground-muted mb-4">
+            <p className="text-xs sm:text-sm text-[#586380] mb-4">
               {dueCount > 0
                 ? `Tưới nước ${dueCount} hoa đến hạn và chủ động củng cố thêm từ vựng.`
                 : "Luyện tập tự do củng cố trí nhớ trước giờ kiểm tra ngay cả khi chưa đến hạn."}
@@ -126,9 +126,9 @@ export function QuizSelectMode({
             {/* Bộ chọn số lượng từ ôn tập */}
             {learnedCount > 0 && (
               <div className="mb-4">
-                <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-foreground-muted">
+                <div className="mb-1.5 flex items-center justify-between text-xs font-semibold text-[#586380]">
                   <span>Số lượng từ ôn tập:</span>
-                  <span className="text-sakura-light font-bold">
+                  <span className="text-[#4255FF] font-bold">
                     {cramLimit === "all" ? `Tất cả (${learnedCount})` : `${cramLimit} từ`}
                   </span>
                 </div>
@@ -144,10 +144,10 @@ export function QuizSelectMode({
                         onClick={() => setCramLimit(opt.value)}
                         className={`rounded-lg py-1.5 px-1 text-xs font-bold transition-all ${
                           isSelected
-                            ? "bg-sakura text-white shadow-sm shadow-sakura/30 scale-[1.02]"
+                            ? "bg-[#4255FF] text-white shadow-xs"
                             : isUnavailable
-                            ? "cursor-not-allowed bg-foreground-muted/5 text-foreground-muted/30 line-through"
-                            : "bg-foreground-muted/10 text-foreground-muted hover:bg-sakura/10 hover:text-sakura-light"
+                            ? "cursor-not-allowed bg-[#F6F7FB] text-[#939BB4] line-through"
+                            : "bg-[#EDEFF4] text-[#586380] hover:bg-[#E2E4E9] hover:text-[#1A1D28]"
                         }`}
                       >
                         {opt.label}
@@ -159,7 +159,7 @@ export function QuizSelectMode({
             )}
 
             {/* Ghi chú chế độ an toàn */}
-            <div className="mb-4 flex items-center gap-1.5 rounded-lg bg-emerald/10 px-2.5 py-1.5 text-xs text-emerald border border-emerald/20">
+            <div className="mb-4 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs text-[#23B26D] border border-emerald-200">
               <span className="shrink-0">🛡️</span>
               <span>
                 <strong>Chế độ an toàn:</strong> Không phạt tụt cấp hoa khi ôn luyện tự do.
@@ -171,10 +171,10 @@ export function QuizSelectMode({
             type="button"
             onClick={() => onStartReview(cramLimit)}
             disabled={learnedCount === 0}
-            className={`w-full cursor-pointer rounded-xl py-3 px-4 text-center text-sm font-bold transition-all duration-300 ${
+            className={`w-full cursor-pointer rounded-xl py-2.5 px-4 text-center text-xs sm:text-sm font-bold transition-all ${
               learnedCount > 0
-                ? "bg-gradient-to-r from-sakura to-indigo text-white shadow-md hover:scale-[1.02] hover:shadow-sakura/20 active:scale-95"
-                : "cursor-not-allowed bg-foreground-muted/10 text-foreground-muted"
+                ? "bg-[#4255FF] text-white shadow-xs hover:bg-[#3344DD] active:scale-98"
+                : "cursor-not-allowed bg-[#EDEFF4] text-[#939BB4]"
             }`}
           >
             {learnedCount > 0
@@ -184,11 +184,11 @@ export function QuizSelectMode({
         </div>
       </div>
 
-      <div className="mt-10 text-center">
+      <div className="mt-8 text-center">
         <button
           type="button"
           onClick={onBack}
-          className="cursor-pointer text-sm text-foreground-muted transition-colors hover:text-indigo-light"
+          className="cursor-pointer text-xs sm:text-sm font-semibold text-[#586380] transition-colors hover:text-[#1A1D28]"
         >
           ← Quay lại thư mục
         </button>

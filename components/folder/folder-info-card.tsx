@@ -17,47 +17,46 @@ export function FolderInfoCard({
   editing,
 }: FolderInfoCardProps) {
   return (
-    <div className="glass-card relative overflow-hidden p-5">
-      <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-sakura to-indigo opacity-60" />
-      <div className="absolute right-0 top-0 -mr-16 -mt-16 h-32 w-32 rounded-full bg-indigo/5" />
-
+    <div className="relative overflow-hidden rounded-2xl border border-[#E2E4E9] bg-white p-5 shadow-xs">
       <div className="relative z-10">
-        <div className="mb-3 flex items-center gap-2.5">
-          <span className="text-3xl shrink-0">📂</span>
-          <h1 className="min-w-0 break-words text-2xl font-extrabold tracking-tight">
-            <span className="gradient-text">{folder.name}</span>
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="text-2xl shrink-0">📂</span>
+          <h1 className="min-w-0 break-words text-xl font-bold tracking-tight text-[#1A1D28]">
+            {folder.name}
           </h1>
         </div>
 
         {folder.description && !editing && (
-          <p className="mb-4 text-sm leading-relaxed text-foreground-muted">{folder.description}</p>
+          <p className="mb-3.5 text-xs sm:text-sm leading-relaxed text-[#586380]">
+            {folder.description}
+          </p>
         )}
 
         {folder.maxCards && !editing && <LimitProgress current={total} max={folder.maxCards} />}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {folder.language === "japanese" ? (
-            <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose shadow-sm">
+            <span className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-600">
               🇯🇵 Tiếng Nhật
             </span>
           ) : (
-            <span className="rounded-full border border-indigo/30 bg-indigo/10 px-3 py-1 text-xs font-bold text-indigo-light shadow-sm">
+            <span className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-[#4255FF]">
               🇬🇧 Tiếng Anh
             </span>
           )}
           {folder.maxCards ? (
-            <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-500 shadow-sm">
-              📊 Giới hạn: {total}/{folder.maxCards}
+            <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">
+              📊 {total}/{folder.maxCards}
             </span>
           ) : (
-            <span className="rounded-full border border-border/50 bg-surface px-3 py-1 text-xs font-medium text-foreground-dim shadow-sm">
+            <span className="rounded-lg border border-[#E2E4E9] bg-[#F6F7FB] px-2.5 py-0.5 text-xs font-medium text-[#586380]">
               📚 {total} thẻ
             </span>
           )}
-          <span className="rounded-full border border-emerald/20 bg-emerald/10 px-3 py-1 text-xs font-bold text-emerald shadow-sm">
+          <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-[#23B26D]">
             🌱 {newCount} chưa học
           </span>
-          <span className="rounded-full border border-sakura/20 bg-sakura/10 px-3 py-1 text-xs font-bold text-sakura-light shadow-sm">
+          <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">
             💧 {dueCount} cần ôn
           </span>
         </div>

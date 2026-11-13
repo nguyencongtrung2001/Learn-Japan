@@ -747,18 +747,16 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
   };
 
   return (
-    <div className="glass-card animate-fade-in relative mb-6 overflow-hidden p-5 sm:p-7 shadow-2xl border border-border/80">
-      <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-sakura via-indigo to-emerald opacity-60" />
-
+    <div className="animate-fade-in relative mb-6 overflow-hidden rounded-2xl border border-[#E2E4E9] bg-white p-5 sm:p-7 shadow-lg">
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted hover:bg-surface-hover hover:text-foreground hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer z-10"
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] transition-all cursor-pointer z-10"
           title="Đóng bảng nhập nhanh"
           aria-label="Đóng bảng nhập nhanh"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -766,19 +764,24 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
 
       {/* Header & Tabs */}
       <div className="mb-5 pr-10">
-        <h3 className="text-xl font-black mb-2 gradient-text flex items-center gap-2">
+        <h3 className="text-lg font-bold text-[#1A1D28] mb-1.5 flex items-center gap-2">
           <span>⚡</span> Nhập Từ Vựng Hàng Loạt ({isJapanese ? "Tiếng Nhật 🇯🇵" : "Tiếng Anh 🇬🇧"})
         </h3>
+        <p className="text-xs text-[#586380] mb-3">
+          {isJapanese
+            ? "Cấu trúc 8 cột tiếng Nhật: Từ vựng (Kana) | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh"
+            : "Cấu trúc 7 cột tiếng Anh: Từ vựng | Phiên âm IPA | Loại từ | Nghĩa tiếng Việt | Định nghĩa | Ví dụ | Link ảnh"}
+        </p>
 
         {/* Tab switchers */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("excel")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
               activeTab === "excel"
-                ? "bg-gradient-to-r from-emerald to-teal-500 text-white shadow-md shadow-emerald/20"
-                : "border border-border/60 bg-surface/50 text-foreground-muted hover:bg-surface hover:text-foreground"
+                ? "bg-[#4255FF] text-white shadow-xs"
+                : "border border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28]"
             }`}
           >
             <span>📊</span> Nhập Bằng File Excel (.xlsx, .xls, .csv)
@@ -786,10 +789,10 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
           <button
             type="button"
             onClick={() => setActiveTab("text")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
               activeTab === "text"
-                ? "bg-gradient-to-r from-sakura to-indigo text-white shadow-md shadow-indigo/20"
-                : "border border-border/60 bg-surface/50 text-foreground-muted hover:bg-surface hover:text-foreground"
+                ? "bg-[#4255FF] text-white shadow-xs"
+                : "border border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28]"
             }`}
           >
             <span>📝</span> Dán Bảng / Text Nhanh
@@ -806,10 +809,10 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`relative flex flex-col items-center justify-center p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
+            className={`relative flex flex-col items-center justify-center p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
               isDragging
-                ? "border-emerald bg-emerald/10 scale-[1.01]"
-                : "border-border/80 bg-surface/40 hover:border-indigo hover:bg-surface/70"
+                ? "border-[#4255FF] bg-blue-50/50 scale-[1.01]"
+                : "border-[#E2E4E9] bg-[#F6F7FB] hover:border-[#4255FF]/60 hover:bg-white"
             }`}
           >
             <input
@@ -820,23 +823,23 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
               className="hidden"
             />
 
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald/15 text-3xl text-emerald mb-3 shadow-inner">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-[#E2E4E9] text-2xl mb-2.5 shadow-xs">
               📊
             </div>
 
-            <p className="text-base font-bold text-foreground text-center mb-1">
+            <p className="text-sm font-bold text-[#1A1D28] text-center mb-1">
               {fileName ? (
-                <span className="text-emerald-400">Đã chọn: {fileName}</span>
+                <span className="text-[#4255FF]">Đã chọn: {fileName}</span>
               ) : (
                 "Kéo thả file Excel vào đây, hoặc click để chọn file"
               )}
             </p>
-            <p className="text-xs text-foreground-muted text-center">
+            <p className="text-xs text-[#586380] text-center">
               Hỗ trợ định dạng Excel <strong>.xlsx</strong>, <strong>.xls</strong>, và <strong>.csv</strong>
             </p>
 
             {isParsingFile && (
-              <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-emerald-400 animate-pulse">
+              <div className="mt-2.5 flex items-center gap-2 text-xs font-semibold text-[#4255FF] animate-pulse">
                 <span>⏳ Đang phân tích dữ liệu Excel...</span>
               </div>
             )}
@@ -847,7 +850,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             <button
               type="button"
               onClick={() => downloadSampleExcel(isJapanese)}
-              className="inline-flex items-center gap-2 rounded-xl border border-indigo/30 bg-indigo/10 px-3.5 py-2 text-xs font-bold text-indigo-light hover:bg-indigo hover:text-white transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2 text-xs font-bold text-[#1A1D28] hover:bg-[#EDEFF4] transition-all cursor-pointer shadow-xs"
               title="Tải file Excel mẫu có sẵn cấu trúc cột và dữ liệu mẫu"
             >
               <span>📥</span> Tải File Excel Mẫu Chuẩn ({isJapanese ? "Tiếng Nhật" : "Tiếng Anh"})
@@ -862,7 +865,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
                   setExcelCards([]);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-                className="text-xs font-semibold text-rose hover:underline cursor-pointer"
+                className="text-xs font-semibold text-red-600 hover:underline cursor-pointer"
               >
                 ✕ Hủy chọn file này
               </button>
@@ -871,12 +874,12 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
 
           {/* Bảng xem trước danh sách thẻ đọc được từ file Excel */}
           {excelCards.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-border/80 bg-surface/60 overflow-hidden shadow-lg animate-fade-in-up">
-              <div className="p-3 bg-surface/80 border-b border-border/70 flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs font-bold text-foreground flex items-center gap-2">
+            <div className="mt-4 rounded-xl border border-[#E2E4E9] bg-white overflow-hidden shadow-xs animate-fade-in-up">
+              <div className="p-3 bg-[#F6F7FB] border-b border-[#E2E4E9] flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-bold text-[#1A1D28] flex items-center gap-1.5">
                   <span>👀</span> Xem trước dữ liệu ({excelCards.length} thẻ được phát hiện):
                 </span>
-                <span className="text-[11px] text-foreground-dim">
+                <span className="text-[11px] text-[#586380]">
                   {isJapanese && (
                     <>{excelCards.filter((c) => c.kanji).length} có Kanji · </>
                   )}
@@ -887,7 +890,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
 
               <div className="max-h-64 overflow-x-auto overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-surface sticky top-0 border-b border-border/60 text-foreground-muted font-bold text-[11px] uppercase tracking-wider">
+                  <thead className="bg-[#F6F7FB] sticky top-0 border-b border-[#E2E4E9] text-[#586380] font-bold text-[11px] uppercase tracking-wider">
                     <tr>
                       <th className="p-2.5 w-10 text-center">#</th>
                       <th className="p-2.5">{isJapanese ? "Từ vựng (Kana)" : "Từ vựng"}</th>
@@ -899,35 +902,35 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
                       <th className="p-2.5">{isJapanese ? "Ngữ cảnh & Ví dụ" : "Định nghĩa & Ví dụ"}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border/40 font-medium">
+                  <tbody className="divide-y divide-[#E2E4E9] font-medium text-[#1A1D28]">
                     {excelCards.map((c, idx) => (
-                      <tr key={idx} className="hover:bg-surface-hover/50 transition-colors">
-                        <td className="p-2.5 text-center text-foreground-dim">{idx + 1}</td>
-                        <td className="p-2.5 font-bold text-foreground">{c.word}</td>
+                      <tr key={idx} className="hover:bg-[#F6F7FB] transition-colors">
+                        <td className="p-2.5 text-center text-[#939BB4]">{idx + 1}</td>
+                        <td className="p-2.5 font-bold text-[#1A1D28]">{c.word}</td>
                         {isJapanese && (
-                          <td className="p-2.5 font-bold text-sakura-light">{c.kanji || "—"}</td>
+                          <td className="p-2.5 font-bold text-red-600">{c.kanji || "—"}</td>
                         )}
-                        <td className="p-2.5 text-indigo-light font-mono">{c.phonetic || "—"}</td>
+                        <td className="p-2.5 text-[#4255FF] font-mono">{c.phonetic || "—"}</td>
                         <td className="p-2.5">
                           {c.partOfSpeech ? (
-                            <span className="rounded bg-indigo/15 px-1.5 py-0.5 text-[10px] font-bold text-indigo-light">
+                            <span className="rounded bg-[#EDEFF4] px-1.5 py-0.5 text-[10px] font-bold text-[#586380]">
                               {c.partOfSpeech}
                             </span>
                           ) : (
                             "—"
                           )}
                         </td>
-                        <td className="p-2.5 font-semibold text-foreground">{c.translation}</td>
+                        <td className="p-2.5 font-semibold text-[#1A1D28]">{c.translation}</td>
                         <td className="p-2.5">
                           {c.imageUrl ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-bold" title={c.imageUrl}>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-[#23B26D] font-bold" title={c.imageUrl}>
                               <span>🖼️</span> Có ảnh
                             </span>
                           ) : (
-                            <span className="text-foreground-dim">—</span>
+                            <span className="text-[#939BB4]">—</span>
                           )}
                         </td>
-                        <td className="p-2.5 text-foreground-muted max-w-xs truncate">
+                        <td className="p-2.5 text-[#586380] max-w-xs truncate">
                           {c.definition || c.example || "—"}
                         </td>
                       </tr>
@@ -944,47 +947,18 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
       {activeTab === "text" && (
         <div className="space-y-4 animate-fade-in">
           <div>
-            <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
+            <p className="text-xs text-[#586380] leading-relaxed">
               Dán bảng Markdown (phân cách bằng dấu <code>|</code>) hoặc copy trực tiếp các cột từ Excel / Google Sheets (dấu Tab).
             </p>
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="font-bold text-foreground">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="font-bold text-[#1A1D28]">
                 {isJapanese ? "Cấu trúc chuẩn tiếng Nhật (8 cột):" : "Cấu trúc chuẩn tiếng Anh (7 cột):"}
               </span>
-              <span className="rounded-lg bg-surface px-2.5 py-1 border border-border text-foreground font-mono text-[11px] font-semibold">
+              <span className="rounded-lg bg-[#F6F7FB] px-2.5 py-1 border border-[#E2E4E9] text-[#1A1D28] font-mono text-[11px] font-semibold">
                 {isJapanese
                   ? "Từ vựng (Kana) | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh"
                   : "Từ vựng | Phiên âm IPA | Loại từ | Nghĩa tiếng Việt | Định nghĩa | Ví dụ | Link ảnh"}
               </span>
-            </div>
-
-            {/* Quick tips tags */}
-            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
-              {isJapanese ? (
-                <>
-                  <span className="rounded bg-sakura/15 px-2 py-0.5 font-bold text-sakura-light border border-sakura/25">
-                    Chữ Hán: 桜 / 食べる / 一期一会
-                  </span>
-                  <span className="rounded bg-indigo/15 px-2 py-0.5 font-bold text-indigo-light border border-indigo/25">
-                    Loại từ: Danh từ, Động từ N1/N2/N3, Tính từ -i, Tính từ -na, Cụm từ, Thành ngữ
-                  </span>
-                  <span className="rounded bg-emerald/15 px-2 py-0.5 font-bold text-emerald-400 border border-emerald/25">
-                    Link ảnh: https://images.unsplash.com/... (tùy chọn)
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="rounded bg-indigo/15 px-2 py-0.5 font-bold text-indigo-light border border-indigo/25">
-                    Phiên âm: /ˌpɜː.sɪˈvɪə.rəns/ hoặc [ˈæp.əl]
-                  </span>
-                  <span className="rounded bg-indigo/15 px-2 py-0.5 font-bold text-indigo-light border border-indigo/25">
-                    Loại từ: NOUN, VERB, ADJ, ADV, PHRASE, IDIOM
-                  </span>
-                  <span className="rounded bg-emerald/15 px-2 py-0.5 font-bold text-emerald-400 border border-emerald/25">
-                    Link ảnh: https://images.unsplash.com/... (tùy chọn)
-                  </span>
-                </>
-              )}
             </div>
           </div>
 
@@ -996,17 +970,17 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
                 ? `Ví dụ bảng Markdown 8 cột tiếng Nhật chuẩn (Từ vựng | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh):\n| さくら | 桜 | sakura | Danh từ | Hoa anh đào | Biểu tượng mùa xuân nước Nhật | 春になると桜が綺麗に咲きます。 | https://images.unsplash.com/photo-1522383225653-ed111181a951 |\n| たべる | 食べる | taberu | Động từ N2 | Ăn | Hành động ăn uống hàng ngày | 毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.) | https://images.unsplash.com/photo-1546069901-ba9599a7e63c |\n| いちごいちえ | 一期一会 | ichigoichie | Thành ngữ | Đời người chỉ gặp một lần | Bắt nguồn từ trà đạo | 一期一会の精神でおもてなしをする。 | |`
                 : `Ví dụ bảng Markdown 7 cột tiếng Anh chuẩn (Từ vựng | Phiên âm IPA | Loại từ | Nghĩa tiếng Việt | Định nghĩa tiếng Anh | Ví dụ | Link ảnh):\n| Perseverance | /ˌpɜː.sɪˈvɪə.rəns/ | NOUN | Sự kiên trì, bền bỉ | Continued effort and determination despite difficulties | His perseverance was rewarded when he finally passed the exam. | https://images.unsplash.com/photo-1517838277536-f5f99be501cd |\n| Accomplish | /əˈkʌm.plɪʃ/ | VERB | Hoàn thành, đạt được | To achieve or complete successfully | She accomplished all her goals for the year. | https://images.unsplash.com/photo-1507525428034-b723cf961d3e |\n| Resilient | /rɪˈzɪl.jənt/ | ADJ | Kiên cường, mau phục hồi | Able to quickly recover from difficult conditions | He is a resilient person who never gives up in tough times. | https://images.unsplash.com/photo-1499209974431-9dddcece7f88 |\n| Piece of cake | /ˌpiːs əv ˈkeɪk/ | IDIOM | Dễ như ăn kẹo, rất dễ dàng | Something that is very easy and simple to do | The interview was a piece of cake; I got the job! | |`
             }
-            className="w-full h-64 sm:h-72 p-4 rounded-xl bg-surface/70 border border-border/80 text-foreground text-xs sm:text-sm font-mono outline-none focus:border-indigo focus:ring-2 focus:ring-indigo/20 transition-all resize-y leading-relaxed"
+            className="w-full h-64 sm:h-72 p-3.5 rounded-xl bg-white border border-[#E2E4E9] text-[#1A1D28] text-xs font-mono outline-none focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 transition-all resize-y leading-relaxed placeholder:text-[#939BB4]"
           />
         </div>
       )}
 
       {/* Thanh điều khiển Submit chung phía dưới */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-border/50">
-        <div className="text-xs font-semibold text-foreground-muted">
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-[#E2E4E9]">
+        <div className="text-xs font-semibold text-[#586380]">
           {activeCards.length > 0 ? (
-            <span className="text-emerald-400 flex items-center gap-1.5 flex-wrap">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[#23B26D] flex items-center gap-1.5 flex-wrap">
+              <span className="h-2 w-2 rounded-full bg-[#23B26D] animate-pulse" />
               Đã sẵn sàng <strong>{activeCards.length}</strong> thẻ hợp lệ (
               {isJapanese && (
                 <>{activeCards.filter((p) => p.kanji).length} có Kanji, </>
@@ -1015,7 +989,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
               {activeCards.filter((p) => p.imageUrl).length} có Hình ảnh)
             </span>
           ) : (
-            <span className="text-foreground-dim">
+            <span className="text-[#939BB4]">
               {activeTab === "excel"
                 ? "Chưa có file nào được tải lên (hãy kéo thả hoặc click chọn file Excel)"
                 : "Chưa có dữ liệu (hãy dán văn bản vào ô trên)"}
@@ -1028,7 +1002,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-border text-xs sm:text-sm font-semibold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-[#E2E4E9] text-xs sm:text-sm font-semibold text-[#586380] hover:bg-[#EDEFF4] transition-all cursor-pointer"
             >
               ✕ Hủy bỏ
             </button>
@@ -1037,7 +1011,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             type="button"
             onClick={() => executeImport(activeCards)}
             disabled={isImporting || activeCards.length === 0}
-            className="px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-sakura to-indigo text-white hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 shadow-md cursor-pointer"
+            className="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#4255FF] text-white hover:bg-[#3344DD] active:scale-98 transition-all disabled:opacity-50 shadow-xs cursor-pointer"
           >
             {isImporting
               ? "⏳ Đang tạo thẻ..."

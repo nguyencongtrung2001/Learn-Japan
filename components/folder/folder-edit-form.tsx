@@ -11,10 +11,9 @@ interface FolderEditFormProps {
 }
 
 const inputClass =
-  "w-full rounded-xl border-2 border-border/50 bg-surface/50 px-4 py-3 text-sm font-medium text-foreground outline-none transition-all placeholder:text-foreground-muted/40 focus:border-indigo focus:ring-4 focus:ring-indigo/10";
-const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wide text-foreground-muted";
+  "w-full rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2.5 text-xs sm:text-sm font-medium text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10";
+const labelClass = "mb-1 block text-xs font-bold uppercase tracking-wider text-[#586380]";
 
-/** State của form nằm trong chính component này → gõ phím không làm render lại cả trang. */
 export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFormProps) {
   const [name, setName] = useState(folder.name ?? "");
   const [description, setDescription] = useState(folder.description ?? "");
@@ -43,21 +42,20 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass-card animate-fade-in relative space-y-4 overflow-hidden p-5 shadow-xl"
+      className="animate-fade-in relative space-y-3.5 rounded-2xl border border-[#E2E4E9] bg-white p-4 sm:p-5 shadow-xs"
     >
-      <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-indigo to-sakura opacity-60" />
-      <h3 className="gradient-text flex items-center gap-2 text-base font-extrabold">⚙️ Chỉnh sửa Thư Mục</h3>
+      <h3 className="text-sm font-bold text-[#1A1D28]">⚙️ Chỉnh sửa Thư Mục</h3>
 
       <div>
         <label className={labelClass}>Ngôn ngữ học tập</label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setLanguage("japanese")}
-            className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2 px-3 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 px-2 text-xs font-bold transition-all cursor-pointer ${
               language === "japanese"
-                ? "border-rose bg-rose/15 text-rose shadow-sm"
-                : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                ? "border-red-500 bg-red-50 text-red-600"
+                : "border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4]"
             }`}
           >
             <span>🇯🇵</span> Tiếng Nhật
@@ -65,10 +63,10 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
           <button
             type="button"
             onClick={() => setLanguage("english")}
-            className={`flex items-center justify-center gap-2 rounded-xl border-2 py-2 px-3 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 rounded-xl border-2 py-1.5 px-2 text-xs font-bold transition-all cursor-pointer ${
               language === "english"
-                ? "border-indigo bg-indigo/15 text-indigo-light shadow-sm"
-                : "border-border/50 bg-surface/50 text-foreground-muted hover:border-border hover:bg-surface"
+                ? "border-[#4255FF] bg-blue-50 text-[#4255FF]"
+                : "border-[#E2E4E9] bg-white text-[#586380] hover:bg-[#EDEFF4]"
             }`}
           >
             <span>🇬🇧</span> Tiếng Anh
@@ -78,7 +76,7 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
 
       <div>
         <label className={labelClass} htmlFor="folder-name">
-          Tên thư mục <span className="text-rose">*</span>
+          Tên thư mục <span className="text-red-500">*</span>
         </label>
         <input
           id="folder-name"
@@ -100,7 +98,7 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Mô tả nội dung thư mục..."
-          rows={3}
+          rows={2}
           className={`${inputClass} resize-none`}
         />
       </div>
@@ -118,8 +116,8 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
           placeholder="VD: 50 (trống = ∞)"
           className={inputClass}
         />
-        <p className="mt-1.5 text-xs text-foreground-dim">
-          💡 Giới hạn: {total}/{limit ? limit : "∞"} (hiện có {total} từ)
+        <p className="mt-1 text-[11px] text-[#939BB4]">
+          Giới hạn: {total}/{limit ? limit : "∞"} từ
         </p>
       </div>
 
@@ -127,14 +125,14 @@ export function FolderEditForm({ folder, total, onSave, onCancel }: FolderEditFo
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 cursor-pointer rounded-xl bg-gradient-to-r from-emerald to-teal-500 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald/30 active:translate-y-0 disabled:opacity-50"
+          className="flex-1 cursor-pointer rounded-xl bg-[#4255FF] py-2 text-xs sm:text-sm font-bold text-white transition-all hover:bg-[#3344DD] active:scale-98 disabled:opacity-50"
         >
           {saving ? "⏳ Đang lưu..." : "✅ Lưu"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="cursor-pointer rounded-xl border border-border/50 bg-surface px-4 py-2.5 text-sm font-bold text-foreground-muted transition-all duration-300 hover:border-rose/20 hover:bg-rose/10 hover:text-rose"
+          className="cursor-pointer rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2 text-xs sm:text-sm font-bold text-[#586380] hover:bg-[#EDEFF4]"
         >
           Hủy
         </button>

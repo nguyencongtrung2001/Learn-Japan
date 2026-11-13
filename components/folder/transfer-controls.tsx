@@ -26,7 +26,6 @@ export function TransferControls({
   useEffect(() => {
     getFolders().then((res) => {
       if (res.success && res.data) {
-        // Exclude the source folder from the list
         setFolders(res.data.filter((f) => f.id !== sourceFolderId));
       }
     });
@@ -56,19 +55,19 @@ export function TransferControls({
   };
 
   return (
-    <div className="rounded-xl border border-indigo/20 bg-surface p-3 space-y-3">
-      <p className="text-xs font-semibold text-foreground-muted">
-        Đã chọn <span className="text-indigo-light">{selectedCards.length}</span> thẻ
+    <div className="rounded-xl border border-[#E2E4E9] bg-white p-3 space-y-2.5 shadow-xs">
+      <p className="text-xs font-semibold text-[#586380]">
+        Đã chọn <span className="font-bold text-[#4255FF]">{selectedCards.length}</span> thẻ
       </p>
 
-      Danh sách từ đã chọn
-      <div className="flex flex-wrap gap-1">
+      {/* Danh sách từ đã chọn */}
+      <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
         {selectedCards.map((c) => (
           <span
             key={c.id}
-            className="rounded-md bg-indigo/10 px-2 py-0.5 text-[11px] font-bold text-indigo-light"
+            className="rounded-md bg-[#EDEFF4] px-2 py-0.5 text-[11px] font-bold text-[#1A1D28]"
           >
-            {c.word} 123
+            {c.word}
           </span>
         ))}
       </div>
@@ -77,7 +76,7 @@ export function TransferControls({
       <select
         value={targetFolderId ?? ""}
         onChange={(e) => setTargetFolderId(Number(e.target.value) || null)}
-        className="w-full rounded-lg border border-border bg-surface-hover px-3 py-2 text-sm text-foreground outline-none focus:border-indigo"
+        className="w-full rounded-lg border border-[#E2E4E9] bg-white px-2.5 py-1.5 text-xs text-[#1A1D28] outline-none focus:border-[#4255FF]"
       >
         <option value="">— Chọn thư mục đích —</option>
         {folders.map((f) => (
@@ -88,16 +87,16 @@ export function TransferControls({
       </select>
 
       {error && (
-        <p className="text-xs font-semibold text-rose">{error}</p>
+        <p className="text-xs font-semibold text-red-500">{error}</p>
       )}
 
       <button
         type="button"
         onClick={handleTransfer}
         disabled={loading || !targetFolderId}
-        className="w-full cursor-pointer rounded-xl bg-indigo px-4 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:bg-indigo-light disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full cursor-pointer rounded-lg bg-[#4255FF] px-3 py-2 text-xs font-bold text-white transition-all hover:bg-[#3344DD] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Đang chuyển..." : `🚀 Chuyển nhanh ${selectedCards.length} thẻ`}
+        {loading ? "Đang chuyển..." : `🚀 Chuyển ${selectedCards.length} thẻ`}
       </button>
     </div>
   );

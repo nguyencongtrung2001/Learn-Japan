@@ -11,14 +11,10 @@ interface AddCardFormProps {
   folderLanguage?: string;
 }
 
-const labelClass = "mb-2 block text-xs font-bold uppercase tracking-wide text-foreground-muted";
+const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#586380]";
 const baseInput =
-  "w-full rounded-2xl border-2 border-border/50 bg-surface/50 px-5 text-foreground outline-none transition-all placeholder:text-foreground-muted/40 focus:border-indigo focus:ring-4 focus:ring-indigo/10";
+  "w-full rounded-xl border border-[#E2E4E9] bg-white px-3.5 text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 text-sm";
 
-/**
- * Form KHÔNG controlled (đọc bằng FormData khi submit) → gõ phím không gây re-render
- * và không động tới danh sách thẻ phía trên. Ô bắt buộc dùng thuộc tính `required` của HTML.
- */
 export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: AddCardFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,35 +53,36 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="glass-card animate-fade-in relative mb-6 overflow-hidden p-6 shadow-2xl sm:p-8"
+      className="animate-fade-in relative mb-6 rounded-2xl border border-[#E2E4E9] bg-white p-5 sm:p-7 shadow-lg"
     >
-      <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-indigo to-sakura opacity-50" />
-
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted hover:bg-surface-hover hover:text-foreground hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer z-10"
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] transition-all cursor-pointer z-10"
           title="Đóng form"
           aria-label="Đóng form thêm thẻ"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       )}
 
-      <h3 className="gradient-text mb-6 text-center text-xl font-extrabold flex items-center justify-center gap-2">
-        <span>{isJapanese ? "🇯🇵" : "🇬🇧"}</span>
-        <span>{isJapanese ? "Thêm Thẻ Tiếng Nhật Mới" : "Thêm Thẻ Từ Vựng Mới"}</span>
-      </h3>
+      <div className="border-b border-[#E2E4E9] pb-3 mb-5">
+        <h3 className="text-lg font-bold text-[#1A1D28] flex items-center gap-2">
+          <span>{isJapanese ? "🇯🇵" : "🇬🇧"}</span>
+          <span>{isJapanese ? "Thêm Thẻ Tiếng Nhật Mới" : "Thêm Thẻ Từ Vựng Mới"}</span>
+        </h3>
+        <p className="text-xs text-[#586380] mt-0.5">Nhập đầy đủ thông tin để flashcard hiển thị trực quan</p>
+      </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* 1. Từ vựng / Cụm từ */}
         <div className={isJapanese ? "md:col-span-1" : "md:col-span-2"}>
           <label className={labelClass} htmlFor="card-word">
             {isJapanese ? "Từ vựng / Kana (Hiragana/Katakana)" : "Từ vựng"}{" "}
-            <span className="text-rose">*</span>
+            <span className="text-red-500">*</span>
           </label>
           <input
             id="card-word"
@@ -94,7 +91,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             required
             autoComplete="off"
             placeholder={isJapanese ? "VD: さくら / たべる" : "VD: apple"}
-            className={`${baseInput} py-4 text-xl font-bold placeholder:font-normal`}
+            className={`${baseInput} py-2.5 text-base font-bold placeholder:font-normal`}
           />
         </div>
 
@@ -110,7 +107,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
               type="text"
               autoComplete="off"
               placeholder="VD: 桜 hoặc 食べる hoặc 一期一会"
-              className={`${baseInput} py-4 text-xl font-bold placeholder:font-normal text-sakura-light`}
+              className={`${baseInput} py-2.5 text-base font-bold placeholder:font-normal text-red-600`}
             />
           </div>
         )}
@@ -126,14 +123,14 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             type="text"
             autoComplete="off"
             placeholder={isJapanese ? "VD: さくら / sakura" : "/ˈæp.əl/"}
-            className={`${baseInput} py-3.5 font-medium text-indigo-light`}
+            className={`${baseInput} py-2.5 font-medium text-[#4255FF]`}
           />
         </div>
 
         {/* 3. Nghĩa tiếng Việt */}
         <div>
           <label className={labelClass} htmlFor="card-translation">
-            Nghĩa tiếng Việt <span className="text-rose">*</span>
+            Nghĩa tiếng Việt <span className="text-red-500">*</span>
           </label>
           <input
             id="card-translation"
@@ -142,7 +139,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             required
             autoComplete="off"
             placeholder={isJapanese ? "VD: Hoa anh đào" : "VD: Quả táo"}
-            className={`${baseInput} py-3.5 font-medium`}
+            className={`${baseInput} py-2.5 font-medium`}
           />
         </div>
 
@@ -157,10 +154,9 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             type="text"
             list="pos-suggestions"
             placeholder={isJapanese ? "VD: Danh từ (名詞), Động từ N1..." : "VD: NOUN, VERB, ADJ..."}
-            className={`${baseInput} py-3.5 font-medium`}
+            className={`${baseInput} py-2.5 font-medium`}
           />
           <datalist id="pos-suggestions">
-            {/* Tiếng Nhật */}
             <option value="Danh từ (名詞)" />
             <option value="Động từ nhóm 1 (五段動詞)" />
             <option value="Động từ nhóm 2 (一段動詞)" />
@@ -172,7 +168,6 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             <option value="Thành ngữ (慣用句)" />
             <option value="Trợ từ (助詞)" />
             <option value="Liên từ (接続詞)" />
-            {/* Tiếng Anh */}
             <option value="NOUN" />
             <option value="VERB" />
             <option value="ADJ" />
@@ -187,7 +182,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
         {/* 5. Hình ảnh nghĩa cốt lõi */}
         <div>
           <label className={labelClass} htmlFor="card-imageUrl">
-            🖼️ Hình ảnh nghĩa cốt lõi (Link URL)
+            🖼️ Hình ảnh minh họa (Link URL)
           </label>
           <input
             id="card-imageUrl"
@@ -196,27 +191,25 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             autoComplete="off"
             placeholder="https://images.unsplash.com/... (tùy chọn)"
             onChange={(e) => setImageUrlPreview(e.target.value.trim())}
-            className={`${baseInput} py-3.5 text-xs font-mono`}
+            className={`${baseInput} py-2.5 text-xs font-mono`}
           />
         </div>
 
-        {/* Image preview nếu người dùng dán URL ảnh */}
+        {/* Image preview nếu có */}
         {imageUrlPreview && (
-          <div className="md:col-span-2 rounded-2xl border-2 border-indigo/30 bg-surface/30 p-3 flex items-center gap-4">
-            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-black/20">
+          <div className="md:col-span-2 rounded-xl border border-[#E2E4E9] bg-[#F6F7FB] p-2.5 flex items-center gap-3">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[#E2E4E9] bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrlPreview}
-                alt="Xem trước hình ảnh nghĩa cốt lõi"
+                alt="Xem trước ảnh"
                 className="h-full w-full object-cover"
-                onError={() => {
-                  /* Bỏ qua lỗi load ảnh */
-                }}
+                onError={() => {}}
               />
             </div>
-            <div className="text-xs text-foreground-muted">
-              <span className="font-bold text-foreground">🖼️ Xem trước hình ảnh nghĩa cốt lõi:</span>
-              <p className="line-clamp-2 font-mono text-[11px] text-foreground-dim mt-0.5">{imageUrlPreview}</p>
+            <div className="text-xs text-[#586380]">
+              <span className="font-bold text-[#1A1D28]">Xem trước hình ảnh:</span>
+              <p className="line-clamp-1 font-mono text-[11px] text-[#939BB4] mt-0.5">{imageUrlPreview}</p>
             </div>
           </div>
         )}
@@ -232,17 +225,17 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             rows={2}
             placeholder={
               isJapanese
-                ? "VD: Biểu tượng mùa xuân nước Nhật, dùng diễn tả vẻ đẹp rực rỡ nhưng mong manh, ngắn ngủi..."
+                ? "VD: Biểu tượng mùa xuân nước Nhật, vẻ đẹp rực rỡ nhưng mong manh..."
                 : "VD: A round fruit with red or green skin and firm white flesh..."
             }
-            className={`${baseInput} resize-none py-3.5`}
+            className={`${baseInput} resize-none py-2.5`}
           />
         </div>
 
         {/* 7. Câu ví dụ thực tế */}
         <div className="md:col-span-2">
           <label className={labelClass} htmlFor="card-example">
-            💬 {isJapanese ? "Câu ví dụ thực tế (kèm dịch nghĩa)" : "Ví dụ thực tế"} (tùy chọn)
+            💬 {isJapanese ? "Câu ví dụ thực tế (kèm dịch)" : "Ví dụ thực tế"} (tùy chọn)
           </label>
           <textarea
             id="card-example"
@@ -250,20 +243,20 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             rows={2}
             placeholder={
               isJapanese
-                ? "VD: 春になると桜がとても綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.)"
+                ? "VD: 春になると桜が綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.)"
                 : "VD: I ate a sweet red apple for breakfast."
             }
-            className={`${baseInput} resize-none py-3.5`}
+            className={`${baseInput} resize-none py-2.5`}
           />
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-5 flex items-center gap-3">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 cursor-pointer rounded-2xl border border-border py-4 text-base font-bold text-foreground-muted hover:bg-surface-hover hover:text-foreground transition-all active:scale-[0.98]"
+            className="flex-1 cursor-pointer rounded-xl border border-[#E2E4E9] bg-white py-3 text-sm font-bold text-[#586380] hover:bg-[#EDEFF4] transition-all"
           >
             ✕ Hủy bỏ
           </button>
@@ -273,7 +266,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
           disabled={submitting}
           className={`${
             onClose ? "flex-[2]" : "w-full"
-          } cursor-pointer rounded-2xl bg-gradient-to-r from-sakura to-indigo py-4 text-lg font-bold text-white transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo/30 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none`}
+          } cursor-pointer rounded-xl bg-[#4255FF] py-3 text-sm font-bold text-white transition-all hover:bg-[#3344DD] active:scale-98 disabled:opacity-50`}
         >
           {submitting ? "⏳ Đang lưu..." : "💾 Lưu Thẻ"}
         </button>

@@ -68,7 +68,6 @@ export function MonthlyTracker() {
 
   const monthWeeks: (Date | null)[][] = [];
   let currentMonthWeek: (Date | null)[] = [];
-  // (getDay(viewMonthStart) + 6) % 7 -> empty leading cells before Monday
   const leadingEmpty = (getDay(viewMonthStart) + 6) % 7;
   for (let i = 0; i < leadingEmpty; i++) {
     currentMonthWeek.push(null);
@@ -92,53 +91,53 @@ export function MonthlyTracker() {
       {/* ─── Cột bên trái: Theo dõi học tập & Thống kê ─── */}
       <div className="w-full lg:w-[320px] xl:w-[360px] shrink-0 space-y-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold gradient-text flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1A1D28] flex items-center gap-2">
             <span>📅</span>
             <span>Theo dõi học tập</span>
           </h1>
-          <p className="text-xs sm:text-sm text-foreground-muted mt-1.5">
+          <p className="text-xs sm:text-sm text-[#586380] mt-1">
             Ghi nhận tiến độ học và duy trì chuỗi ngày rèn luyện.
           </p>
         </div>
 
         {/* 2 thẻ thống kê: Ngày đã học & Ngày còn lại */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5">
-          <div className="card p-5 text-center transition-all hover:border-emerald/40 hover:shadow-lg hover:shadow-emerald/5">
-            <p className="text-3xl sm:text-4xl font-extrabold text-emerald">{monthStreakCount}</p>
-            <p className="text-sm font-bold text-foreground mt-1">
+          <div className="rounded-2xl border border-[#E2E4E9] bg-white p-5 text-center shadow-xs">
+            <p className="text-3xl sm:text-4xl font-extrabold text-[#23B26D]">{monthStreakCount}</p>
+            <p className="text-sm font-bold text-[#1A1D28] mt-1">
               Ngày đã học tháng này
             </p>
-            <p className="text-xs text-foreground-muted mt-0.5">
+            <p className="text-xs text-[#586380] mt-0.5">
               Tổng cộng: {totalStreakCount} ngày
             </p>
           </div>
 
-          <div className="card p-5 text-center relative overflow-hidden transition-all hover:border-indigo/40 hover:shadow-lg hover:shadow-indigo/5">
-            <p className="text-3xl sm:text-4xl font-extrabold gradient-text">{remainingDays}</p>
-            <p className="text-sm font-bold text-foreground mt-1">Ngày còn lại</p>
-            <p className="text-xs text-foreground-muted mt-0.5">
+          <div className="rounded-2xl border border-[#E2E4E9] bg-white p-5 text-center shadow-xs">
+            <p className="text-3xl sm:text-4xl font-extrabold text-[#4255FF]">{remainingDays}</p>
+            <p className="text-sm font-bold text-[#1A1D28] mt-1">Ngày còn lại</p>
+            <p className="text-xs text-[#586380] mt-0.5">
               Cuối tháng ({lastDayOfMonth}) - Hiện tại ({currentDay})
             </p>
           </div>
         </div>
 
         {/* Chú thích màu sắc (Legend) */}
-        <div className="card p-4">
-          <p className="text-xs font-bold text-foreground-muted mb-3 uppercase tracking-wider">
+        <div className="rounded-2xl border border-[#E2E4E9] bg-white p-4 shadow-xs">
+          <p className="text-xs font-bold text-[#586380] mb-3 uppercase tracking-wider">
             Chú thích lịch
           </p>
           <div className="flex flex-col gap-2.5 text-xs">
             <div className="flex items-center gap-2.5">
-              <span className="w-3.5 h-3.5 rounded-md bg-emerald-500 shadow-sm shadow-emerald-500/40 shrink-0" />
-              <span className="font-medium text-foreground">Đã học (điểm danh ngày)</span>
+              <span className="w-3.5 h-3.5 rounded-md bg-[#23B26D] shadow-xs shrink-0" />
+              <span className="font-medium text-[#1A1D28]">Đã học (điểm danh ngày)</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <span className="w-3.5 h-3.5 rounded-md bg-indigo/20 ring-2 ring-indigo/40 shrink-0" />
-              <span className="font-medium text-foreground">Hôm nay</span>
+              <span className="w-3.5 h-3.5 rounded-md bg-blue-100 ring-2 ring-[#4255FF] shrink-0" />
+              <span className="font-medium text-[#1A1D28]">Hôm nay</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <span className="w-3.5 h-3.5 rounded-md bg-surface border border-border shrink-0" />
-              <span className="font-medium text-foreground-muted">Chưa học</span>
+              <span className="w-3.5 h-3.5 rounded-md bg-[#F6F7FB] border border-[#E2E4E9] shrink-0" />
+              <span className="font-medium text-[#586380]">Chưa học</span>
             </div>
           </div>
         </div>
@@ -146,9 +145,9 @@ export function MonthlyTracker() {
 
       {/* ─── Cột bên phải: Lịch tháng ─── */}
       <div className="flex-1 w-full">
-        <div className="card p-5 sm:p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#E2E4E9] bg-white p-5 sm:p-6 shadow-xs">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base sm:text-lg font-bold flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-[#1A1D28] flex items-center gap-2">
               <span>🗓️</span>
               <span>Tháng {format(viewMonthDate, "MM/yyyy")}</span>
             </h2>
@@ -156,7 +155,7 @@ export function MonthlyTracker() {
               <button
                 type="button"
                 onClick={() => setViewMonthDate((prev) => subMonths(prev, 1))}
-                className="p-1.5 rounded-lg hover:bg-surface-hover border border-border text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[#EDEFF4] border border-[#E2E4E9] text-[#586380] hover:text-[#1A1D28] transition-colors cursor-pointer"
                 title="Tháng trước"
                 aria-label="Tháng trước"
               >
@@ -177,7 +176,7 @@ export function MonthlyTracker() {
               <button
                 type="button"
                 onClick={() => setViewMonthDate(new Date())}
-                className="px-2.5 py-1 text-xs font-medium rounded-lg hover:bg-surface-hover border border-border text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg hover:bg-[#EDEFF4] border border-[#E2E4E9] text-[#586380] hover:text-[#1A1D28] transition-colors cursor-pointer"
                 title="Về tháng hiện tại"
               >
                 Hôm nay
@@ -185,7 +184,7 @@ export function MonthlyTracker() {
               <button
                 type="button"
                 onClick={() => setViewMonthDate((prev) => addMonths(prev, 1))}
-                className="p-1.5 rounded-lg hover:bg-surface-hover border border-border text-foreground-muted hover:text-foreground transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[#EDEFF4] border border-[#E2E4E9] text-[#586380] hover:text-[#1A1D28] transition-colors cursor-pointer"
                 title="Tháng sau"
                 aria-label="Tháng sau"
               >
@@ -210,7 +209,7 @@ export function MonthlyTracker() {
             {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
               <div
                 key={d}
-                className="font-semibold text-foreground-muted py-1.5 text-xs sm:text-sm"
+                className="font-bold text-[#586380] py-1.5 text-xs sm:text-sm"
               >
                 {d}
               </div>
@@ -238,10 +237,10 @@ export function MonthlyTracker() {
                       transition-all duration-200 cursor-pointer select-none relative
                       ${
                         selected
-                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-105"
+                          ? "bg-[#23B26D] text-white shadow-xs scale-105"
                           : isToday
-                            ? "bg-indigo/20 text-indigo-light ring-2 ring-indigo/40"
-                            : "bg-surface/80 hover:bg-surface-hover text-foreground border border-border/40"
+                            ? "bg-blue-100 text-[#4255FF] ring-2 ring-[#4255FF]"
+                            : "bg-[#F6F7FB] hover:bg-[#EDEFF4] text-[#1A1D28] border border-[#E2E4E9]"
                       }
                     `}
                     title={`${format(d, "dd/MM/yyyy")}: ${

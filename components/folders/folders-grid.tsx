@@ -35,10 +35,10 @@ export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
 
   if (folders.length === 0) {
     return (
-      <div className="glass-card mx-auto max-w-md py-20 text-center">
-        <div className="mb-4 text-5xl">📁</div>
-        <p className="text-foreground-muted">Chưa có thư mục nào</p>
-        <p className="mt-1 text-sm text-foreground-dim">Bấm nút &quot;Tạo thư mục mới&quot; để bắt đầu!</p>
+      <div className="mx-auto max-w-md rounded-2xl border border-[#E2E4E9] bg-white py-16 text-center shadow-xs">
+        <div className="mb-3 text-4xl">📁</div>
+        <p className="font-bold text-[#1A1D28]">Chưa có thư mục nào</p>
+        <p className="mt-1 text-xs text-[#586380]">Bấm nút &quot;Tạo Thư Mục Mới&quot; để bắt đầu!</p>
       </div>
     );
   }
@@ -46,14 +46,14 @@ export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
   return (
     <div className="space-y-6">
       {/* Bộ lọc trạng thái thư mục */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-border/60 pb-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E4E9] pb-3">
         <button
           type="button"
           onClick={() => setFilter("all")}
-          className={`cursor-pointer rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs ${
+          className={`cursor-pointer rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
             filter === "all"
-              ? "bg-foreground text-background shadow-sm"
-              : "bg-surface hover:bg-surface-hover text-foreground-muted hover:text-foreground border border-border/60"
+              ? "bg-[#1A1D28] text-white shadow-xs"
+              : "bg-white hover:bg-[#EDEFF4] text-[#586380] hover:text-[#1A1D28] border border-[#E2E4E9]"
           }`}
         >
           Tất cả ({counts.all})
@@ -62,51 +62,51 @@ export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
         <button
           type="button"
           onClick={() => setFilter("learning")}
-          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs ${
+          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
             filter === "learning"
-              ? "bg-indigo text-white shadow-indigo/25 shadow-md"
-              : "bg-indigo/10 hover:bg-indigo/20 text-indigo-light border border-indigo/20"
+              ? "bg-[#4255FF] text-white shadow-xs"
+              : "bg-white hover:bg-blue-50 text-[#4255FF] border border-blue-200"
           }`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#4255FF]" />
           <span>Đang học ({counts.learning})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setFilter("completed")}
-          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs ${
+          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
             filter === "completed"
-              ? "bg-emerald text-white shadow-emerald/25 shadow-md"
-              : "bg-emerald/10 hover:bg-emerald/20 text-emerald border border-emerald/20"
+              ? "bg-[#23B26D] text-white shadow-xs"
+              : "bg-white hover:bg-emerald-50 text-[#23B26D] border border-emerald-200"
           }`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#23B26D]" />
           <span>Đã hoàn thành ({counts.completed})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setFilter("not_started")}
-          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs ${
+          className={`cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
             filter === "not_started"
-              ? "bg-amber-500 text-white shadow-amber-500/25 shadow-md"
-              : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20"
+              ? "bg-[#FFCD1F] text-[#1A1D28] shadow-xs"
+              : "bg-white hover:bg-amber-50 text-amber-700 border border-amber-200"
           }`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#FFCD1F]" />
           <span>Chưa học ({counts.not_started})</span>
         </button>
       </div>
 
       {filteredFolders.length === 0 ? (
-        <div className="glass-card py-12 text-center border-dashed border-2 border-border/50">
-          <p className="text-sm font-semibold text-foreground-muted">
+        <div className="rounded-2xl border-2 border-dashed border-[#E2E4E9] bg-white py-12 text-center">
+          <p className="text-sm font-semibold text-[#586380]">
             Không có thư mục nào ở trạng thái này.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredFolders.map((folder) => (
             <FolderCard key={folder.id} folder={folder} />
           ))}
