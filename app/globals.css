@@ -40,6 +40,88 @@
   --canvas-bg: #FFFFFF;
 }
 
+/* ============================================================
+   QUIZLET DARK THEME
+   Anti-glare, high contrast, WCAG 2.1 AA compliant
+   ============================================================ */
+[data-theme="dark"],
+.dark {
+  --background: #0A092D;
+  --background-secondary: #131729;
+  --surface: #1A1D28;
+  --surface-hover: #222845;
+  --border: #2E3856;
+  --border-light: #3D4575;
+
+  --foreground: #F6F7FB;
+  --foreground-muted: #9FA8DA;
+  --foreground-dim: #6B75A8;
+
+  --sakura: #5B6BFF;
+  --sakura-light: #818CF8;
+  --sakura-glow: rgba(91, 107, 255, 0.25);
+
+  --indigo: #5B6BFF;
+  --indigo-light: #818CF8;
+  --indigo-glow: rgba(91, 107, 255, 0.25);
+
+  --emerald: #23B26D;
+  --emerald-light: #34D399;
+  --emerald-glow: rgba(35, 178, 109, 0.2);
+
+  --rose: #FF7873;
+  --rose-glow: rgba(255, 120, 115, 0.2);
+
+  --gold: #FFCD1F;
+  --gold-glow: rgba(255, 205, 31, 0.2);
+
+  --glass-bg: rgba(26, 29, 40, 0.95);
+  --glass-bg-hover: rgba(34, 40, 69, 0.9);
+  --canvas-bg: #1A1D28;
+}
+
+/* Tự động đảo màu các utility class cứng trong Dark Mode */
+[data-theme="dark"] header,
+.dark header {
+  background-color: rgba(16, 18, 29, 0.95) !important;
+  border-color: #2E3856 !important;
+}
+
+[data-theme="dark"] .bg-white,
+.dark .bg-white {
+  background-color: #1A1D28 !important;
+}
+
+[data-theme="dark"] .border-\[\#E2E4E9\],
+.dark .border-\[\#E2E4E9\] {
+  border-color: #2E3856 !important;
+}
+
+[data-theme="dark"] .text-\[\#1A1D28\],
+.dark .text-\[\#1A1D28\] {
+  color: #F6F7FB !important;
+}
+
+[data-theme="dark"] .text-\[\#586380\],
+.dark .text-\[\#586380\] {
+  color: #9FA8DA !important;
+}
+
+[data-theme="dark"] .bg-\[\#F6F7FB\],
+.dark .bg-\[\#F6F7FB\] {
+  background-color: #0A092D !important;
+}
+
+[data-theme="dark"] .bg-\[\#EDEFF4\],
+.dark .bg-\[\#EDEFF4\] {
+  background-color: #222845 !important;
+}
+
+[data-theme="dark"] .hover\:bg-\[\#EDEFF4\]:hover,
+.dark .hover\:bg-\[\#EDEFF4\]:hover {
+  background-color: #2E3856 !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);

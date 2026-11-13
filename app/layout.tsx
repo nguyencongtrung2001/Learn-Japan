@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/header";
+import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/components/language-provider";
 import { BackgroundProvider } from "@/components/background-provider";
 import BackgroundVideo from "@/components/background-video";
 import BackgroundSelector from "@/components/background-selector";
@@ -31,14 +33,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="vi"
       className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('app_theme');
+                  if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.classList.remove('dark');
+                  }
+                  var l = localStorage.getItem('app_language');
+                  if (l) document.documentElement.lang = l;
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-transparent">
-        <BackgroundProvider>
-          <BackgroundVideo />
-          <Header />
-          <main className="flex-1 relative z-10">{children}</main>
-          <BackgroundSelector />
-        </BackgroundProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <BackgroundProvider>
+              <BackgroundVideo />
+              <Header />
+              <main className="flex-1 relative z-10">{children}</main>
+              <BackgroundSelector />
+            </BackgroundProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
