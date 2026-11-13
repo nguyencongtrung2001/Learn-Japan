@@ -18,6 +18,9 @@ import { CardsHeader } from "./cards-header";
 import { EmptyCards } from "./empty-cards";
 import { VocabGrid } from "./vocab-grid";
 import { TransferControls } from "./transfer-controls";
+import { ViewSwitcher, type FolderViewMode } from "./view-switcher";
+import { MinimalFlashcardPlayer } from "./minimal-flashcard-player";
+import { SplitFlashcardView } from "./split-flashcard-view";
 
 interface FolderDetailProps {
   folder: Folder;
@@ -38,6 +41,41 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const [editing, setEditing] = useState(false);
   const [editingCard, setEditingCard] = useState<CardListItem | null>(null);
   const [now] = useState(serverNow);
+
+  // ---------- View Mode state (Giao diện 1: Classic | Giao diện 2: Minimalist | Split-View) ----------
+  const [viewMode, setViewMode] = useState<FolderViewMode>(() => {
+    if (typeof window === "undefined") return "classic";
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlView = urlParams.get("view");
+      if (urlView === "minimal" || urlView === "split" || urlView === "classic") {
+        return urlView;
+      }
+      const saved = localStorage.getItem("preferred_folder_view");
+      if (saved === "minimal" || saved === "split") {
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return "classic";
+  });
+
+  const handleChangeViewMode = (mode: FolderViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("preferred_folder_view", mode);
+      const url = new URL(window.location.href);
+      if (mode === "classic") {
+        url.searchParams.delete("view");
+      } else {
+        url.searchParams.set("view", mode);
+      }
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // ignore
+    }
+  };
 
   // ---------- Transfer (multi‑select) state ----------
   const [selecting, setSelecting] = useState(false);
@@ -184,8 +222,67 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
     [folderId, commitCards]
   );
 
+  if (viewMode === "minimal") {
+    return (
+      <div className="space-y-4 py-4 min-h-screen" style={{ backgroundColor: "#F6F7FB" }}>
+        <div className="flex items-center justify-between px-4 max-w-5xl mx-auto">
+          <ViewSwitcher
+            currentMode={viewMode}
+            onChangeMode={handleChangeViewMode}
+            cardsCount={cards.length}
+          />
+        </div>
+        <MinimalFlashcardPlayer
+          folder={folder}
+          cards={cards}
+          onBackToClassic={() => handleChangeViewMode("classic")}
+        />
+      </div>
+    );
+  }
+
+  if (viewMode === "split") {
+    return (
+      <div className="space-y-4 py-4 min-h-screen" style={{ backgroundColor: "#F6F7FB" }}>
+        <div className="flex items-center justify-between px-4 max-w-7xl mx-auto">
+          <ViewSwitcher
+            currentMode={viewMode}
+            onChangeMode={handleChangeViewMode}
+            cardsCount={cards.length}
+          />
+        </div>
+        <SplitFlashcardView
+          folder={folder}
+          cards={cards}
+          onBackToClassic={() => handleChangeViewMode("classic")}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 sm:py-12">
+      {/* ══════ BỘ CHUYỂN ĐỔI GIAO DIỆN (VIEW SWITCHER) ══════ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border/60">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🎛️</span>
+          <div>
+            <h2 className="text-sm font-bold text-foreground">
+              Giao diện 1: Quản lý thư mục & Danh sách
+            </h2>
+            <p className="text-xs text-foreground-dim">
+              Quản lý thẻ, sửa/xóa, nhập Excel và danh sách dạng lưới
+            </p>
+          </div>
+        </div>
+
+        <ViewSwitcher
+          currentMode={viewMode}
+          onChangeMode={handleChangeViewMode}
+          cardsCount={cards.length}
+        />
+      </div>
+
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* ═══════ SIDEBAR ═══════ */}
         <aside className="w-full shrink-0 lg:w-64 xl:w-72">
@@ -197,6 +294,29 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               dueCount={dueCount}
               editing={editing}
             />
+
+            {/* Nút chuyển nhanh sang Giao diện 2 (Flashcard Tối giản) */}
+            {cards.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleChangeViewMode("minimal")}
+                  className="w-full cursor-pointer rounded-2xl bg-[#4255FF] text-white px-4 py-3 text-sm font-bold shadow-lg shadow-[#4255FF]/25 hover:bg-[#3344dd] transition-all hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-2"
+                >
+                  <span>🗂️</span>
+                  <span>Học Flashcard Tối Giản</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleChangeViewMode("split")}
+                  className="w-full cursor-pointer rounded-xl bg-surface border border-border px-3 py-2 text-xs font-semibold text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>📑</span>
+                  <span>Chia Đôi Màn Hình (Split-View)</span>
+                </button>
+              </div>
+            )}
 
             {/* Transfer controls */}
             <div className="flex flex-col gap-2">
