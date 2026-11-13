@@ -224,7 +224,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
   if (viewMode === "minimal") {
     return (
-      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col" style={{ backgroundColor: "#F6F7FB" }}>
+      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col bg-transparent">
         <MinimalFlashcardPlayer
           folder={folder}
           cards={cards}
@@ -243,7 +243,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
   if (viewMode === "split") {
     return (
-      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col" style={{ backgroundColor: "#F6F7FB" }}>
+      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col bg-transparent">
         <SplitFlashcardView
           folder={folder}
           cards={cards}

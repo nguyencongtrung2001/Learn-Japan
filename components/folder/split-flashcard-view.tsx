@@ -50,10 +50,7 @@ export function SplitFlashcardView({
   }, [activeIndex]);
 
   return (
-    <div
-      className="h-full p-2 sm:p-4 overflow-hidden"
-      style={{ backgroundColor: "#F6F7FB" }}
-    >
+    <div className="h-full p-2 sm:p-4 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto h-full">
         {/* Bố cục Split-View 3:7 (Màn hình rộng / Tablet) */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6 items-start h-full">

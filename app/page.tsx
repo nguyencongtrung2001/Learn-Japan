@@ -11,12 +11,6 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12 xl:gap-16">
           {/* ═══════ CỘT TRÁI: TIÊU ĐỀ & HÀNH ĐỘNG ═══════ */}
           <div className="flex flex-col items-center text-center lg:col-span-7 lg:items-start lg:text-left">
-            {/* Top pill badge */}
-            <div className="animate-fade-in mb-4 inline-flex items-center gap-2 rounded-full border border-[#E2E4E9] bg-white px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#4255FF] shadow-sm">
-              <span className="animate-float inline-block">🚀</span>
-              Spaced Repetition • Ghi nhớ thông minh
-            </div>
-
             {/* Main Hero Headline */}
             <h1 className="animate-fade-in-up mb-4 text-3xl sm:text-5xl lg:text-[3.25rem] xl:text-[3.5rem] font-black tracking-tight leading-[1.12] text-[#1A1D28]">
               Học Từ Vựng Nhanh, <br />

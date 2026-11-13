@@ -331,11 +331,11 @@ export function MinimalFlashcardPlayer({
 
   return (
     <div
-      className={`h-full flex flex-col justify-between selection:bg-[#4255FF]/20 overflow-hidden ${
+      className={`h-full flex flex-col justify-between selection:bg-[#4255FF]/20 overflow-hidden bg-transparent ${
         isSplitView ? "" : "max-w-5xl mx-auto px-4 sm:px-6 py-1.5 sm:py-2"
       }`}
       style={{
-        backgroundColor: isSplitView ? "transparent" : "#F6F7FB",
+        backgroundColor: "transparent",
         color: "#1A1D28",
       }}
     >
@@ -662,7 +662,7 @@ export function MinimalFlashcardPlayer({
           KHU VỰC 3: BOTTOM CONTROL BAR (GỌN GÀNG, DỊCH LÊN TRÊN)
           ════════════════════════════════════════════════════════════ */}
       <footer
-        className="w-full pt-1 sm:pt-2 pb-1.5 transition-all shrink-0 bg-[#F6F7FB]/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-gray-200/80 z-20"
+        className="w-full pt-1 sm:pt-2 pb-1.5 transition-all shrink-0 bg-transparent z-20"
       >
         <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
           {/* Cụm trái: Nút Play (Tự động phát slideshow) */}
