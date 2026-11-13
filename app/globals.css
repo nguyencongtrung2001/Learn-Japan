@@ -85,10 +85,11 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  background: var(--background);
 }
 
 body {
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
   font-family: var(--font-sans, "Inter", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif);
   min-height: 100vh;

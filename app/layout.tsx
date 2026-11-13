@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Header from "@/components/header";
+import { BackgroundProvider } from "@/components/background-provider";
+import BackgroundVideo from "@/components/background-video";
+import BackgroundSelector from "@/components/background-selector";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Q — Master Vocabulary",
+  title: "Quizlet — Master Vocabulary",
   description:
     "Ứng dụng học từ vựng tiếng Anh & tiếng Nhật. Luyện tập với Flashcard, Spaced Repetition và Quiz tương tác.",
   keywords: [
@@ -29,9 +32,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="vi"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 relative">{children}</main>
+      <body className="min-h-full flex flex-col bg-transparent">
+        <BackgroundProvider>
+          <BackgroundVideo />
+          <Header />
+          <main className="flex-1 relative z-10">{children}</main>
+          <BackgroundSelector />
+        </BackgroundProvider>
       </body>
     </html>
   );

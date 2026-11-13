@@ -30,8 +30,8 @@ export default function Header() {
             <div className="relative w-8 h-8 rounded-xl overflow-hidden transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
               <AppLogo className="w-full h-full" />
             </div>
-            <span className="text-lg font-black text-[#1A1D28] tracking-tight">
-              Q
+            <span className="text-xl font-black text-[#4255FF] tracking-tight">
+              Quizlet
             </span>
           </Link>
 

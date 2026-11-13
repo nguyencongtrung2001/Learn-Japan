@@ -9,12 +9,14 @@ interface SplitFlashcardViewProps {
   folder: Folder;
   cards: CardListItem[];
   onBackToClassic?: () => void;
+  viewSwitcher?: React.ReactNode;
 }
 
 export function SplitFlashcardView({
   folder,
   cards,
   onBackToClassic,
+  viewSwitcher,
 }: SplitFlashcardViewProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,14 +51,14 @@ export function SplitFlashcardView({
 
   return (
     <div
-      className="min-h-[calc(100vh-5rem)] p-4 sm:p-6"
+      className="h-full p-2 sm:p-4 overflow-hidden"
       style={{ backgroundColor: "#F6F7FB" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto h-full">
         {/* Bố cục Split-View 3:7 (Màn hình rộng / Tablet) */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6 items-start h-full">
           {/* ══════ CỘT TRÁI (30%): DANH SÁCH TOÀN BỘ TỪ VỰNG DẠNG LIST ══════ */}
-          <aside className="lg:col-span-3 bg-white rounded-3xl border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col max-h-[82vh] lg:sticky lg:top-20">
+          <aside className="lg:col-span-3 bg-white rounded-3xl border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] overflow-hidden">
             {/* Header danh sách & Tìm kiếm */}
             <div className="space-y-3 pb-3 border-b border-gray-100">
               <div className="flex items-center justify-between">
@@ -138,7 +140,7 @@ export function SplitFlashcardView({
           </aside>
 
           {/* ══════ CỘT PHẢI (70%): SÂN KHẤU FLASHCARD ĐANG LẬT ══════ */}
-          <main className="lg:col-span-7">
+          <main className="lg:col-span-7 h-[calc(100vh-6rem)] overflow-hidden">
             <MinimalFlashcardPlayer
               folder={folder}
               cards={cards}
@@ -146,6 +148,7 @@ export function SplitFlashcardView({
               onCardChange={(idx) => setActiveIndex(idx)}
               onBackToClassic={onBackToClassic}
               isSplitView={true}
+              viewSwitcher={viewSwitcher}
             />
           </main>
         </div>

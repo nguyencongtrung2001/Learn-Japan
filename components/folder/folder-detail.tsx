@@ -224,18 +224,18 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
   if (viewMode === "minimal") {
     return (
-      <div className="space-y-4 py-4 min-h-screen" style={{ backgroundColor: "#F6F7FB" }}>
-        <div className="flex items-center justify-between px-4 max-w-5xl mx-auto">
-          <ViewSwitcher
-            currentMode={viewMode}
-            onChangeMode={handleChangeViewMode}
-            cardsCount={cards.length}
-          />
-        </div>
+      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col" style={{ backgroundColor: "#F6F7FB" }}>
         <MinimalFlashcardPlayer
           folder={folder}
           cards={cards}
           onBackToClassic={() => handleChangeViewMode("classic")}
+          viewSwitcher={
+            <ViewSwitcher
+              currentMode={viewMode}
+              onChangeMode={handleChangeViewMode}
+              cardsCount={cards.length}
+            />
+          }
         />
       </div>
     );
@@ -243,50 +243,29 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
   if (viewMode === "split") {
     return (
-      <div className="space-y-4 py-4 min-h-screen" style={{ backgroundColor: "#F6F7FB" }}>
-        <div className="flex items-center justify-between px-4 max-w-7xl mx-auto">
-          <ViewSwitcher
-            currentMode={viewMode}
-            onChangeMode={handleChangeViewMode}
-            cardsCount={cards.length}
-          />
-        </div>
+      <div className="h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] overflow-hidden flex flex-col" style={{ backgroundColor: "#F6F7FB" }}>
         <SplitFlashcardView
           folder={folder}
           cards={cards}
           onBackToClassic={() => handleChangeViewMode("classic")}
+          viewSwitcher={
+            <ViewSwitcher
+              currentMode={viewMode}
+              onChangeMode={handleChangeViewMode}
+              cardsCount={cards.length}
+            />
+          }
         />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 sm:py-12">
-      {/* ══════ BỘ CHUYỂN ĐỔI GIAO DIỆN (VIEW SWITCHER) ══════ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-border/60">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🎛️</span>
-          <div>
-            <h2 className="text-sm font-bold text-foreground">
-              Giao diện 1: Quản lý thư mục & Danh sách
-            </h2>
-            <p className="text-xs text-foreground-dim">
-              Quản lý thẻ, sửa/xóa, nhập Excel và danh sách dạng lưới
-            </p>
-          </div>
-        </div>
-
-        <ViewSwitcher
-          currentMode={viewMode}
-          onChangeMode={handleChangeViewMode}
-          cardsCount={cards.length}
-        />
-      </div>
-
+    <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
       <div className="flex flex-col gap-8 lg:flex-row">
         {/* ═══════ SIDEBAR ═══════ */}
         <aside className="w-full shrink-0 lg:w-64 xl:w-72">
-          <div className="space-y-5 lg:sticky lg:top-24">
+          <div className="space-y-5 lg:sticky lg:top-20">
             <FolderInfoCard
               folder={folder}
               total={cards.length}
@@ -294,29 +273,6 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               dueCount={dueCount}
               editing={editing}
             />
-
-            {/* Nút chuyển nhanh sang Giao diện 2 (Flashcard Tối giản) */}
-            {cards.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleChangeViewMode("minimal")}
-                  className="w-full cursor-pointer rounded-2xl bg-[#4255FF] text-white px-4 py-3 text-sm font-bold shadow-lg shadow-[#4255FF]/25 hover:bg-[#3344dd] transition-all hover:scale-[1.02] active:scale-98 flex items-center justify-center gap-2"
-                >
-                  <span>🗂️</span>
-                  <span>Học Flashcard Tối Giản</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleChangeViewMode("split")}
-                  className="w-full cursor-pointer rounded-xl bg-surface border border-border px-3 py-2 text-xs font-semibold text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-all flex items-center justify-center gap-1.5"
-                >
-                  <span>📑</span>
-                  <span>Chia Đôi Màn Hình (Split-View)</span>
-                </button>
-              </div>
-            )}
 
             {/* Transfer controls */}
             <div className="flex flex-col gap-2">
@@ -411,6 +367,8 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             }}
             showCardForm={showCardForm}
             showBulkImport={showBulkImport}
+            viewMode={viewMode}
+            onChangeMode={handleChangeViewMode}
           />
 
           {cards.length === 0 ? (

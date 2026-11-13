@@ -12,6 +12,7 @@ interface MinimalFlashcardPlayerProps {
   externalIndex?: number;
   onCardChange?: (index: number) => void;
   isSplitView?: boolean;
+  viewSwitcher?: React.ReactNode;
 }
 
 export function MinimalFlashcardPlayer({
@@ -21,6 +22,7 @@ export function MinimalFlashcardPlayer({
   externalIndex,
   onCardChange,
   isSplitView = false,
+  viewSwitcher,
 }: MinimalFlashcardPlayerProps) {
   // State
   const [internalIndex, setInternalIndex] = useState(externalIndex ?? 0);
@@ -329,8 +331,8 @@ export function MinimalFlashcardPlayer({
 
   return (
     <div
-      className={`min-h-[calc(100vh-5rem)] flex flex-col justify-between selection:bg-[#4255FF]/20 ${
-        isSplitView ? "" : "max-w-5xl mx-auto px-4 sm:px-6 py-4"
+      className={`h-full flex flex-col justify-between selection:bg-[#4255FF]/20 overflow-hidden ${
+        isSplitView ? "" : "max-w-5xl mx-auto px-4 sm:px-6 py-1.5 sm:py-2"
       }`}
       style={{
         backgroundColor: isSplitView ? "transparent" : "#F6F7FB",
@@ -338,17 +340,17 @@ export function MinimalFlashcardPlayer({
       }}
     >
       {/* ════════════════════════════════════════════════════════════
-          KHU VỰC 1: TOP BAR (10 - 15% KHÔNG GIAN DỌC)
+          KHU VỰC 1: TOP BAR (GỌN GÀNG, KHÔNG TỐN DIỆN TÍCH)
           ════════════════════════════════════════════════════════════ */}
-      <header className="w-full pb-4 space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          {/* Top-Left: [< Quay lại] & Breadcrumb */}
+      <header className="w-full pb-1 sm:pb-2 space-y-1.5 shrink-0">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          {/* Top-Left: [< Quay lại] & ViewSwitcher & Breadcrumb */}
           <div className="flex items-center gap-2 min-w-0">
             {onBackToClassic && (
               <button
                 type="button"
                 onClick={onBackToClassic}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-[#586380] hover:text-[#1A1D28] hover:bg-white transition-all cursor-pointer shadow-xs border border-transparent hover:border-gray-200"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-[#586380] hover:text-[#1A1D28] hover:bg-white transition-all cursor-pointer shadow-xs border border-transparent hover:border-gray-200 shrink-0"
                 title="Quay lại giao diện quản lý"
               >
                 <span>‹</span>
@@ -356,13 +358,15 @@ export function MinimalFlashcardPlayer({
               </button>
             )}
 
-            <div className="h-4 w-px bg-gray-300 hidden sm:block" />
+            {viewSwitcher}
 
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold text-[#1A1D28] truncate">
+            <div className="h-4 w-px bg-gray-300 hidden md:block" />
+
+            <div className="min-w-0 hidden sm:block">
+              <h1 className="text-sm sm:text-base font-bold text-[#1A1D28] truncate">
                 {folder.name}
               </h1>
-              <span className="text-xs text-[#586380] font-medium hidden sm:inline">
+              <span className="text-xs text-[#586380] font-medium hidden md:inline">
                 {folder.language === "japanese" ? "🇯🇵 Tiếng Nhật" : "🇬🇧 Tiếng Anh"} • {activeList.length} thẻ
               </span>
             </div>
@@ -502,21 +506,18 @@ export function MinimalFlashcardPlayer({
       </header>
 
       {/* ════════════════════════════════════════════════════════════
-          KHU VỰC 2: MAIN STAGE (70% KHÔNG GIAN DỌC - TRỌNG TÂM THỊ GIÁC)
+          KHU VỰC 2: MAIN STAGE (TRỌNG TÂM THỊ GIÁC - CHIỀU CAO VỪA VẶN)
           ════════════════════════════════════════════════════════════ */}
-      <main className="flex-1 flex items-center justify-center my-4 sm:my-6 select-none">
+      <main className="flex-1 flex items-center justify-center my-1 sm:my-2 select-none min-h-0">
         <div
-          className="w-full max-w-2xl mx-auto perspective-1000"
+          className="w-full max-w-2xl mx-auto perspective-1000 flex flex-col items-center justify-center h-full max-h-[50vh] sm:max-h-[55vh] md:max-h-[60vh]"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {/* Tấm thẻ Flashcard với Soft Neumorphism & Material Shadow */}
           <div
             onClick={handleFlip}
-            className={`relative w-full cursor-pointer transition-all duration-500 rounded-2xl sm:rounded-3xl border border-gray-200/70 p-6 sm:p-10 flex flex-col justify-between ${
-              // Aspect ratio: 3:2 on desktop, 1:1 or 4:5 on mobile
-              "min-h-[20rem] sm:min-h-[22rem] md:min-h-[24rem]"
-            }`}
+            className="relative w-full h-full max-h-[460px] cursor-pointer transition-all duration-500 rounded-2xl sm:rounded-3xl border border-gray-200/70 p-5 sm:p-7 flex flex-col justify-between"
             style={{
               backgroundColor: "#FFFFFF",
               // Soft Neumorphism multi-layered shadow as specified
@@ -580,7 +581,7 @@ export function MinimalFlashcardPlayer({
             </div>
 
             {/* Nội dung chữ ở trung tâm tuyệt đối của thẻ */}
-            <div className="flex-1 flex flex-col items-center justify-center text-center my-6 px-4">
+            <div className="flex-1 flex flex-col items-center justify-center text-center my-2 sm:my-4 px-3">
               {showingTerm ? (
                 /* ── MẶT THUẬT NGỮ (TỪ VỰNG / KANJI) ── */
                 <div className="space-y-3">
@@ -658,13 +659,10 @@ export function MinimalFlashcardPlayer({
       </main>
 
       {/* ════════════════════════════════════════════════════════════
-          KHU VỰC 3: BOTTOM CONTROL BAR (15 - 20% KHÔNG GIAN DỌC)
+          KHU VỰC 3: BOTTOM CONTROL BAR (GỌN GÀNG, DỊCH LÊN TRÊN)
           ════════════════════════════════════════════════════════════ */}
       <footer
-        className={`w-full pt-4 pb-2 transition-all ${
-          // Mobile Sticky Bottom Bar (Thumb Zone)
-          "sticky bottom-0 bg-[#F6F7FB]/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-gray-200/80 z-20"
-        }`}
+        className="w-full pt-1 sm:pt-2 pb-1.5 transition-all shrink-0 bg-[#F6F7FB]/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-gray-200/80 z-20"
       >
         <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
           {/* Cụm trái: Nút Play (Tự động phát slideshow) */}

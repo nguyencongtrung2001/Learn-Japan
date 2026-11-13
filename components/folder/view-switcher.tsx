@@ -40,7 +40,7 @@ export function ViewSwitcher({
         }`}
         title="Giao diện 2: Flashcard Tối giản & Tập trung (Quizlet Clean UI)"
       >
-        <span>🗂️</span>
+        <span>📁</span>
         <span>Flashcard</span>
       </button>
 
@@ -55,7 +55,7 @@ export function ViewSwitcher({
         }`}
         title="Giao diện 2 Mở rộng: Chia đôi màn hình 3:7 (Danh sách cuộn đồng bộ + Thẻ)"
       >
-        <span>📑</span>
+        <span>📄</span>
         <span>Split-View</span>
       </button>
     </div>

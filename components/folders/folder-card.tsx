@@ -54,13 +54,6 @@ export function FolderCard({ folder }: { folder: FolderWithCount }) {
         >
           Mở Thư Mục
         </Link>
-        <Link
-          href={`/folders/${folder.id}?view=minimal`}
-          className="rounded-xl border border-[#E2E4E9] bg-white px-3 py-2 text-xs sm:text-sm font-bold text-[#586380] transition-all duration-200 hover:bg-[#EDEFF4] hover:text-[#1A1D28]"
-          title="Học Thẻ Flashcard Tối Giản"
-        >
-          🗂️
-        </Link>
         <DeleteFolderButton folderId={folder.id} />
       </div>
     </div>
