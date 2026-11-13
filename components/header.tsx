@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AppLogo } from "./app-logo";
 import { useLanguage } from "./language-provider";
 import { LanguageSelector } from "./language-selector";
 import { ThemeToggle } from "./theme-toggle";
@@ -28,14 +27,13 @@ export default function Header() {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 group shrink-0"
+            className="flex items-center group shrink-0 select-none py-1"
             id="header-logo"
+            aria-label="Quizlet Home"
           >
-            <div className="relative w-8 h-8 rounded-xl overflow-hidden transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
-              <AppLogo className="w-full h-full" />
-            </div>
-            <span className="text-xl font-black text-[#4255FF] tracking-tight">
-              Quizlet
+            <span className="text-[#4255FF] tracking-tight transition-transform duration-200 group-hover:scale-105 flex items-baseline">
+              <span className="text-2xl sm:text-[1.85rem] font-black leading-none">Q</span>
+              <span className="text-lg sm:text-[1.35rem] font-extrabold leading-none -ml-0.5">uizlet</span>
             </span>
           </Link>
 
