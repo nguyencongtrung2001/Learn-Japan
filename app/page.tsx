@@ -35,18 +35,27 @@ export default async function HomePage() {
             {/* CTA Buttons */}
             <div className="animate-fade-in-up flex flex-wrap items-center justify-center gap-3.5 lg:justify-start">
               <Link
-                href="/folders"
-                className="btn-shine group relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald to-teal-500 px-7 py-3.5 text-base font-bold text-white shadow-xl shadow-emerald/25 transition-all duration-300 hover:scale-105 active:scale-95"
-                id="hero-start-btn"
+                href="/latest"
+                className="btn-shine group relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo to-teal-500 px-7 py-3.5 text-base font-bold text-white shadow-xl shadow-indigo/25 transition-all duration-300 hover:scale-105 active:scale-95"
+                id="hero-latest-btn"
               >
                 <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-300 ease-out group-hover:translate-y-0" />
                 <span className="relative flex items-center gap-2">
-                  <span>📂</span>
-                  Bắt Đầu Học Ngay
+                  <span>⚡</span>
+                  Bảng Tin Gần Đây
                   <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </span>
+              </Link>
+
+              <Link
+                href="/folders"
+                className="flex items-center gap-2 rounded-2xl border border-border bg-surface/80 px-6 py-3.5 text-base font-bold text-foreground backdrop-blur-md transition-all duration-200 hover:border-emerald/40 hover:bg-surface-hover shadow-sm hover:scale-105 active:scale-95"
+                id="hero-folders-btn"
+              >
+                <span>📂</span>
+                Bộ Thẻ Của Bạn
               </Link>
 
               <Link
