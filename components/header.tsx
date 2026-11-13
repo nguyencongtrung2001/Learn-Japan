@@ -9,6 +9,7 @@ import { AppLogo } from "./app-logo";
 const navLinks = [
   { href: "/", label: "Trang chủ", icon: "🏠" },
   { href: "/folders", label: "Bộ thẻ", icon: "📂" },
+  { href: "/alphabet", label: "Bảng chữ cái", icon: "🇯🇵" },
   { href: "/tracker", label: "Theo dõi", icon: "📅" },
   { href: "/note", label: "Ghi chú", icon: "📋" },
 ];

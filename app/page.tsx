@@ -50,6 +50,14 @@ export default async function HomePage() {
               </Link>
 
               <Link
+                href="/alphabet"
+                className="flex items-center gap-2 rounded-2xl border border-sakura/40 bg-sakura/10 px-6 py-3.5 text-base font-bold text-sakura-light backdrop-blur-md transition-all duration-200 hover:bg-sakura hover:text-white shadow-sm hover:scale-105 active:scale-95"
+              >
+                <span>🇯🇵</span>
+                Bảng Chữ Cái (Kana)
+              </Link>
+
+              <Link
                 href="/tracker"
                 className="flex items-center gap-2 rounded-2xl border border-border bg-surface/70 px-6 py-3.5 text-base font-semibold text-foreground-muted backdrop-blur-md transition-all duration-200 hover:border-indigo/40 hover:bg-surface-hover hover:text-foreground"
               >
