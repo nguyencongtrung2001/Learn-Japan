@@ -7,10 +7,20 @@ const inputClass =
   "w-full rounded-xl border border-[#E2E4E9] bg-white px-4 py-3 font-medium text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 text-sm";
 const labelClass = "mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#586380]";
 
-export function CreateFolderSection() {
+export function CreateFolderSection({
+  defaultLanguage = "japanese",
+}: {
+  defaultLanguage?: "japanese" | "english";
+}) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [language, setLanguage] = useState<"japanese" | "english">("japanese");
+  const [language, setLanguage] = useState<"japanese" | "english">(defaultLanguage);
+  const [prevDefaultLanguage, setPrevDefaultLanguage] = useState(defaultLanguage);
+
+  if (prevDefaultLanguage !== defaultLanguage) {
+    setPrevDefaultLanguage(defaultLanguage);
+    setLanguage(defaultLanguage);
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -1,8 +1,7 @@
+import { Suspense } from "react";
 import { connection } from "next/server";
 import { getFolders } from "@/actions/folder-actions";
-import { FoldersHeader } from "@/components/folders/folders-header";
-import { CreateFolderSection } from "@/components/folders/create-folder-section";
-import { FoldersGrid } from "@/components/folders/folders-grid";
+import { FoldersContainer } from "@/components/folders/folders-container";
 
 export default async function FoldersPage() {
   await connection(); // luôn render động: dữ liệu đến từ DB, không prerender lúc build
@@ -10,11 +9,10 @@ export default async function FoldersPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-      <FoldersHeader />
-      <CreateFolderSection />
-
       {res.success && res.data ? (
-        <FoldersGrid folders={res.data} />
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-white/50" />}>
+          <FoldersContainer initialFolders={res.data} />
+        </Suspense>
       ) : (
         <div className="glass-card mx-auto max-w-md py-12 text-center">
           <div className="mb-3 text-4xl">⚠️</div>

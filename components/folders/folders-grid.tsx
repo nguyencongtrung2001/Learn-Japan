@@ -7,7 +7,12 @@ import { getFolderStatus, type FolderStatus } from "@/lib/folder-status";
 
 type FilterTab = "all" | FolderStatus;
 
-export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
+interface FoldersGridProps {
+  folders: FolderWithCount[];
+  language?: "japanese" | "english";
+}
+
+export function FoldersGrid({ folders, language }: FoldersGridProps) {
   const [filter, setFilter] = useState<FilterTab>("all");
 
   const counts = useMemo(() => {
@@ -34,11 +39,24 @@ export function FoldersGrid({ folders }: { folders: FolderWithCount[] }) {
   }, [folders, filter]);
 
   if (folders.length === 0) {
+    const isJapanese = language === "japanese";
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-[#E2E4E9] bg-white py-16 text-center shadow-xs">
-        <div className="mb-3 text-4xl">📁</div>
-        <p className="font-bold text-[#1A1D28]">Chưa có thư mục nào</p>
-        <p className="mt-1 text-xs text-[#586380]">Bấm nút &quot;Tạo Thư Mục Mới&quot; để bắt đầu!</p>
+      <div className="mx-auto max-w-md rounded-2xl border border-[#E2E4E9] bg-white py-16 px-6 text-center shadow-xs">
+        <div className="mb-3 text-4xl">{isJapanese ? "🇯🇵" : "🇬🇧"}</div>
+        <p className="font-bold text-[#1A1D28]">
+          {isJapanese
+            ? "Chưa có bộ thẻ Tiếng Nhật nào"
+            : language === "english"
+            ? "Chưa có bộ thẻ Tiếng Anh nào"
+            : "Chưa có thư mục nào"}
+        </p>
+        <p className="mt-1 text-xs text-[#586380] leading-relaxed">
+          {isJapanese
+            ? "Bấm nút \"Tạo Thư Mục Mới\" để bắt đầu học Kanji, Furigana & Từ vựng!"
+            : language === "english"
+            ? "Bấm nút \"Tạo Thư Mục Mới\" để bắt đầu học Từ vựng, IPA & Ví dụ tiếng Anh!"
+            : "Bấm nút \"Tạo Thư Mục Mới\" để bắt đầu!"}
+        </p>
       </div>
     );
   }
