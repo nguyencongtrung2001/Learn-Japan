@@ -17,7 +17,7 @@ interface KanaFlashcardProps {
 export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardProps) {
   // Filter state
   const [selectedType, setSelectedType] = useState<"all" | KanaType>("all");
-  const [selectedGroup, setSelectedGroup] = useState<"all" | KanaGroup>("all");
+  const [selectedGroup, setSelectedGroup] = useState<"all" | "basic" | "dakuten" | "youon" | KanaGroup>("all");
   const [memorizedFilter, setMemorizedFilter] = useState<"all" | "unlearned" | "learned">("all");
 
   // Flashcard interaction state
@@ -39,7 +39,11 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
       list = list.filter((item) => item.type === selectedType);
     }
 
-    if (selectedGroup !== "all") {
+    if (selectedGroup === "basic") {
+      list = list.filter(
+        (item) => item.subGroup === "basic" || item.group === "hiragana" || item.group === "katakana"
+      );
+    } else if (selectedGroup !== "all") {
       list = list.filter((item) => item.group === selectedGroup);
     }
 
@@ -73,7 +77,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
     setIsFlipped(false);
   }, []);
 
-  const handleSelectGroup = useCallback((group: "all" | KanaGroup) => {
+  const handleSelectGroup = useCallback((group: "all" | "basic" | "dakuten" | "youon" | KanaGroup) => {
     setSelectedGroup(group);
     setCurrentIndex(0);
     setIsFlipped(false);
@@ -273,14 +277,14 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             </button>
             <button
               type="button"
-              onClick={() => handleSelectGroup(selectedType === "katakana" ? "katakana" : "hiragana")}
+              onClick={() => handleSelectGroup("basic")}
               className={`whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                selectedGroup === "hiragana" || selectedGroup === "katakana"
+                selectedGroup === "basic" || selectedGroup === "hiragana" || selectedGroup === "katakana"
                   ? "border-sakura bg-sakura/15 text-sakura-light font-bold"
                   : "border-border/60 text-foreground-muted hover:bg-surface"
               }`}
             >
-              Cơ bản (46)
+              {selectedType === "all" ? "Cơ bản Hira & Kata (92)" : "Cơ bản (46)"}
             </button>
             <button
               type="button"

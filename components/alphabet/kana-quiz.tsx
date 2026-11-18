@@ -10,6 +10,15 @@ import {
 import { playKanaAudio } from "@/lib/kana-audio";
 
 type QuizMode = "kana-to-romaji" | "romaji-to-kana" | "typing";
+type QuizGroupFilter =
+  | "all"
+  | "basic"
+  | "basic-both"
+  | "basic-hira"
+  | "basic-kata"
+  | "dakuten"
+  | "youon"
+  | KanaGroup;
 
 interface Question {
   item: KanaItem;
@@ -21,7 +30,7 @@ export function KanaQuiz() {
   // Quiz setup settings
   const [quizMode, setQuizMode] = useState<QuizMode>("kana-to-romaji");
   const [selectedType, setSelectedType] = useState<"all" | KanaType>("all");
-  const [selectedGroup, setSelectedGroup] = useState<"all" | KanaGroup>("all");
+  const [selectedGroup, setSelectedGroup] = useState<QuizGroupFilter>("all");
   const [questionCount, setQuestionCount] = useState<number>(20);
   const [timeLimit, setTimeLimit] = useState<number>(10); // 0 = no limit, 5, 10, 15
 
@@ -45,12 +54,35 @@ export function KanaQuiz() {
   // Pool of available items based on type & group filters
   const candidatePool = useMemo(() => {
     let pool = [...allKana];
-    if (selectedType !== "all") {
-      pool = pool.filter((item) => item.type === selectedType);
+
+    if (selectedGroup === "basic-both") {
+      pool = pool.filter(
+        (item) => item.subGroup === "basic" || item.group === "hiragana" || item.group === "katakana"
+      );
+    } else if (selectedGroup === "basic-hira") {
+      pool = pool.filter(
+        (item) => item.type === "hiragana" && (item.subGroup === "basic" || item.group === "hiragana")
+      );
+    } else if (selectedGroup === "basic-kata") {
+      pool = pool.filter(
+        (item) => item.type === "katakana" && (item.subGroup === "basic" || item.group === "katakana")
+      );
+    } else if (selectedGroup === "basic") {
+      if (selectedType !== "all") {
+        pool = pool.filter((item) => item.type === selectedType);
+      }
+      pool = pool.filter(
+        (item) => item.subGroup === "basic" || item.group === "hiragana" || item.group === "katakana"
+      );
+    } else {
+      if (selectedType !== "all") {
+        pool = pool.filter((item) => item.type === selectedType);
+      }
+      if (selectedGroup !== "all") {
+        pool = pool.filter((item) => item.group === selectedGroup);
+      }
     }
-    if (selectedGroup !== "all") {
-      pool = pool.filter((item) => item.group === selectedGroup);
-    }
+
     return pool;
   }, [selectedType, selectedGroup]);
 
@@ -267,7 +299,12 @@ export function KanaQuiz() {
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedType("all")}
+                  onClick={() => {
+                    setSelectedType("all");
+                    if (selectedGroup === "basic-hira" || selectedGroup === "basic-kata") {
+                      setSelectedGroup("basic-both");
+                    }
+                  }}
                   className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                     selectedType === "all"
                       ? "border-indigo bg-indigo text-white"
@@ -278,7 +315,12 @@ export function KanaQuiz() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedType("hiragana")}
+                  onClick={() => {
+                    setSelectedType("hiragana");
+                    if (selectedGroup === "basic-both" || selectedGroup === "basic-kata") {
+                      setSelectedGroup("basic-hira");
+                    }
+                  }}
                   className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                     selectedType === "hiragana"
                       ? "border-sakura bg-sakura text-white"
@@ -289,7 +331,12 @@ export function KanaQuiz() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedType("katakana")}
+                  onClick={() => {
+                    setSelectedType("katakana");
+                    if (selectedGroup === "basic-both" || selectedGroup === "basic-hira") {
+                      setSelectedGroup("basic-kata");
+                    }
+                  }}
                   className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                     selectedType === "katakana"
                       ? "border-teal-600 bg-teal-600 text-white"
@@ -301,55 +348,96 @@ export function KanaQuiz() {
               </div>
             </div>
 
-            {/* 3. Nhóm âm */}
+            {/* 3. Nhóm âm cần luyện */}
             <div>
-              <label className="block font-bold text-foreground mb-2">
-                3. Nhóm âm cần luyện:
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="font-bold text-foreground">
+                  3. Nhóm âm cần luyện:
+                </label>
+                <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald/10 px-2 py-0.5 rounded-md border border-emerald/20">
+                  {candidatePool.length} chữ trong bài
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedGroup("all")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
                     selectedGroup === "all"
-                      ? "border-indigo bg-indigo/20 text-indigo-light"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
+                      ? "border-indigo bg-indigo/20 text-indigo-light shadow-xs"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                   }`}
                 >
                   Tất cả nhóm
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => setSelectedGroup(selectedType === "katakana" ? "katakana" : "hiragana")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
-                    selectedGroup === "hiragana" || selectedGroup === "katakana"
-                      ? "border-sakura bg-sakura/20 text-sakura-light"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
+                  onClick={() => {
+                    setSelectedGroup("basic-both");
+                    setSelectedType("all");
+                  }}
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    selectedGroup === "basic-both" || (selectedGroup === "basic" && selectedType === "all")
+                      ? "border-indigo bg-indigo text-white shadow-sm font-black"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                   }`}
                 >
-                  Cơ bản (46)
+                  ✨ Cơ bản Hira & Kata (92)
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedGroup("basic-hira");
+                    setSelectedType("hiragana");
+                  }}
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    selectedGroup === "basic-hira" || (selectedGroup === "basic" && selectedType === "hiragana")
+                      ? "border-sakura bg-sakura text-white shadow-sm font-black"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                  }`}
+                >
+                  🌸 Cơ bản Hiragana (46)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedGroup("basic-kata");
+                    setSelectedType("katakana");
+                  }}
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    selectedGroup === "basic-kata" || (selectedGroup === "basic" && selectedType === "katakana")
+                      ? "border-teal-600 bg-teal-600 text-white shadow-sm font-black"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                  }`}
+                >
+                  ⚡ Cơ bản Katakana (46)
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setSelectedGroup("dakuten")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
                     selectedGroup === "dakuten"
-                      ? "border-emerald bg-emerald/20 text-emerald-400"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
+                      ? "border-emerald bg-emerald/20 text-emerald-400 font-bold shadow-xs"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                   }`}
                 >
-                  Âm đục (゛/ ゜)
+                  🔔 Âm đục (゛/ ゜)
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setSelectedGroup("youon")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
                     selectedGroup === "youon"
-                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
+                      ? "border-amber-500 bg-amber-500/20 text-amber-300 font-bold shadow-xs"
+                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
                   }`}
                 >
-                  Âm ghép (ゃ/ゅ/ょ)
+                  🧩 Âm ghép (ゃ/ゅ/ょ)
                 </button>
               </div>
             </div>
@@ -361,7 +449,7 @@ export function KanaQuiz() {
                   Số lượng câu:
                 </label>
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  {[10, 20, 30, 50].map((num) => (
+                  {[10, 20, 30, 50, 92].map((num) => (
                     <button
                       key={num}
                       type="button"

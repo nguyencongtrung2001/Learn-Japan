@@ -350,7 +350,7 @@ export const hiragana: KanaItem[] = [
   },
   {
     id: "h-no",
-    kana: "no",
+    kana: "の",
     romaji: "no",
     type: "hiragana",
     group: "hiragana",
@@ -471,7 +471,7 @@ export const hiragana: KanaItem[] = [
   },
   {
     id: "h-me",
-    kana: "me",
+    kana: "め",
     romaji: "me",
     type: "hiragana",
     group: "hiragana",
@@ -553,7 +553,7 @@ export const hiragana: KanaItem[] = [
   },
   {
     id: "h-ri",
-    kana: "ri",
+    kana: "り",
     romaji: "ri",
     type: "hiragana",
     group: "hiragana",
@@ -1432,7 +1432,7 @@ export const dakuten: KanaItem[] = [
   },
   {
     id: "h-bi",
-    kana: "bi",
+    kana: "び",
     romaji: "bi",
     type: "hiragana",
     group: "dakuten",
