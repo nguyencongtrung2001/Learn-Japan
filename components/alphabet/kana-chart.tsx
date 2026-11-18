@@ -33,13 +33,13 @@ export function KanaChart({ isMemorized, toggleMemorized }: KanaChartProps) {
   return (
     <div className="space-y-6">
       {/* ══════════ THANH ĐIỀU HƯỚNG BẢNG ══════════ */}
-      <div className="glass-card p-4 sm:p-5 rounded-2xl border border-border/80 shadow-md flex flex-wrap items-center justify-between gap-3">
+      <div className="glass-card p-3 sm:p-5 rounded-2xl border border-border/80 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
         {/* Nhóm bảng */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-surface/80 border border-border/60">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 p-1 rounded-xl bg-surface/80 border border-border/60 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setChartMode("hiragana")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
               chartMode === "hiragana"
                 ? "bg-sakura text-white shadow-sm"
                 : "text-foreground-muted hover:text-foreground hover:bg-surface"
@@ -50,7 +50,7 @@ export function KanaChart({ isMemorized, toggleMemorized }: KanaChartProps) {
           <button
             type="button"
             onClick={() => setChartMode("katakana")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
               chartMode === "katakana"
                 ? "bg-teal-600 text-white shadow-sm"
                 : "text-foreground-muted hover:text-foreground hover:bg-surface"
@@ -61,29 +61,29 @@ export function KanaChart({ isMemorized, toggleMemorized }: KanaChartProps) {
           <button
             type="button"
             onClick={() => setChartMode("dakuten")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
               chartMode === "dakuten"
                 ? "bg-emerald text-white shadow-sm"
                 : "text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            🔔 Âm Đục & Bán Đục
+            🔔 Âm Đục (25)
           </button>
           <button
             type="button"
             onClick={() => setChartMode("youon")}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
               chartMode === "youon"
                 ? "bg-amber-500 text-white shadow-sm"
                 : "text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            🧩 Âm Ghép (Youon)
+            🧩 Âm Ghép (36)
           </button>
         </div>
 
         {/* Nút bật tắt Romaji & Hướng dẫn */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setShowRomaji(!showRomaji)}
@@ -97,8 +97,8 @@ export function KanaChart({ isMemorized, toggleMemorized }: KanaChartProps) {
             <span>{showRomaji ? "👁️ Hiện Romaji" : "🙈 Đang ẩn Romaji"}</span>
           </button>
 
-          <span className="text-[11px] text-foreground-dim hidden sm:inline">
-            (Bấm vào ô để nghe phát âm & xem chi tiết)
+          <span className="text-[11px] text-foreground-dim">
+            (Bấm ô để nghe)
           </span>
         </div>
       </div>

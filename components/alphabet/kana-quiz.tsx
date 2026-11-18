@@ -189,9 +189,9 @@ export function KanaQuiz() {
     <div className="space-y-6">
       {/* ══════════ MÀN HÌNH CÀI ĐẶT QUIZ (KHI CHƯA CHƠI) ══════════ */}
       {!isPlaying && !isFinished && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-2xl space-y-6 max-w-2xl mx-auto animate-fade-in">
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl sm:text-3xl font-black gradient-text flex items-center justify-center gap-2">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-2xl space-y-4 sm:space-y-6 max-w-2xl mx-auto animate-fade-in">
+          <div className="text-center space-y-1.5 sm:space-y-2">
+            <h3 className="text-xl sm:text-3xl font-black gradient-text flex items-center justify-center gap-2">
               <span>⚡</span> Luyện Phản Xạ Bảng Chữ Cái
             </h3>
             <p className="text-xs sm:text-sm text-foreground-muted">
@@ -327,7 +327,7 @@ export function KanaQuiz() {
                       : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
                   }`}
                 >
-                  Cơ bản (46 chữ)
+                  Cơ bản (46)
                 </button>
                 <button
                   type="button"
@@ -355,18 +355,18 @@ export function KanaQuiz() {
             </div>
 
             {/* 4. Số câu hỏi & Thời gian */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
               <div>
                 <label className="block font-bold text-foreground mb-1.5">
                   Số lượng câu:
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[10, 20, 30, 50].map((num) => (
                     <button
                       key={num}
                       type="button"
                       onClick={() => setQuestionCount(num)}
-                      className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
                         questionCount === num
                           ? "border-indigo bg-indigo text-white"
                           : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
@@ -382,18 +382,18 @@ export function KanaQuiz() {
                 <label className="block font-bold text-foreground mb-1.5">
                   Thời gian mỗi câu:
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {[
                     { label: "Vô hạn", val: 0 },
                     { label: "15s", val: 15 },
                     { label: "10s", val: 10 },
-                    { label: "5s (Nhanh)", val: 5 },
+                    { label: "5s", val: 5 },
                   ].map((t) => (
                     <button
                       key={t.val}
                       type="button"
                       onClick={() => setTimeLimit(t.val)}
-                      className={`flex-1 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[10px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
                         timeLimit === t.val
                           ? "border-emerald bg-emerald text-white"
                           : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
@@ -453,15 +453,15 @@ export function KanaQuiz() {
           )}
 
           {/* Câu hỏi trung tâm */}
-          <div className="text-center py-6 sm:py-8 space-y-3 bg-surface/50 rounded-3xl border border-border/60 relative overflow-hidden">
-            <span className="text-xs font-bold text-foreground-dim uppercase tracking-wider">
+          <div className="text-center py-4 sm:py-8 space-y-2.5 sm:space-y-3 bg-surface/50 rounded-2xl sm:rounded-3xl border border-border/60 relative overflow-hidden">
+            <span className="text-[11px] sm:text-xs font-bold text-foreground-dim uppercase tracking-wider">
               {quizMode === "romaji-to-kana" ? "Phiên âm Romaji" : "Ký tự tiếng Nhật"}
             </span>
 
             {/* Ký tự câu hỏi */}
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2.5 sm:gap-3">
               <div
-                className={`text-6xl sm:text-7xl font-black text-foreground drop-shadow-md ${
+                className={`text-5xl sm:text-7xl font-black text-foreground drop-shadow-md ${
                   quizMode === "romaji-to-kana" ? "font-mono" : "kana-display"
                 }`}
               >
@@ -472,10 +472,10 @@ export function KanaQuiz() {
               <button
                 type="button"
                 onClick={() => playKanaAudio(currentQ.item.kana)}
-                className="p-2.5 rounded-2xl bg-indigo/15 text-indigo-light hover:bg-indigo hover:text-white transition-all cursor-pointer"
+                className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-indigo/15 text-indigo-light hover:bg-indigo hover:text-white transition-all cursor-pointer"
                 title="Nghe phát âm"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                 </svg>
               </button>
@@ -492,7 +492,7 @@ export function KanaQuiz() {
 
           {/* Đáp án: Trắc nghiệm 4 lựa chọn */}
           {quizMode !== "typing" ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {currentQ.options.map((opt, idx) => {
                 const isSelected = selectedAnswer === opt;
                 const isCorrect = opt === currentQ.correctAnswer;
@@ -516,7 +516,7 @@ export function KanaQuiz() {
                     type="button"
                     disabled={isAnswered}
                     onClick={() => handleAnswer(opt)}
-                    className={`p-4 rounded-2xl border-2 text-xl sm:text-2xl font-bold transition-all duration-150 cursor-pointer flex items-center justify-center gap-2 ${btnStyle} ${
+                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 text-lg sm:text-2xl font-bold min-h-[52px] sm:min-h-[64px] transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 ${btnStyle} ${
                       quizMode === "romaji-to-kana" ? "kana-display" : "font-mono"
                     }`}
                   >
@@ -604,13 +604,13 @@ export function KanaQuiz() {
 
       {/* ══════════ MÀN HÌNH KẾT QUẢ TỔNG KẾT ══════════ */}
       {isFinished && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-2xl max-w-xl mx-auto space-y-6 text-center animate-fade-in">
-          <div className="text-5xl mb-1">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-2xl max-w-xl mx-auto space-y-4 sm:space-y-6 text-center animate-fade-in">
+          <div className="text-4xl sm:text-5xl mb-1">
             {score === questions.length ? "🏆" : score >= questions.length * 0.8 ? "🎉" : "💪"}
           </div>
 
           <div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-xl sm:text-2xl font-black text-foreground">
               {score === questions.length
                 ? "Xuất sắc! Bạn đúng 100%!"
                 : score >= questions.length * 0.8
@@ -623,24 +623,24 @@ export function KanaQuiz() {
           </div>
 
           {/* Hộp điểm số */}
-          <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-surface/70 border border-border/60">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl bg-surface/70 border border-border/60">
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
+              <div className="text-xl sm:text-3xl font-black text-emerald-400 font-mono">
                 {Math.round((score / questions.length) * 100)}%
               </div>
-              <div className="text-[11px] text-foreground-dim font-semibold">Độ chính xác</div>
+              <div className="text-[10px] sm:text-[11px] text-foreground-dim font-semibold">Độ chính xác</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-indigo-light font-mono">
+              <div className="text-xl sm:text-3xl font-black text-indigo-light font-mono">
                 {score}/{questions.length}
               </div>
-              <div className="text-[11px] text-foreground-dim font-semibold">Số câu đúng</div>
+              <div className="text-[10px] sm:text-[11px] text-foreground-dim font-semibold">Số câu đúng</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+              <div className="text-xl sm:text-3xl font-black text-amber-400 font-mono">
                 {maxStreak} 🔥
               </div>
-              <div className="text-[11px] text-foreground-dim font-semibold">Chuỗi đúng dài nhất</div>
+              <div className="text-[10px] sm:text-[11px] text-foreground-dim font-semibold">Chuỗi đúng</div>
             </div>
           </div>
 

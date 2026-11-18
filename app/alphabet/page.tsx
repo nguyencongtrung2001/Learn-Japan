@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AlphabetPage() {
   return (
-    <div className="h-[calc(100dvh-3.5rem)] overflow-hidden">
+    <div className="min-h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden">
       <AlphabetContainer />
     </div>
   );

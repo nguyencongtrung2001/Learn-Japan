@@ -17,66 +17,66 @@ export function KanaRules() {
   return (
     <div className="space-y-6">
       {/* ══════════ TABS ĐIỀU HƯỚNG QUY TẮC ══════════ */}
-      <div className="glass-card p-4 sm:p-5 rounded-2xl border border-border/80 shadow-md">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="glass-card p-3 sm:p-5 rounded-2xl border border-border/80 shadow-md">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={() => setActiveSection("sokuon")}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center text-center gap-1.5 sm:gap-2 ${
               activeSection === "sokuon"
                 ? "bg-gradient-to-r from-sakura to-rose text-white shadow-md"
                 : "border border-border/60 bg-surface/60 text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            <span>⏸️</span> Âm Ngắt (っ / ッ)
+            <span>⏸️</span> Âm Ngắt (っ)
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSection("chouon")}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center text-center gap-1.5 sm:gap-2 ${
               activeSection === "chouon"
                 ? "bg-gradient-to-r from-indigo to-teal-500 text-white shadow-md"
                 : "border border-border/60 bg-surface/60 text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            <span>〰️</span> Trường Âm (Chōon)
+            <span>〰️</span> Trường Âm (ー)
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSection("hatsuon")}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center text-center gap-1.5 sm:gap-2 ${
               activeSection === "hatsuon"
                 ? "bg-gradient-to-r from-emerald to-teal-600 text-white shadow-md"
                 : "border border-border/60 bg-surface/60 text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            <span>👃</span> Âm Mũi (ん / ン)
+            <span>👃</span> Âm Mũi (ん)
           </button>
 
           <button
             type="button"
             onClick={() => setActiveSection("confusing")}
-            className={`px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center text-center gap-1.5 sm:gap-2 ${
               activeSection === "confusing"
                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
                 : "border border-border/60 bg-surface/60 text-foreground-muted hover:text-foreground hover:bg-surface"
             }`}
           >
-            <span>🔍</span> Chữ Dễ Nhầm Lẫn
+            <span>🔍</span> Dễ Nhầm Lẫn
           </button>
         </div>
       </div>
 
       {/* ══════════ NỘI DUNG 1: ÂM NGẮT (SOKUON) ══════════ */}
       {activeSection === "sokuon" && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-xl space-y-6 animate-fade-in">
-          <div className="border-b border-border/60 pb-4">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-sakura-light bg-sakura/15 px-3 py-1 rounded-full mb-2">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-xl space-y-4 sm:space-y-6 animate-fade-in">
+          <div className="border-b border-border/60 pb-3 sm:pb-4">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-sakura-light bg-sakura/15 px-3 py-1 rounded-full mb-1.5 sm:mb-2">
               <span>促音 • Sokuon</span>
             </div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-xl sm:text-2xl font-black text-foreground">
               {sokuonRules.title}
             </h3>
             <p className="text-xs sm:text-sm text-foreground-muted mt-1 leading-relaxed">
@@ -84,7 +84,7 @@ export function KanaRules() {
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-indigo/10 border border-indigo/25 text-xs sm:text-sm leading-relaxed text-indigo-light space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo/10 border border-indigo/25 text-xs sm:text-sm leading-relaxed text-indigo-light space-y-1.5">
             <strong className="block text-foreground font-bold">Quy tắc phát âm & Romaji:</strong>
             <p>{sokuonRules.rule}</p>
           </div>
@@ -93,7 +93,7 @@ export function KanaRules() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-foreground-dim">
               Ví dụ thực tế (Bấm để nghe phát âm):
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
               {sokuonRules.examples.map((ex, idx) => (
                 <button
                   key={idx}
@@ -124,12 +124,12 @@ export function KanaRules() {
 
       {/* ══════════ NỘI DUNG 2: TRƯỜNG ÂM (CHOUON) ══════════ */}
       {activeSection === "chouon" && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-xl space-y-6 animate-fade-in">
-          <div className="border-b border-border/60 pb-4">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-light bg-indigo/15 px-3 py-1 rounded-full mb-2">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-xl space-y-4 sm:space-y-6 animate-fade-in">
+          <div className="border-b border-border/60 pb-3 sm:pb-4">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-indigo-light bg-indigo/15 px-3 py-1 rounded-full mb-1.5 sm:mb-2">
               <span>長音 • Chōon</span>
             </div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-xl sm:text-2xl font-black text-foreground">
               {chouonRules.title}
             </h3>
             <p className="text-xs sm:text-sm text-foreground-muted mt-1 leading-relaxed">
@@ -220,12 +220,12 @@ export function KanaRules() {
 
       {/* ══════════ NỘI DUNG 3: ÂM MŨI (HATSUON) ══════════ */}
       {activeSection === "hatsuon" && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-xl space-y-6 animate-fade-in">
-          <div className="border-b border-border/60 pb-4">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald/15 px-3 py-1 rounded-full mb-2">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-xl space-y-4 sm:space-y-6 animate-fade-in">
+          <div className="border-b border-border/60 pb-3 sm:pb-4">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald/15 px-3 py-1 rounded-full mb-1.5 sm:mb-2">
               <span>撥音 • Hatsuon</span>
             </div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-xl sm:text-2xl font-black text-foreground">
               {hatsuonRules.title}
             </h3>
             <p className="text-xs sm:text-sm text-foreground-muted mt-1 leading-relaxed">
@@ -273,12 +273,12 @@ export function KanaRules() {
 
       {/* ══════════ NỘI DUNG 4: CÁC CẶP CHỮ DỄ NHẦM ══════════ */}
       {activeSection === "confusing" && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-border/80 shadow-xl space-y-6 animate-fade-in">
-          <div className="border-b border-border/60 pb-4">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-300 bg-amber-500/15 px-3 py-1 rounded-full mb-2">
+        <div className="glass-card p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/80 shadow-xl space-y-4 sm:space-y-6 animate-fade-in">
+          <div className="border-b border-border/60 pb-3 sm:pb-4">
+            <div className="inline-flex items-center gap-2 text-xs font-bold text-amber-300 bg-amber-500/15 px-3 py-1 rounded-full mb-1.5 sm:mb-2">
               <span>Mẹo Nhận Biết • Confusing Kana</span>
             </div>
-            <h3 className="text-2xl font-black text-foreground">
+            <h3 className="text-xl sm:text-2xl font-black text-foreground">
               Các Cặp Chữ Dễ Nhầm Lẫn Trong Tiếng Nhật
             </h3>
             <p className="text-xs sm:text-sm text-foreground-muted mt-1 leading-relaxed">

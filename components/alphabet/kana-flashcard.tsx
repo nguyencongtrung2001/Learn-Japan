@@ -218,15 +218,15 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
   return (
     <div className="space-y-6">
       {/* ══════════ BỘ LỌC TÙY CHỌN ══════════ */}
-      <div className="glass-card p-4 sm:p-5 rounded-2xl border border-border/80 shadow-lg space-y-4">
+      <div className="glass-card p-3 sm:p-5 rounded-2xl border border-border/80 shadow-lg space-y-3 sm:space-y-4">
         {/* Hàng 1: Loại chữ & Nhóm âm */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
           {/* Chọn bảng chữ cái */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface/80 border border-border/60">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-surface/80 border border-border/60 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => handleSelectType("all")}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
                 selectedType === "all"
                   ? "bg-indigo text-white shadow-sm"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface"
@@ -237,33 +237,33 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={() => handleSelectType("hiragana")}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
                 selectedType === "hiragana"
                   ? "bg-sakura text-white shadow-sm"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface"
               }`}
             >
-              Hiragana (ひらがな)
+              Hiragana
             </button>
             <button
               type="button"
               onClick={() => handleSelectType("katakana")}
-              className={`px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all cursor-pointer text-center ${
                 selectedType === "katakana"
                   ? "bg-teal-600 text-white shadow-sm"
                   : "text-foreground-muted hover:text-foreground hover:bg-surface"
               }`}
             >
-              Katakana (カタカナ)
+              Katakana
             </button>
           </div>
 
           {/* Chọn nhóm âm */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto shrink-0">
             <button
               type="button"
               onClick={() => handleSelectGroup("all")}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                 selectedGroup === "all"
                   ? "border-indigo bg-indigo/15 text-indigo-light font-bold"
                   : "border-border/60 text-foreground-muted hover:bg-surface"
@@ -274,18 +274,18 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={() => handleSelectGroup(selectedType === "katakana" ? "katakana" : "hiragana")}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                 selectedGroup === "hiragana" || selectedGroup === "katakana"
                   ? "border-sakura bg-sakura/15 text-sakura-light font-bold"
                   : "border-border/60 text-foreground-muted hover:bg-surface"
               }`}
             >
-              Cơ bản (46 chữ)
+              Cơ bản (46)
             </button>
             <button
               type="button"
               onClick={() => handleSelectGroup("dakuten")}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                 selectedGroup === "dakuten"
                   ? "border-emerald bg-emerald/15 text-emerald-400 font-bold"
                   : "border-border/60 text-foreground-muted hover:bg-surface"
@@ -296,7 +296,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={() => handleSelectGroup("youon")}
-              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                 selectedGroup === "youon"
                   ? "border-amber-500 bg-amber-500/15 text-amber-300 font-bold"
                   : "border-border/60 text-foreground-muted hover:bg-surface"
@@ -308,14 +308,14 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
         </div>
 
         {/* Hàng 2: Trạng thái thuộc & Tiện ích */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border/50 text-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pt-2 border-t border-border/50 text-xs">
           {/* Lọc theo ghi nhớ */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-foreground-muted font-medium">Trạng thái:</span>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <span className="text-foreground-muted font-medium whitespace-nowrap">Trạng thái:</span>
             <button
               type="button"
               onClick={() => handleSelectMemorizedFilter("all")}
-              className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2 py-1 rounded-md transition-all cursor-pointer ${
                 memorizedFilter === "all"
                   ? "bg-surface font-bold text-foreground border border-border"
                   : "text-foreground-dim hover:text-foreground"
@@ -326,18 +326,18 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={() => handleSelectMemorizedFilter("unlearned")}
-              className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2 py-1 rounded-md transition-all cursor-pointer ${
                 memorizedFilter === "unlearned"
                   ? "bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40"
                   : "text-foreground-dim hover:text-foreground"
               }`}
             >
-              🌱 Chưa thuộc ({filteredList.length - memorizedCountInSelection})
+              🌱 Chưa ({filteredList.length - memorizedCountInSelection})
             </button>
             <button
               type="button"
               onClick={() => handleSelectMemorizedFilter("learned")}
-              className={`px-2 py-1 rounded-md transition-all cursor-pointer ${
+              className={`whitespace-nowrap px-2 py-1 rounded-md transition-all cursor-pointer ${
                 memorizedFilter === "learned"
                   ? "bg-emerald/20 text-emerald-400 font-bold border border-emerald/40"
                   : "text-foreground-dim hover:text-foreground"
@@ -348,7 +348,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
           </div>
 
           {/* Công cụ hỗ trợ */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={handleShuffle}
@@ -372,7 +372,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
               }`}
               title="Tự động phát âm khi sang thẻ mới"
             >
-              <span>🔊</span> Tự phát âm: {autoAudio ? "Bật" : "Tắt"}
+              <span>🔊</span> Tự phát: {autoAudio ? "Bật" : "Tắt"}
             </button>
 
             <button
@@ -385,7 +385,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
               }`}
               title="Tự động lướt thẻ trình chiếu"
             >
-              <span>{autoPlay ? "⏸️ Dừng chạy" : "▶️ Tự chạy"}</span>
+              <span>{autoPlay ? "⏸️ Dừng" : "▶️ Tự chạy"}</span>
             </button>
 
             {autoPlay && (
@@ -442,7 +442,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
           </div>
 
           {/* Khung thẻ 3D Flip */}
-          <div className="perspective-1000 w-full max-w-md h-88 sm:h-96">
+          <div className="perspective-1000 w-full max-w-md h-80 sm:h-96">
             <div
               className={`flip-card-inner cursor-pointer select-none relative ${
                 isFlipped ? "flipped" : ""
@@ -451,12 +451,12 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
               title="Click hoặc bấm phím Space để lật thẻ"
             >
               {/* ── MẶT TRƯỚC (Kana) ── */}
-              <div className="flip-card-front glass-card p-6 sm:p-8 rounded-3xl border-2 border-indigo/25 shadow-2xl flex flex-col justify-between overflow-hidden relative group">
+              <div className="flip-card-front glass-card p-4 sm:p-7 rounded-3xl border-2 border-indigo/25 shadow-2xl flex flex-col justify-between overflow-hidden relative group">
                 <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-sakura via-indigo to-emerald opacity-70" />
 
                 {/* Top header mặt trước */}
                 <div className="w-full flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-surface/90 border border-border/80 text-foreground-muted">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] font-bold bg-surface/90 border border-border/80 text-foreground-muted">
                     <span className="w-2 h-2 rounded-full bg-indigo animate-pulse" />
                     {currentItem.type === "hiragana" ? "Hiragana" : "Katakana"} •{" "}
                     {currentItem.group === "hiragana" || currentItem.group === "katakana"
@@ -473,7 +473,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
                       e.stopPropagation();
                       toggleMemorized(currentItem.id);
                     }}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       isMemorized(currentItem.id)
                         ? "bg-emerald/20 text-emerald-400 border border-emerald/40 shadow-xs"
                         : "bg-surface/70 text-foreground-dim hover:text-foreground border border-border hover:border-amber-400/50"
@@ -486,12 +486,12 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
 
                 {/* Ký tự Kana khổng lồ trung tâm */}
                 <div className="flex flex-col items-center justify-center my-auto">
-                  <div className="kana-display text-7xl sm:text-8xl md:text-9xl font-black text-foreground drop-shadow-md hover:scale-105 transition-transform duration-200">
+                  <div className="kana-display text-6xl sm:text-8xl md:text-9xl font-black text-foreground drop-shadow-md hover:scale-105 transition-transform duration-200">
                     {currentItem.kana}
                   </div>
 
                   {/* Gợi ý cách đọc gần gũi */}
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-2.5 sm:mt-3 flex items-center gap-2">
                     <span className="text-xs sm:text-sm font-semibold text-foreground-dim">
                       Phát âm: <strong className="text-foreground">{currentItem.vietnamese}</strong>
                     </span>
@@ -513,14 +513,14 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
 
                 {/* Footer lật thẻ */}
                 <div className="w-full text-center">
-                  <span className="text-[11px] font-medium text-foreground-dim inline-flex items-center gap-1 bg-surface/50 px-3 py-1 rounded-full border border-border/40">
-                    <span>↻</span> Chạm để xem Romaji & Từ ví dụ
+                  <span className="text-[10px] sm:text-[11px] font-medium text-foreground-dim inline-flex items-center gap-1 bg-surface/50 px-3 py-1 rounded-full border border-border/40">
+                    <span>↻</span> Chạm để xem Romaji & Ví dụ
                   </span>
                 </div>
               </div>
 
               {/* ── MẶT SAU (Romaji & Ví dụ) ── */}
-              <div className="flip-card-back glass-card p-6 sm:p-7 rounded-3xl border-2 border-sakura/30 shadow-2xl flex flex-col justify-between overflow-hidden relative">
+              <div className="flip-card-back glass-card p-4 sm:p-7 rounded-3xl border-2 border-sakura/30 shadow-2xl flex flex-col justify-between overflow-hidden relative">
                 <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-emerald via-indigo to-sakura opacity-70" />
 
                 {/* Top header mặt sau */}
@@ -534,7 +534,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
                       e.stopPropagation();
                       toggleMemorized(currentItem.id);
                     }}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       isMemorized(currentItem.id)
                         ? "bg-emerald/20 text-emerald-400 border border-emerald/40"
                         : "bg-surface text-foreground-dim hover:text-foreground border border-border"
@@ -545,21 +545,21 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
                 </div>
 
                 {/* Nội dung trung tâm: Romaji & Ví dụ thực tế */}
-                <div className="w-full space-y-3.5 my-auto">
+                <div className="w-full space-y-2.5 sm:space-y-3.5 my-auto">
                   {/* Romaji lớn */}
                   <div className="text-center">
-                    <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-indigo-light drop-shadow-sm">
+                    <span className="text-3xl sm:text-5xl font-black font-mono tracking-tight text-indigo-light drop-shadow-sm">
                       /{currentItem.romaji}/
                     </span>
-                    <p className="text-xs text-foreground-muted mt-1 font-medium">
+                    <p className="text-[11px] sm:text-xs text-foreground-muted mt-0.5 sm:mt-1 font-medium">
                       Cách đọc tiếng Việt: <strong>{currentItem.vietnamese}</strong>
                     </p>
                   </div>
 
                   {/* Hộp từ vựng ví dụ thực tế */}
-                  <div className="rounded-2xl bg-surface/90 border border-border/80 p-3 sm:p-4 text-left shadow-inner">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-bold text-foreground-dim uppercase tracking-wider">
+                  <div className="rounded-2xl bg-surface/90 border border-border/80 p-2.5 sm:p-4 text-left shadow-inner">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] sm:text-[11px] font-bold text-foreground-dim uppercase tracking-wider">
                         Từ vựng mẫu
                       </span>
                       <button
@@ -571,12 +571,12 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald transition-colors cursor-pointer"
                         title="Nghe phát âm từ ví dụ"
                       >
-                        <span>🔊</span> Nghe từ
+                        <span>🔊</span> Nghe
                       </button>
                     </div>
 
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-xl sm:text-2xl font-black text-foreground kana-display">
+                    <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
+                      <span className="text-lg sm:text-2xl font-black text-foreground kana-display">
                         {currentItem.example.word}
                       </span>
                       {currentItem.example.kanji && (
@@ -589,14 +589,14 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
                       </span>
                     </div>
 
-                    <p className="text-xs sm:text-sm font-semibold text-emerald-400 mt-1">
+                    <p className="text-xs sm:text-sm font-semibold text-emerald-400 mt-0.5 sm:mt-1">
                       ➔ {currentItem.example.meaning}
                     </p>
                   </div>
 
                   {/* Mẹo nhớ hình dáng (nếu có) */}
                   {currentItem.mnemonic && (
-                    <div className="text-[11px] text-foreground-dim bg-surface/40 p-2.5 rounded-xl border border-border/40 text-center">
+                    <div className="text-[10px] sm:text-[11px] text-foreground-dim bg-surface/40 p-2 sm:p-2.5 rounded-xl border border-border/40 text-center line-clamp-2 sm:line-clamp-none">
                       💡 <strong>Mẹo nhớ:</strong> {currentItem.mnemonic}
                     </div>
                   )}
@@ -604,7 +604,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
 
                 {/* Footer lật thẻ */}
                 <div className="w-full text-center">
-                  <span className="text-[11px] font-medium text-foreground-dim inline-flex items-center gap-1 bg-surface/50 px-3 py-1 rounded-full border border-border/40">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-foreground-dim inline-flex items-center gap-1 bg-surface/50 px-3 py-1 rounded-full border border-border/40">
                     <span>↻</span> Chạm để quay lại mặt chữ
                   </span>
                 </div>
@@ -613,16 +613,16 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
           </div>
 
           {/* ══════════ THANH ĐIỀU KHIỂN DƯỚI ══════════ */}
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mt-6">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mt-4 sm:mt-6">
             {/* Nút Trước */}
             <button
               type="button"
               onClick={handlePrev}
-              className="flex items-center justify-center w-12 h-12 rounded-2xl bg-surface/90 border border-border/80 text-foreground hover:bg-surface-hover hover:border-indigo/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
+              className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-surface/90 border border-border/80 text-foreground hover:bg-surface-hover hover:border-indigo/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
               title="Thẻ trước (Phím ← hoặc A)"
               aria-label="Thẻ trước"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -631,11 +631,11 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={() => handlePlayAudio()}
-              className="flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo/15 border border-indigo/30 text-indigo-light hover:bg-indigo hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
+              className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo/15 border border-indigo/30 text-indigo-light hover:bg-indigo hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
               title="Phát âm chữ cái (Phím R)"
               aria-label="Phát âm"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             </button>
@@ -644,7 +644,7 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={handleFlip}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-sakura to-indigo text-white font-extrabold text-sm sm:text-base shadow-lg shadow-indigo/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-sakura to-indigo text-white font-extrabold text-xs sm:text-base shadow-lg shadow-indigo/25 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2"
               title="Lật thẻ (Phím Space hoặc Enter)"
             >
               <span>↻</span>
@@ -655,18 +655,18 @@ export function KanaFlashcard({ isMemorized, toggleMemorized }: KanaFlashcardPro
             <button
               type="button"
               onClick={handleNext}
-              className="flex items-center justify-center w-12 h-12 rounded-2xl bg-surface/90 border border-border/80 text-foreground hover:bg-surface-hover hover:border-indigo/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
+              className="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-surface/90 border border-border/80 text-foreground hover:bg-surface-hover hover:border-indigo/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-md"
               title="Thẻ kế tiếp (Phím → hoặc D)"
               aria-label="Thẻ tiếp"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
 
-          {/* Phím tắt gợi ý */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-[11px] text-foreground-dim">
+          {/* Phím tắt gợi ý (chỉ hiện trên màn hình sm trở lên) */}
+          <div className="mt-3 sm:mt-4 hidden sm:flex flex-wrap items-center justify-center gap-3 text-[11px] text-foreground-dim">
             <span>
               Phím <kbd className="px-1.5 py-0.5 rounded bg-surface border border-border font-mono text-[10px]">Space</kbd>: Lật thẻ
             </span>
