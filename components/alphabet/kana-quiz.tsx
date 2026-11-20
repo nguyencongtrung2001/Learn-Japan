@@ -138,7 +138,6 @@ export function KanaQuiz() {
   // Quiz setup settings
   const [quizMode, setQuizMode] = useState<QuizMode>("kana-to-romaji");
   const [selectedGroups, setSelectedGroups] = useState<KanaGroupId[]>(ALL_GROUP_IDS);
-  const [questionCount, setQuestionCount] = useState<number>(20);
   const [timeLimit, setTimeLimit] = useState<number>(10); // 0 = no limit, 5, 10, 15
 
   // Quick state checkers
@@ -147,16 +146,6 @@ export function KanaQuiz() {
     selectedGroups.length === 3 && selectedGroups.every((g) => g.endsWith("-hira"));
   const isOnlyKatakana =
     selectedGroups.length === 3 && selectedGroups.every((g) => g.endsWith("-kata"));
-  const isBasicBoth =
-    selectedGroups.length === 2 &&
-    selectedGroups.includes("basic-hira") &&
-    selectedGroups.includes("basic-kata");
-  const isDakutenAndYouon =
-    selectedGroups.length === 4 &&
-    selectedGroups.includes("dakuten-hira") &&
-    selectedGroups.includes("dakuten-kata") &&
-    selectedGroups.includes("youon-hira") &&
-    selectedGroups.includes("youon-kata");
 
   // Toggle or select groups
   const toggleGroup = useCallback((id: KanaGroupId) => {
@@ -180,14 +169,6 @@ export function KanaQuiz() {
 
   const selectAllKatakana = useCallback(() => {
     setSelectedGroups(["basic-kata", "dakuten-kata", "youon-kata"]);
-  }, []);
-
-  const selectBasicBoth = useCallback(() => {
-    setSelectedGroups(["basic-hira", "basic-kata"]);
-  }, []);
-
-  const selectDakutenAndYouonBoth = useCallback(() => {
-    setSelectedGroups(["dakuten-hira", "dakuten-kata", "youon-hira", "youon-kata"]);
   }, []);
 
   // Quiz active state
@@ -218,10 +199,9 @@ export function KanaQuiz() {
       const pool = customPool && customPool.length > 0 ? customPool : candidatePool;
       if (pool.length === 0) return [];
 
-      // Shuffle pool
+      // Shuffle pool và học hết toàn bộ chữ trong nhóm đã chọn
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      const count = Math.min(questionCount, shuffled.length);
-      const selected = shuffled.slice(0, count);
+      const selected = shuffled;
 
       // Chuẩn bị danh sách kiểu bài tập cho chế độ tổng hợp (phân bổ đều 3 kiểu)
       const mixedTypes: QuestionType[] = [];
@@ -254,7 +234,7 @@ export function KanaQuiz() {
         };
       });
     },
-    [candidatePool, questionCount, quizMode]
+    [candidatePool, quizMode]
   );
 
   // Start new quiz
@@ -448,14 +428,9 @@ export function KanaQuiz() {
 
             {/* 2. Chọn nhanh theo bảng */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block font-bold text-foreground">
-                  2. Chọn nhanh theo bảng:
-                </label>
-                <span className="text-xs text-foreground-muted">
-                  Bấm để đặt nhanh nhóm chữ
-                </span>
-              </div>
+              <label className="block font-bold text-foreground mb-2">
+                2. Chọn nhanh theo bảng:
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -509,44 +484,6 @@ export function KanaQuiz() {
                 </span>
               </div>
 
-              {/* Thanh gợi ý chọn nhanh */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-2.5 text-xs">
-                <span className="text-[11px] text-foreground-muted font-medium">Gợi ý chọn:</span>
-                <button
-                  type="button"
-                  onClick={selectBasicBoth}
-                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
-                    isBasicBoth
-                      ? "border-sakura bg-sakura/20 text-sakura-light"
-                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
-                  }`}
-                >
-                  ✨ Cả 2 bảng cơ bản (92)
-                </button>
-                <button
-                  type="button"
-                  onClick={selectDakutenAndYouonBoth}
-                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
-                    isDakutenAndYouon
-                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
-                  }`}
-                >
-                  🔔 Âm đục & Ghép (116)
-                </button>
-                <button
-                  type="button"
-                  onClick={selectAllGroups}
-                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
-                    isAllSelected
-                      ? "border-indigo bg-indigo/20 text-indigo-light"
-                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
-                  }`}
-                >
-                  Chọn tất cả (208)
-                </button>
-              </div>
-
               {/* Lưới 6 nhóm âm đa chọn */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {GROUP_CONFIGS.map((g) => {
@@ -587,57 +524,37 @@ export function KanaQuiz() {
               </div>
             </div>
 
-            {/* 4. Số câu hỏi & Thời gian */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
-              <div>
-                <label className="block font-bold text-foreground mb-1.5">
-                  Số lượng câu:
+            {/* 4. Thời gian mỗi câu */}
+            <div className="pt-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                <label className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
+                  <span>⏱️</span>
+                  <span>4. Thời gian mỗi câu:</span>
                 </label>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {[10, 20, 30, 50, candidatePool.length]
-                    .filter((num, idx, arr) => num > 0 && arr.indexOf(num) === idx)
-                    .map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setQuestionCount(num)}
-                        className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
-                          questionCount === num
-                            ? "border-indigo bg-indigo text-white"
-                            : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
-                        }`}
-                      >
-                        {num === candidatePool.length ? `Tất cả (${num})` : `${num} câu`}
-                      </button>
-                    ))}
-                </div>
+                <span className="text-[11px] text-foreground-dim">
+                  Luyện tập đầy đủ <strong className="text-indigo font-mono font-bold">{candidatePool.length}</strong> chữ trong các nhóm đã chọn
+                </span>
               </div>
-
-              <div>
-                <label className="block font-bold text-foreground mb-1.5">
-                  Thời gian mỗi câu:
-                </label>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {[
-                    { label: "Vô hạn", val: 0 },
-                    { label: "15s", val: 15 },
-                    { label: "10s", val: 10 },
-                    { label: "5s", val: 5 },
-                  ].map((t) => (
-                    <button
-                      key={t.val}
-                      type="button"
-                      onClick={() => setTimeLimit(t.val)}
-                      className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[10px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
-                        timeLimit === t.val
-                          ? "border-emerald bg-emerald text-white"
-                          : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 max-w-sm">
+                {[
+                  { label: "Vô hạn", val: 0 },
+                  { label: "15s", val: 15 },
+                  { label: "10s", val: 10 },
+                  { label: "5s", val: 5 },
+                ].map((t) => (
+                  <button
+                    key={t.val}
+                    type="button"
+                    onClick={() => setTimeLimit(t.val)}
+                    className={`flex-1 py-2 px-2 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer text-center ${
+                      timeLimit === t.val
+                        ? "border-emerald bg-emerald text-white shadow-xs"
+                        : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -648,7 +565,7 @@ export function KanaQuiz() {
               onClick={() => startQuiz()}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald via-teal-500 to-indigo text-white font-black text-base shadow-xl shadow-emerald/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>🚀</span> Bắt Đầu Bài Kiểm Tra ({candidatePool.length} chữ trong phạm vi)
+              <span>🚀</span> Bắt Đầu Bài Kiểm Tra (Học hết {candidatePool.length} chữ)
             </button>
           </div>
         </div>
