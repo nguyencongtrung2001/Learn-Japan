@@ -9,7 +9,8 @@ import {
 } from "@/data/kana-data";
 import { playKanaAudio } from "@/lib/kana-audio";
 
-type QuizMode = "kana-to-romaji" | "romaji-to-kana" | "typing";
+type QuestionType = "kana-to-romaji" | "romaji-to-kana" | "typing";
+type QuizMode = QuestionType | "mixed";
 type QuizGroupFilter =
   | "all"
   | "basic"
@@ -22,6 +23,7 @@ type QuizGroupFilter =
 
 interface Question {
   item: KanaItem;
+  type: QuestionType;
   options: string[]; // 4 choices (either romajis or kanas)
   correctAnswer: string;
 }
@@ -97,8 +99,19 @@ export function KanaQuiz() {
       const count = Math.min(questionCount, shuffled.length);
       const selected = shuffled.slice(0, count);
 
-      return selected.map((item) => {
-        const isKanaQuestion = quizMode === "kana-to-romaji" || quizMode === "typing";
+      // Chuẩn bị danh sách kiểu bài tập cho chế độ tổng hợp (phân bổ đều 3 kiểu)
+      const mixedTypes: QuestionType[] = [];
+      if (quizMode === "mixed") {
+        const baseTypes: QuestionType[] = ["kana-to-romaji", "romaji-to-kana", "typing"];
+        for (let i = 0; i < selected.length; i++) {
+          mixedTypes.push(baseTypes[i % baseTypes.length]);
+        }
+        mixedTypes.sort(() => Math.random() - 0.5);
+      }
+
+      return selected.map((item, idx) => {
+        const qType: QuestionType = quizMode === "mixed" ? mixedTypes[idx] : quizMode;
+        const isKanaQuestion = qType === "kana-to-romaji" || qType === "typing";
         const correctAnswer = isKanaQuestion ? item.romaji : item.kana;
 
         // Generate 3 distractors
@@ -111,6 +124,7 @@ export function KanaQuiz() {
 
         return {
           item,
+          type: qType,
           options,
           correctAnswer,
         };
@@ -189,10 +203,10 @@ export function KanaQuiz() {
 
   // Focus input in typing mode
   useEffect(() => {
-    if (isPlaying && quizMode === "typing" && !isAnswered) {
+    if (isPlaying && currentQ?.type === "typing" && !isAnswered) {
       inputRef.current?.focus();
     }
-  }, [isPlaying, quizMode, currentIndex, isAnswered]);
+  }, [isPlaying, currentQ?.type, currentIndex, isAnswered]);
 
   // Timer logic for each question
   useEffect(() => {
@@ -237,21 +251,21 @@ export function KanaQuiz() {
               <label className="block font-bold text-foreground mb-2">
                 1. Kiểu bài tập:
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setQuizMode("kana-to-romaji")}
                   className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                     quizMode === "kana-to-romaji"
-                      ? "border-indigo bg-indigo/15 text-indigo-light shadow-md"
+                      ? "border-indigo bg-indigo/15 text-indigo-light shadow-md ring-1 ring-indigo/40"
                       : "border-border/60 bg-surface/60 text-foreground-muted hover:bg-surface"
                   }`}
                 >
                   <div className="font-bold flex items-center gap-1.5 mb-1">
                     <span>🈸 ➔ ABC</span>
                   </div>
-                  <div className="text-[11px] opacity-80">
-                    Nhìn chữ Kana, chọn đáp án Romaji tương ứng
+                  <div className="text-[11px] opacity-80 leading-snug">
+                    Nhìn chữ Kana, chọn đáp án Romaji
                   </div>
                 </button>
 
@@ -260,15 +274,15 @@ export function KanaQuiz() {
                   onClick={() => setQuizMode("romaji-to-kana")}
                   className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                     quizMode === "romaji-to-kana"
-                      ? "border-sakura bg-sakura/15 text-sakura-light shadow-md"
+                      ? "border-sakura bg-sakura/15 text-sakura-light shadow-md ring-1 ring-sakura/40"
                       : "border-border/60 bg-surface/60 text-foreground-muted hover:bg-surface"
                   }`}
                 >
                   <div className="font-bold flex items-center gap-1.5 mb-1">
                     <span>ABC ➔ 🈸</span>
                   </div>
-                  <div className="text-[11px] opacity-80">
-                    Nhìn phiên âm Romaji, chọn chữ Kana đúng
+                  <div className="text-[11px] opacity-80 leading-snug">
+                    Nhìn phiên âm Romaji, chọn chữ Kana
                   </div>
                 </button>
 
@@ -277,15 +291,32 @@ export function KanaQuiz() {
                   onClick={() => setQuizMode("typing")}
                   className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                     quizMode === "typing"
-                      ? "border-emerald bg-emerald/15 text-emerald-400 shadow-md"
+                      ? "border-emerald bg-emerald/15 text-emerald-400 shadow-md ring-1 ring-emerald/40"
                       : "border-border/60 bg-surface/60 text-foreground-muted hover:bg-surface"
                   }`}
                 >
                   <div className="font-bold flex items-center gap-1.5 mb-1">
                     <span>⌨️ Gõ Romaji</span>
                   </div>
-                  <div className="text-[11px] opacity-80">
-                    Nhìn Kana và tự gõ Romaji bằng bàn phím
+                  <div className="text-[11px] opacity-80 leading-snug">
+                    Nhìn Kana và tự gõ Romaji bằng phím
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setQuizMode("mixed")}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                    quizMode === "mixed"
+                      ? "border-purple-500 bg-purple-500/15 text-purple-300 shadow-md ring-1 ring-purple-500/50"
+                      : "border-border/60 bg-surface/60 text-foreground-muted hover:bg-surface"
+                  }`}
+                >
+                  <div className="font-bold flex items-center gap-1.5 mb-1">
+                    <span>🎯 Tổng Hợp</span>
+                  </div>
+                  <div className="text-[11px] opacity-80 leading-snug">
+                    Trộn ngẫu nhiên cả 3 kiểu bài tập
                   </div>
                 </button>
               </div>
@@ -542,18 +573,29 @@ export function KanaQuiz() {
 
           {/* Câu hỏi trung tâm */}
           <div className="text-center py-4 sm:py-8 space-y-2.5 sm:space-y-3 bg-surface/50 rounded-2xl sm:rounded-3xl border border-border/60 relative overflow-hidden">
-            <span className="text-[11px] sm:text-xs font-bold text-foreground-dim uppercase tracking-wider">
-              {quizMode === "romaji-to-kana" ? "Phiên âm Romaji" : "Ký tự tiếng Nhật"}
-            </span>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-[11px] sm:text-xs font-bold text-foreground-dim uppercase tracking-wider">
+                {currentQ.type === "romaji-to-kana" ? "Phiên âm Romaji" : "Ký tự tiếng Nhật"}
+              </span>
+              {quizMode === "mixed" && (
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300">
+                  {currentQ.type === "kana-to-romaji"
+                    ? "🈸 ➔ ABC (Chọn Romaji)"
+                    : currentQ.type === "romaji-to-kana"
+                    ? "ABC ➔ 🈸 (Chọn Kana)"
+                    : "⌨️ Gõ Romaji"}
+                </span>
+              )}
+            </div>
 
             {/* Ký tự câu hỏi */}
             <div className="flex items-center justify-center gap-2.5 sm:gap-3">
               <div
                 className={`text-5xl sm:text-7xl font-black text-foreground drop-shadow-md ${
-                  quizMode === "romaji-to-kana" ? "font-mono" : "kana-display"
+                  currentQ.type === "romaji-to-kana" ? "font-mono" : "kana-display"
                 }`}
               >
-                {quizMode === "romaji-to-kana" ? currentQ.item.romaji : currentQ.item.kana}
+                {currentQ.type === "romaji-to-kana" ? currentQ.item.romaji : currentQ.item.kana}
               </div>
 
               {/* Nút phát âm */}
@@ -570,16 +612,16 @@ export function KanaQuiz() {
             </div>
 
             <p className="text-xs text-foreground-muted">
-              {quizMode === "typing"
+              {currentQ.type === "typing"
                 ? "Gõ Romaji tương ứng bên dưới rồi bấm Enter:"
-                : quizMode === "romaji-to-kana"
+                : currentQ.type === "romaji-to-kana"
                 ? "Chọn chữ Kana tương ứng:"
                 : "Chọn cách đọc Romaji đúng:"}
             </p>
           </div>
 
           {/* Đáp án: Trắc nghiệm 4 lựa chọn */}
-          {quizMode !== "typing" ? (
+          {currentQ.type !== "typing" ? (
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {currentQ.options.map((opt, idx) => {
                 const isSelected = selectedAnswer === opt;
@@ -605,7 +647,7 @@ export function KanaQuiz() {
                     disabled={isAnswered}
                     onClick={() => handleAnswer(opt)}
                     className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 text-lg sm:text-2xl font-bold min-h-[52px] sm:min-h-[64px] transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 ${btnStyle} ${
-                      quizMode === "romaji-to-kana" ? "kana-display" : "font-mono"
+                      currentQ.type === "romaji-to-kana" ? "kana-display" : "font-mono"
                     }`}
                   >
                     <span>{opt}</span>
