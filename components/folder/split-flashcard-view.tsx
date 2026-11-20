@@ -55,7 +55,7 @@ export function SplitFlashcardView({
         {/* Bố cục Split-View 3:7 (Màn hình rộng / Tablet) */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6 items-start h-full">
           {/* ══════ CỘT TRÁI (30%): DANH SÁCH TOÀN BỘ TỪ VỰNG DẠNG LIST ══════ */}
-          <aside className="lg:col-span-3 bg-white rounded-3xl border border-gray-200 shadow-sm p-4 sm:p-5 flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] overflow-hidden">
+          <aside className="lg:col-span-3 bg-white/95 dark:bg-[#1A1D28]/95 backdrop-blur-md rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm p-4 sm:p-5 flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-6rem)] overflow-hidden">
             {/* Header danh sách & Tìm kiếm */}
             <div className="space-y-3 pb-3 border-b border-gray-100">
               <div className="flex items-center justify-between">

@@ -517,10 +517,8 @@ export function MinimalFlashcardPlayer({
           {/* Tấm thẻ Flashcard với Soft Neumorphism & Material Shadow */}
           <div
             onClick={handleFlip}
-            className="relative w-full h-full max-h-[460px] cursor-pointer transition-all duration-500 rounded-2xl sm:rounded-3xl border border-gray-200/70 p-5 sm:p-7 flex flex-col justify-between"
+            className="relative w-full h-full max-h-[460px] cursor-pointer transition-all duration-500 rounded-2xl sm:rounded-3xl border border-gray-200/70 dark:border-gray-800 p-5 sm:p-7 flex flex-col justify-between bg-white/95 dark:bg-[#1A1D28]/95 backdrop-blur-md"
             style={{
-              backgroundColor: "#FFFFFF",
-              // Soft Neumorphism multi-layered shadow as specified
               boxShadow:
                 "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03), 0 20px 25px -5px rgba(0, 0, 0, 0.03)",
             }}

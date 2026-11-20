@@ -4,22 +4,128 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   allKana,
   type KanaItem,
-  type KanaType,
-  type KanaGroup,
 } from "@/data/kana-data";
 import { playKanaAudio } from "@/lib/kana-audio";
 
 type QuestionType = "kana-to-romaji" | "romaji-to-kana" | "typing";
 type QuizMode = QuestionType | "mixed";
-type QuizGroupFilter =
-  | "all"
-  | "basic"
-  | "basic-both"
+
+export type KanaGroupId =
   | "basic-hira"
   | "basic-kata"
-  | "dakuten"
-  | "youon"
-  | KanaGroup;
+  | "dakuten-hira"
+  | "dakuten-kata"
+  | "youon-hira"
+  | "youon-kata";
+
+export const ALL_GROUP_IDS: KanaGroupId[] = [
+  "basic-hira",
+  "basic-kata",
+  "dakuten-hira",
+  "dakuten-kata",
+  "youon-hira",
+  "youon-kata",
+];
+
+export function getItemGroupId(item: KanaItem): KanaGroupId {
+  if (item.type === "hiragana") {
+    if (item.group === "dakuten") return "dakuten-hira";
+    if (item.group === "youon") return "youon-hira";
+    return "basic-hira";
+  } else {
+    if (item.group === "dakuten") return "dakuten-kata";
+    if (item.group === "youon") return "youon-kata";
+    return "basic-kata";
+  }
+}
+
+interface GroupConfig {
+  id: KanaGroupId;
+  label: string;
+  icon: string;
+  desc: string;
+  count: number;
+  activeBorder: string;
+  activeBg: string;
+  activeText: string;
+  activeRing: string;
+  badgeBg: string;
+}
+
+const GROUP_CONFIGS: GroupConfig[] = [
+  {
+    id: "basic-hira",
+    label: "Cơ bản Hiragana",
+    icon: "🌸",
+    desc: "46 chữ nét mềm",
+    count: 46,
+    activeBorder: "border-sakura",
+    activeBg: "bg-sakura/15",
+    activeText: "text-sakura-light font-bold",
+    activeRing: "ring-sakura/40",
+    badgeBg: "bg-sakura",
+  },
+  {
+    id: "basic-kata",
+    label: "Cơ bản Katakana",
+    icon: "⚡",
+    desc: "46 chữ nét cứng",
+    count: 46,
+    activeBorder: "border-teal-600",
+    activeBg: "bg-teal-600/15",
+    activeText: "text-teal-400 font-bold",
+    activeRing: "ring-teal-600/40",
+    badgeBg: "bg-teal-600",
+  },
+  {
+    id: "dakuten-hira",
+    label: "Âm đục Hiragana",
+    icon: "🔔",
+    desc: "25 chữ (゛và ゜)",
+    count: 25,
+    activeBorder: "border-emerald",
+    activeBg: "bg-emerald/15",
+    activeText: "text-emerald-400 font-bold",
+    activeRing: "ring-emerald/40",
+    badgeBg: "bg-emerald",
+  },
+  {
+    id: "dakuten-kata",
+    label: "Âm đục Katakana",
+    icon: "🔔",
+    desc: "25 chữ (゛và ゜)",
+    count: 25,
+    activeBorder: "border-emerald",
+    activeBg: "bg-emerald/15",
+    activeText: "text-emerald-400 font-bold",
+    activeRing: "ring-emerald/40",
+    badgeBg: "bg-emerald",
+  },
+  {
+    id: "youon-hira",
+    label: "Âm ghép Hiragana",
+    icon: "🧩",
+    desc: "33 âm ghép nhỏ",
+    count: 33,
+    activeBorder: "border-amber-500",
+    activeBg: "bg-amber-500/15",
+    activeText: "text-amber-300 font-bold",
+    activeRing: "ring-amber-500/40",
+    badgeBg: "bg-amber-500",
+  },
+  {
+    id: "youon-kata",
+    label: "Âm ghép Katakana",
+    icon: "🧩",
+    desc: "33 âm ghép nhỏ",
+    count: 33,
+    activeBorder: "border-amber-500",
+    activeBg: "bg-amber-500/15",
+    activeText: "text-amber-300 font-bold",
+    activeRing: "ring-amber-500/40",
+    badgeBg: "bg-amber-500",
+  },
+];
 
 interface Question {
   item: KanaItem;
@@ -31,10 +137,58 @@ interface Question {
 export function KanaQuiz() {
   // Quiz setup settings
   const [quizMode, setQuizMode] = useState<QuizMode>("kana-to-romaji");
-  const [selectedType, setSelectedType] = useState<"all" | KanaType>("all");
-  const [selectedGroup, setSelectedGroup] = useState<QuizGroupFilter>("all");
+  const [selectedGroups, setSelectedGroups] = useState<KanaGroupId[]>(ALL_GROUP_IDS);
   const [questionCount, setQuestionCount] = useState<number>(20);
   const [timeLimit, setTimeLimit] = useState<number>(10); // 0 = no limit, 5, 10, 15
+
+  // Quick state checkers
+  const isAllSelected = selectedGroups.length === 6;
+  const isOnlyHiragana =
+    selectedGroups.length === 3 && selectedGroups.every((g) => g.endsWith("-hira"));
+  const isOnlyKatakana =
+    selectedGroups.length === 3 && selectedGroups.every((g) => g.endsWith("-kata"));
+  const isBasicBoth =
+    selectedGroups.length === 2 &&
+    selectedGroups.includes("basic-hira") &&
+    selectedGroups.includes("basic-kata");
+  const isDakutenAndYouon =
+    selectedGroups.length === 4 &&
+    selectedGroups.includes("dakuten-hira") &&
+    selectedGroups.includes("dakuten-kata") &&
+    selectedGroups.includes("youon-hira") &&
+    selectedGroups.includes("youon-kata");
+
+  // Toggle or select groups
+  const toggleGroup = useCallback((id: KanaGroupId) => {
+    setSelectedGroups((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) return prev; // Giữ ít nhất 1 nhóm
+        return prev.filter((g) => g !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  const selectAllGroups = useCallback(() => {
+    setSelectedGroups(ALL_GROUP_IDS);
+  }, []);
+
+  const selectAllHiragana = useCallback(() => {
+    setSelectedGroups(["basic-hira", "dakuten-hira", "youon-hira"]);
+  }, []);
+
+  const selectAllKatakana = useCallback(() => {
+    setSelectedGroups(["basic-kata", "dakuten-kata", "youon-kata"]);
+  }, []);
+
+  const selectBasicBoth = useCallback(() => {
+    setSelectedGroups(["basic-hira", "basic-kata"]);
+  }, []);
+
+  const selectDakutenAndYouonBoth = useCallback(() => {
+    setSelectedGroups(["dakuten-hira", "dakuten-kata", "youon-hira", "youon-kata"]);
+  }, []);
 
   // Quiz active state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,40 +207,10 @@ export function KanaQuiz() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Pool of available items based on type & group filters
+  // Pool of available items based on selected groups
   const candidatePool = useMemo(() => {
-    let pool = [...allKana];
-
-    if (selectedGroup === "basic-both") {
-      pool = pool.filter(
-        (item) => item.subGroup === "basic" || item.group === "hiragana" || item.group === "katakana"
-      );
-    } else if (selectedGroup === "basic-hira") {
-      pool = pool.filter(
-        (item) => item.type === "hiragana" && (item.subGroup === "basic" || item.group === "hiragana")
-      );
-    } else if (selectedGroup === "basic-kata") {
-      pool = pool.filter(
-        (item) => item.type === "katakana" && (item.subGroup === "basic" || item.group === "katakana")
-      );
-    } else if (selectedGroup === "basic") {
-      if (selectedType !== "all") {
-        pool = pool.filter((item) => item.type === selectedType);
-      }
-      pool = pool.filter(
-        (item) => item.subGroup === "basic" || item.group === "hiragana" || item.group === "katakana"
-      );
-    } else {
-      if (selectedType !== "all") {
-        pool = pool.filter((item) => item.type === selectedType);
-      }
-      if (selectedGroup !== "all") {
-        pool = pool.filter((item) => item.group === selectedGroup);
-      }
-    }
-
-    return pool;
-  }, [selectedType, selectedGroup]);
+    return allKana.filter((item) => selectedGroups.includes(getItemGroupId(item)));
+  }, [selectedGroups]);
 
   // Generate questions generator
   const generateQuestions = useCallback(
@@ -322,154 +446,144 @@ export function KanaQuiz() {
               </div>
             </div>
 
-            {/* 2. Chọn loại bảng chữ cái */}
+            {/* 2. Chọn nhanh theo bảng */}
             <div>
-              <label className="block font-bold text-foreground mb-2">
-                2. Loại chữ:
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block font-bold text-foreground">
+                  2. Chọn nhanh theo bảng:
+                </label>
+                <span className="text-xs text-foreground-muted">
+                  Bấm để đặt nhanh nhóm chữ
+                </span>
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedType("all");
-                    if (selectedGroup === "basic-hira" || selectedGroup === "basic-kata") {
-                      setSelectedGroup("basic-both");
-                    }
-                  }}
-                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
-                    selectedType === "all"
-                      ? "border-indigo bg-indigo text-white"
+                  onClick={selectAllGroups}
+                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    isAllSelected
+                      ? "border-indigo bg-indigo text-white shadow-xs font-black"
                       : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
                   }`}
                 >
-                  Cả hai bảng
+                  Cả hai bảng (208)
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedType("hiragana");
-                    if (selectedGroup === "basic-both" || selectedGroup === "basic-kata") {
-                      setSelectedGroup("basic-hira");
-                    }
-                  }}
-                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
-                    selectedType === "hiragana"
-                      ? "border-sakura bg-sakura text-white"
+                  onClick={selectAllHiragana}
+                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    isOnlyHiragana
+                      ? "border-sakura bg-sakura text-white shadow-xs font-black"
                       : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
                   }`}
                 >
-                  Chỉ Hiragana
+                  Chỉ Hiragana (104)
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedType("katakana");
-                    if (selectedGroup === "basic-both" || selectedGroup === "basic-hira") {
-                      setSelectedGroup("basic-kata");
-                    }
-                  }}
-                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
-                    selectedType === "katakana"
-                      ? "border-teal-600 bg-teal-600 text-white"
+                  onClick={selectAllKatakana}
+                  className={`py-2 px-3 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
+                    isOnlyKatakana
+                      ? "border-teal-600 bg-teal-600 text-white shadow-xs font-black"
                       : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
                   }`}
                 >
-                  Chỉ Katakana
+                  Chỉ Katakana (104)
                 </button>
               </div>
             </div>
 
-            {/* 3. Nhóm âm cần luyện */}
+            {/* 3. Nhóm âm cần luyện (Đa chọn tự do) */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="font-bold text-foreground">
-                  3. Nhóm âm cần luyện:
-                </label>
+              <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
+                <div className="flex items-center gap-1.5">
+                  <label className="font-bold text-foreground">
+                    3. Nhóm âm cần luyện:
+                  </label>
+                  <span className="text-[11px] text-foreground-dim">
+                    (Chọn 1 hoặc nhiều nhóm tùy ý)
+                  </span>
+                </div>
                 <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald/10 px-2 py-0.5 rounded-md border border-emerald/20">
-                  {candidatePool.length} chữ trong bài
+                  {candidatePool.length} chữ ({selectedGroups.length}/6 nhóm)
                 </span>
               </div>
+
+              {/* Thanh gợi ý chọn nhanh */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2.5 text-xs">
+                <span className="text-[11px] text-foreground-muted font-medium">Gợi ý chọn:</span>
+                <button
+                  type="button"
+                  onClick={selectBasicBoth}
+                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                    isBasicBoth
+                      ? "border-sakura bg-sakura/20 text-sakura-light"
+                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
+                  }`}
+                >
+                  ✨ Cả 2 bảng cơ bản (92)
+                </button>
+                <button
+                  type="button"
+                  onClick={selectDakutenAndYouonBoth}
+                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                    isDakutenAndYouon
+                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
+                  }`}
+                >
+                  🔔 Âm đục & Ghép (116)
+                </button>
+                <button
+                  type="button"
+                  onClick={selectAllGroups}
+                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                    isAllSelected
+                      ? "border-indigo bg-indigo/20 text-indigo-light"
+                      : "border-border/60 bg-surface/80 text-foreground-muted hover:text-foreground hover:bg-surface"
+                  }`}
+                >
+                  Chọn tất cả (208)
+                </button>
+              </div>
+
+              {/* Lưới 6 nhóm âm đa chọn */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroup("all")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "all"
-                      ? "border-indigo bg-indigo/20 text-indigo-light shadow-xs"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  Tất cả nhóm
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedGroup("basic-both");
-                    setSelectedType("all");
-                  }}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "basic-both" || (selectedGroup === "basic" && selectedType === "all")
-                      ? "border-indigo bg-indigo text-white shadow-sm font-black"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  ✨ Cơ bản Hira & Kata (92)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedGroup("basic-hira");
-                    setSelectedType("hiragana");
-                  }}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "basic-hira" || (selectedGroup === "basic" && selectedType === "hiragana")
-                      ? "border-sakura bg-sakura text-white shadow-sm font-black"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  🌸 Cơ bản Hiragana (46)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedGroup("basic-kata");
-                    setSelectedType("katakana");
-                  }}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "basic-kata" || (selectedGroup === "basic" && selectedType === "katakana")
-                      ? "border-teal-600 bg-teal-600 text-white shadow-sm font-black"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  ⚡ Cơ bản Katakana (46)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroup("dakuten")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "dakuten"
-                      ? "border-emerald bg-emerald/20 text-emerald-400 font-bold shadow-xs"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  🔔 Âm đục (゛/ ゜)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroup("youon")}
-                  className={`py-2 px-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer text-center ${
-                    selectedGroup === "youon"
-                      ? "border-amber-500 bg-amber-500/20 text-amber-300 font-bold shadow-xs"
-                      : "border-border/60 bg-surface text-foreground-muted hover:text-foreground hover:bg-surface-hover"
-                  }`}
-                >
-                  🧩 Âm ghép (ゃ/ゅ/ょ)
-                </button>
+                {GROUP_CONFIGS.map((g) => {
+                  const isChecked = selectedGroups.includes(g.id);
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => toggleGroup(g.id)}
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
+                        isChecked
+                          ? `${g.activeBorder} ${g.activeBg} ${g.activeText} shadow-xs ring-1 ${g.activeRing}`
+                          : "border-border/60 bg-surface/60 text-foreground-muted hover:bg-surface hover:text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold flex items-center gap-1.5 text-xs sm:text-sm">
+                          <span>{g.icon}</span>
+                          <span>{g.label}</span>
+                        </span>
+                        <span
+                          className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] font-black border transition-all ${
+                            isChecked
+                              ? `${g.badgeBg} text-white border-transparent`
+                              : "border-border bg-surface text-transparent"
+                          }`}
+                        >
+                          ✓
+                        </span>
+                      </div>
+                      <div className="text-[11px] opacity-80 flex items-center justify-between">
+                        <span>{g.desc}</span>
+                        <span className="font-mono font-bold">({g.count})</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -480,20 +594,22 @@ export function KanaQuiz() {
                   Số lượng câu:
                 </label>
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  {[10, 20, 30, 50, 92].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      onClick={() => setQuestionCount(num)}
-                      className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
-                        questionCount === num
-                          ? "border-indigo bg-indigo text-white"
-                          : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
-                      }`}
-                    >
-                      {num} câu
-                    </button>
-                  ))}
+                  {[10, 20, 30, 50, candidatePool.length]
+                    .filter((num, idx, arr) => num > 0 && arr.indexOf(num) === idx)
+                    .map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setQuestionCount(num)}
+                        className={`flex-1 py-1.5 px-1 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center ${
+                          questionCount === num
+                            ? "border-indigo bg-indigo text-white"
+                            : "border-border/60 bg-surface text-foreground-muted hover:text-foreground"
+                        }`}
+                      >
+                        {num === candidatePool.length ? `Tất cả (${num})` : `${num} câu`}
+                      </button>
+                    ))}
                 </div>
               </div>
 

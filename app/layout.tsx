@@ -27,8 +27,13 @@ export const metadata: Metadata = {
     "Vocabulary",
   ],
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/icon.svg?v=4", type: "image/svg+xml" },
+      { url: "/icon-32.png?v=4", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico?v=4", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico?v=4",
+    apple: "/icon-192.png?v=4",
   },
 };
 
@@ -40,6 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg?v=4" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png?v=4" />
+        <link rel="shortcut icon" href="/favicon.ico?v=4" />
+        <link rel="apple-touch-icon" href="/icon-192.png?v=4" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
