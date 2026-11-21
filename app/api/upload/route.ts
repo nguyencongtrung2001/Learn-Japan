@@ -58,9 +58,18 @@ export async function POST(req: NextRequest) {
     if (!uploadRes.ok) {
       const errBody = await uploadRes.json().catch(() => ({}));
       console.error("Cloudinary upload error:", errBody);
+
+      let errorMessage = "Lỗi upload lên Cloudinary. Vui lòng thử lại.";
+      if (errBody?.error?.message?.includes('missing permissions (actions=["create"])')) {
+        errorMessage =
+          "API Key Cloudinary chưa được cấp quyền tải ảnh (thiếu quyền create). Vui lòng vào Cloudinary Console > Settings > Access Keys để cấp quyền Full Access hoặc tạo key mới.";
+      } else if (errBody?.error?.message) {
+        errorMessage = `Lỗi Cloudinary: ${errBody.error.message}`;
+      }
+
       return NextResponse.json(
-        { error: "Lỗi upload lên Cloudinary. Vui lòng thử lại." },
-        { status: 500 }
+        { error: errorMessage },
+        { status: uploadRes.status || 500 }
       );
     }
 
