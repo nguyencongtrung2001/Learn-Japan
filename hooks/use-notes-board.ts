@@ -22,25 +22,27 @@ import {
 const STORAGE_KEY = "trello_notes_board_v1";
 
 export function useNotesBoard() {
-  const [board, setBoard] = useState<NotesBoardData>(DEFAULT_BOARD_DATA);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<"synced" | "saving" | "error">("synced");
-  const [, startTransition] = useTransition();
-
-  // 1. Khởi tạo cache tức thì từ localStorage, sau đó tải dữ liệu mới nhất từ Neon Postgres DB
-  useEffect(() => {
+  const [board, setBoard] = useState<NotesBoardData>(() => {
+    if (typeof window === "undefined") return DEFAULT_BOARD_DATA;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed?.columns && Array.isArray(parsed.columns)) {
-          setBoard(parsed);
+          return parsed;
         }
       }
     } catch (err) {
       console.error("Lỗi khi đọc cache localStorage:", err);
     }
+    return DEFAULT_BOARD_DATA;
+  });
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "saving" | "error">("synced");
+  const [, startTransition] = useTransition();
 
+  // 1. Tải dữ liệu mới nhất từ Neon Postgres DB và đồng bộ cache
+  useEffect(() => {
     // Tải dữ liệu thật từ Database
     let isCancelled = false;
     getNotesBoardAction()

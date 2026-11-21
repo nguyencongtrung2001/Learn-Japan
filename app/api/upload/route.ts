@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { v2 as cloudinary } from "cloudinary";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
@@ -67,35 +68,26 @@ export async function POST(req: NextRequest) {
     // 1. Thử upload lên Cloudinary nếu có cấu hình đầy đủ
     if (cloudName && apiKey && apiSecret) {
       try {
+        cloudinary.config({
+          cloud_name: cloudName,
+          api_key: apiKey,
+          api_secret: apiSecret,
+          secure: true,
+        });
+
         const folder = language === "japanese" ? "Image/Japan" : "Image/English";
-        const timestamp = Math.floor(Date.now() / 1000).toString();
+        const b64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-        const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-        const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
+        const uploadResult = await cloudinary.uploader.upload(b64, {
+          folder,
+          resource_type: "image",
+        });
 
-        const cloudinaryForm = new FormData();
-        cloudinaryForm.append("file", new Blob([buffer], { type: file.type }), file.name);
-        cloudinaryForm.append("api_key", apiKey);
-        cloudinaryForm.append("timestamp", timestamp);
-        cloudinaryForm.append("signature", signature);
-        cloudinaryForm.append("folder", folder);
-
-        const uploadRes = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          { method: "POST", body: cloudinaryForm }
-        );
-
-        if (uploadRes.ok) {
-          const result = await uploadRes.json();
-          if (result.secure_url) {
-            return NextResponse.json({ url: result.secure_url });
-          }
-        } else {
-          const errBody = await uploadRes.json().catch(() => ({}));
-          console.warn("Cloudinary upload failed, falling back to local storage:", errBody);
+        if (uploadResult?.secure_url) {
+          return NextResponse.json({ url: uploadResult.secure_url });
         }
       } catch (cloudErr) {
-        console.warn("Cloudinary fetch error, falling back to local storage:", cloudErr);
+        console.warn("Cloudinary upload failed, falling back to local storage:", cloudErr);
       }
     }
 

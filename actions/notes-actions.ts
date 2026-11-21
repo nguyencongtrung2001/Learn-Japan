@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { noteColumns, noteCards, type NoteColumnDB, type NoteCardDB } from "@/db/schema";
+import { noteColumns, noteCards } from "@/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import {
   DEFAULT_BOARD_DATA,

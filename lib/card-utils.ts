@@ -77,3 +77,26 @@ export function toCardListItem(
 export function isCardDue(card: Pick<CardListItem, "growthLevel" | "nextReviewAt">, now: number): boolean {
   return card.growthLevel >= 6 && card.nextReviewAt <= now;
 }
+
+/** Tách câu ví dụ và bản dịch nghĩa của ví dụ */
+export function parseExampleAndMeaning(example?: string | null, exampleMeaning?: string | null) {
+  const sentence = (example ?? "").trim();
+  const directMeaning = (exampleMeaning ?? "").trim();
+  if (directMeaning) {
+    return { sentence, meaning: directMeaning };
+  }
+  if (!sentence) {
+    return { sentence: "", meaning: "" };
+  }
+  // Nếu câu ví dụ có kèm dịch trong ngoặc đơn: 春になると桜が綺麗に咲きます。(Khi mùa xuân đến...)
+  const bracketMatch = sentence.match(/^([\s\S]*?)\s*[(（]([\s\S]+?)[)）]\s*$/);
+  if (bracketMatch) {
+    return { sentence: bracketMatch[1].trim(), meaning: bracketMatch[2].trim() };
+  }
+  // Nếu câu ví dụ chia thành 2 dòng (dòng 1 câu gốc, dòng 2 câu dịch)
+  const lines = sentence.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length >= 2) {
+    return { sentence: lines[0], meaning: lines.slice(1).join(" ") };
+  }
+  return { sentence, meaning: "" };
+}
