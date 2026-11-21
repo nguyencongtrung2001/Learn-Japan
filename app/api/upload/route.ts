@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-
-const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME!;
-const API_KEY = process.env.CLOUDINARY_API_KEY!;
-const API_SECRET = process.env.CLOUDINARY_API_SECRET!;
+import fs from "fs/promises";
+import path from "path";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+
+const EXT_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/svg+xml": "svg",
+};
+
+/**
+ * Lưu ảnh vào thư mục public/uploads cục bộ dự phòng
+ */
+async function saveLocally(buffer: Buffer, mimeType: string): Promise<string> {
+  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  const ext = EXT_MAP[mimeType] || "jpg";
+  const uniqueName = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+  const filePath = path.join(uploadDir, uniqueName);
+
+  await fs.writeFile(filePath, buffer);
+  return `/uploads/${uniqueName}`;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,49 +53,53 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Determine Cloudinary folder based on language
-    const folder = language === "japanese" ? "Image/Japan" : "Image/English";
-    const timestamp = Math.floor(Date.now() / 1000).toString();
-
-    // Create signature for signed upload
-    const signatureString = `folder=${folder}&timestamp=${timestamp}${API_SECRET}`;
-    const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
-
-    // Build FormData for Cloudinary
     const buffer = Buffer.from(await file.arrayBuffer());
-    const cloudinaryForm = new FormData();
-    cloudinaryForm.append("file", new Blob([buffer], { type: file.type }), file.name);
-    cloudinaryForm.append("api_key", API_KEY);
-    cloudinaryForm.append("timestamp", timestamp);
-    cloudinaryForm.append("signature", signature);
-    cloudinaryForm.append("folder", folder);
 
-    // Upload to Cloudinary
-    const uploadRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      { method: "POST", body: cloudinaryForm }
-    );
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
-    if (!uploadRes.ok) {
-      const errBody = await uploadRes.json().catch(() => ({}));
-      console.error("Cloudinary upload error:", errBody);
+    // 1. Thử upload lên Cloudinary nếu có cấu hình đầy đủ
+    if (cloudName && apiKey && apiSecret) {
+      try {
+        const folder = language === "japanese" ? "Image/Japan" : "Image/English";
+        const timestamp = Math.floor(Date.now() / 1000).toString();
 
-      let errorMessage = "Lỗi upload lên Cloudinary. Vui lòng thử lại.";
-      if (errBody?.error?.message?.includes('missing permissions (actions=["create"])')) {
-        errorMessage =
-          "API Key Cloudinary chưa được cấp quyền tải ảnh (thiếu quyền create). Vui lòng vào Cloudinary Console > Settings > Access Keys để cấp quyền Full Access hoặc tạo key mới.";
-      } else if (errBody?.error?.message) {
-        errorMessage = `Lỗi Cloudinary: ${errBody.error.message}`;
+        const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
+        const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
+
+        const cloudinaryForm = new FormData();
+        cloudinaryForm.append("file", new Blob([buffer], { type: file.type }), file.name);
+        cloudinaryForm.append("api_key", apiKey);
+        cloudinaryForm.append("timestamp", timestamp);
+        cloudinaryForm.append("signature", signature);
+        cloudinaryForm.append("folder", folder);
+
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          { method: "POST", body: cloudinaryForm }
+        );
+
+        if (uploadRes.ok) {
+          const result = await uploadRes.json();
+          if (result.secure_url) {
+            return NextResponse.json({ url: result.secure_url });
+          }
+        } else {
+          const errBody = await uploadRes.json().catch(() => ({}));
+          console.warn("Cloudinary upload failed, falling back to local storage:", errBody);
+        }
+      } catch (cloudErr) {
+        console.warn("Cloudinary fetch error, falling back to local storage:", cloudErr);
       }
-
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: uploadRes.status || 500 }
-      );
     }
 
-    const result = await uploadRes.json();
-    return NextResponse.json({ url: result.secure_url });
+    // 2. Tự động lưu cục bộ vào /public/uploads nếu Cloudinary bị vô hiệu hóa / thiếu quyền
+    const localUrl = await saveLocally(buffer, file.type);
+    return NextResponse.json({
+      url: localUrl,
+      source: "local",
+    });
   } catch (err) {
     console.error("Upload API error:", err);
     return NextResponse.json({ error: "Lỗi server khi upload ảnh." }, { status: 500 });
