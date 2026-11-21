@@ -598,9 +598,9 @@ export function MinimalFlashcardPlayer({
                   </div>
 
                   {/* Phiên âm Romaji / IPA */}
-                  {currentCard.phonetic && (
+                  {(currentCard.romaji || currentCard.phonetic) && (
                     <div className="text-sm sm:text-base font-mono font-medium text-[#586380]">
-                      /{currentCard.phonetic}/
+                      /{currentCard.romaji || currentCard.phonetic}/
                     </div>
                   )}
 
@@ -635,6 +635,11 @@ export function MinimalFlashcardPlayer({
                         Ví dụ:
                       </span>
                       {currentCard.example}
+                      {currentCard.exampleMeaning && (
+                        <div className="mt-1 text-xs text-emerald-600 font-medium italic">
+                          Dịch nghĩa: {currentCard.exampleMeaning}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

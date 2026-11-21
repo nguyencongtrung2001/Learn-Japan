@@ -12,6 +12,7 @@ interface VocabGridProps {
   selecting?: boolean;
   selectedIds?: Set<number>;
   toggleSelect?: (id: number) => void;
+  folderLanguage?: string;
 }
 
 /** Lưới 3 cột: 1 cột (mobile) → 2 cột (sm) → 3 cột (lg+). */
@@ -24,6 +25,7 @@ function VocabGridBase({
   selecting = false,
   selectedIds,
   toggleSelect,
+  folderLanguage = "japanese",
 }: VocabGridProps) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,6 +56,7 @@ function VocabGridBase({
               onPlay={onPlay}
               onDelete={onDelete}
               onEdit={onEdit}
+              folderLanguage={folderLanguage}
             />
           </div>
         );

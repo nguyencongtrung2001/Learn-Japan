@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CardInput } from "@/lib/card-utils";
+import { ImageUploader } from "./image-uploader";
 
 interface AddCardFormProps {
   /** Trả về true nếu tạo thành công (form sẽ được reset). */
@@ -18,7 +19,7 @@ const baseInput =
 export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: AddCardFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [imageUrlPreview, setImageUrlPreview] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const isJapanese = folderLanguage === "japanese";
 
@@ -35,17 +36,20 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
     const ok = await onSubmit({
       word,
       kanji: get("kanji") || undefined,
+      furigana: get("furigana") || undefined,
+      romaji: get("romaji") || undefined,
       translation,
       partOfSpeech: get("partOfSpeech") || undefined,
       phonetic: get("phonetic") || undefined,
-      imageUrl: get("imageUrl") || undefined,
+      imageUrl: imageUrl || undefined,
       definition: get("definition") || undefined,
       example: get("example") || undefined,
+      exampleMeaning: get("exampleMeaning") || undefined,
     });
     setSubmitting(false);
     if (ok) {
       formRef.current?.reset();
-      setImageUrlPreview("");
+      setImageUrl("");
     }
   };
 
@@ -74,14 +78,18 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
           <span>{isJapanese ? "🇯🇵" : "🇬🇧"}</span>
           <span>{isJapanese ? "Thêm Thẻ Tiếng Nhật Mới" : "Thêm Thẻ Từ Vựng Mới"}</span>
         </h3>
-        <p className="text-xs text-[#586380] mt-0.5">Nhập đầy đủ thông tin để flashcard hiển thị trực quan</p>
+        <p className="text-xs text-[#586380] mt-0.5">
+          {isJapanese
+            ? "Cấu trúc chuẩn: Từ vựng (Kana) | Kanji | Furigana | Romaji | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ (có dịch) | Hình ảnh"
+            : "Nhập đầy đủ thông tin để flashcard hiển thị trực quan"}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* 1. Từ vựng / Cụm từ */}
-        <div className={isJapanese ? "md:col-span-1" : "md:col-span-2"}>
+        {/* 1. Từ vựng (Kana) */}
+        <div>
           <label className={labelClass} htmlFor="card-word">
-            {isJapanese ? "Từ vựng / Kana (Hiragana/Katakana)" : "Từ vựng"}{" "}
+            {isJapanese ? "1. Từ vựng / Kana (Hiragana/Katakana)" : "Từ vựng"}{" "}
             <span className="text-red-500">*</span>
           </label>
           <input
@@ -95,65 +103,80 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
           />
         </div>
 
-        {/* Cột chữ Kanji nếu là tiếng Nhật */}
-        {isJapanese && (
-          <div className="md:col-span-1">
+        {/* 2. Chữ Hán (Kanji) */}
+        {isJapanese ? (
+          <div>
             <label className={labelClass} htmlFor="card-kanji">
-              🈁 Chữ Hán (Kanji)
+              2. 🈁 Chữ Hán (Kanji)
             </label>
             <input
               id="card-kanji"
               name="kanji"
               type="text"
               autoComplete="off"
-              placeholder="VD: 桜 hoặc 食べる hoặc 一期一会"
-              className={`${baseInput} py-2.5 text-base font-bold placeholder:font-normal text-red-600`}
+              placeholder="VD: 桜 hoặc 食べる"
+              className={`${baseInput} py-2.5 text-base font-bold placeholder:font-normal text-red-600 font-jp`}
+            />
+          </div>
+        ) : (
+          <div>
+            <label className={labelClass} htmlFor="card-phonetic">
+              Phiên âm IPA
+            </label>
+            <input
+              id="card-phonetic"
+              name="phonetic"
+              type="text"
+              autoComplete="off"
+              placeholder="/ˈæp.əl/"
+              className={`${baseInput} py-2.5 font-medium text-[#4255FF]`}
             />
           </div>
         )}
 
-        {/* 2. Phiên âm / Romaji / Furigana */}
-        <div>
-          <label className={labelClass} htmlFor="card-phonetic">
-            {isJapanese ? "Phiên âm / Furigana / Romaji" : "Phiên âm IPA"}
-          </label>
-          <input
-            id="card-phonetic"
-            name="phonetic"
-            type="text"
-            autoComplete="off"
-            placeholder={isJapanese ? "VD: さくら / sakura" : "/ˈæp.əl/"}
-            className={`${baseInput} py-2.5 font-medium text-[#4255FF]`}
-          />
-        </div>
+        {/* 3 & 4: Furigana & Romaji (nếu là tiếng Nhật) */}
+        {isJapanese && (
+          <>
+            <div>
+              <label className={labelClass} htmlFor="card-furigana">
+                3. Furigana (Cách đọc Hán tự)
+              </label>
+              <input
+                id="card-furigana"
+                name="furigana"
+                type="text"
+                autoComplete="off"
+                placeholder="VD: さくら / たべる"
+                className={`${baseInput} py-2.5 font-medium text-sakura-light`}
+              />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="card-romaji">
+                4. Romaji
+              </label>
+              <input
+                id="card-romaji"
+                name="romaji"
+                type="text"
+                autoComplete="off"
+                placeholder="VD: sakura / taberu"
+                className={`${baseInput} py-2.5 font-medium text-[#4255FF] font-mono`}
+              />
+            </div>
+          </>
+        )}
 
-        {/* 3. Nghĩa tiếng Việt */}
-        <div>
-          <label className={labelClass} htmlFor="card-translation">
-            Nghĩa tiếng Việt <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="card-translation"
-            name="translation"
-            type="text"
-            required
-            autoComplete="off"
-            placeholder={isJapanese ? "VD: Hoa anh đào" : "VD: Quả táo"}
-            className={`${baseInput} py-2.5 font-medium`}
-          />
-        </div>
-
-        {/* 4. Loại từ */}
+        {/* 5. Loại từ */}
         <div>
           <label className={labelClass} htmlFor="card-pos">
-            Loại từ (Part of Speech)
+            5. Loại từ (Part of Speech)
           </label>
           <input
             id="card-pos"
             name="partOfSpeech"
             type="text"
             list="pos-suggestions"
-            placeholder={isJapanese ? "VD: Danh từ (名詞), Động từ N1..." : "VD: NOUN, VERB, ADJ..."}
+            placeholder={isJapanese ? "VD: Danh từ, Động từ N1..." : "VD: NOUN, VERB, ADJ..."}
             className={`${baseInput} py-2.5 font-medium`}
           />
           <datalist id="pos-suggestions">
@@ -172,52 +195,41 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             <option value="VERB" />
             <option value="ADJ" />
             <option value="ADV" />
-            <option value="PHRASE" />
-            <option value="CỤM TỪ" />
-            <option value="STRUCTURE" />
-            <option value="IDIOM" />
           </datalist>
         </div>
 
-        {/* 5. Hình ảnh nghĩa cốt lõi */}
+        {/* 6. Nghĩa tiếng Việt */}
         <div>
-          <label className={labelClass} htmlFor="card-imageUrl">
-            🖼️ Hình ảnh minh họa (Link URL)
+          <label className={labelClass} htmlFor="card-translation">
+            6. Nghĩa tiếng Việt <span className="text-red-500">*</span>
           </label>
           <input
-            id="card-imageUrl"
-            name="imageUrl"
-            type="url"
+            id="card-translation"
+            name="translation"
+            type="text"
+            required
             autoComplete="off"
-            placeholder="https://images.unsplash.com/... (tùy chọn)"
-            onChange={(e) => setImageUrlPreview(e.target.value.trim())}
-            className={`${baseInput} py-2.5 text-xs font-mono`}
+            placeholder={isJapanese ? "VD: Hoa anh đào" : "VD: Quả táo"}
+            className={`${baseInput} py-2.5 font-medium`}
           />
         </div>
 
-        {/* Image preview nếu có */}
-        {imageUrlPreview && (
-          <div className="md:col-span-2 rounded-xl border border-[#E2E4E9] bg-[#F6F7FB] p-2.5 flex items-center gap-3">
-            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-[#E2E4E9] bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageUrlPreview}
-                alt="Xem trước ảnh"
-                className="h-full w-full object-cover"
-                onError={() => {}}
-              />
-            </div>
-            <div className="text-xs text-[#586380]">
-              <span className="font-bold text-[#1A1D28]">Xem trước hình ảnh:</span>
-              <p className="line-clamp-1 font-mono text-[11px] text-[#939BB4] mt-0.5">{imageUrlPreview}</p>
-            </div>
-          </div>
-        )}
+        {/* 7. Hình ảnh minh họa */}
+        <div className="md:col-span-2">
+          <label className={labelClass}>
+            7. Hình ảnh minh họa
+          </label>
+          <ImageUploader
+            value={imageUrl}
+            onChange={setImageUrl}
+            language={folderLanguage}
+          />
+        </div>
 
-        {/* 6. Ngữ cảnh sử dụng & Sắc thái */}
+        {/* 8. Ngữ cảnh sử dụng & Sắc thái */}
         <div className="md:col-span-2">
           <label className={labelClass} htmlFor="card-definition">
-            💡 {isJapanese ? "Ngữ cảnh sử dụng & Sắc thái" : "Định nghĩa / Ngữ cảnh sử dụng"} (tùy chọn)
+            8. 💡 {isJapanese ? "Ngữ cảnh sử dụng & Sắc thái" : "Định nghĩa / Ngữ cảnh sử dụng"} (tùy chọn)
           </label>
           <textarea
             id="card-definition"
@@ -225,17 +237,17 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             rows={2}
             placeholder={
               isJapanese
-                ? "VD: Biểu tượng mùa xuân nước Nhật, vẻ đẹp rực rỡ nhưng mong manh..."
+                ? "VD: Biểu tượng mùa xuân nước Nhật, vẻ đẹp rực rỡ nhưng ngắn ngủi thanh khiết..."
                 : "VD: A round fruit with red or green skin and firm white flesh..."
             }
             className={`${baseInput} resize-none py-2.5`}
           />
         </div>
 
-        {/* 7. Câu ví dụ thực tế */}
-        <div className="md:col-span-2">
+        {/* 9. Câu ví dụ thực tế */}
+        <div className={isJapanese ? "md:col-span-1" : "md:col-span-2"}>
           <label className={labelClass} htmlFor="card-example">
-            💬 {isJapanese ? "Câu ví dụ thực tế (kèm dịch)" : "Ví dụ thực tế"} (tùy chọn)
+            9. 💬 {isJapanese ? "Câu ví dụ thực tế" : "Ví dụ thực tế"} (tùy chọn)
           </label>
           <textarea
             id="card-example"
@@ -243,12 +255,28 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             rows={2}
             placeholder={
               isJapanese
-                ? "VD: 春になると桜が綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.)"
+                ? "VD: 春になると桜が綺麗に咲きます。"
                 : "VD: I ate a sweet red apple for breakfast."
             }
             className={`${baseInput} resize-none py-2.5`}
           />
         </div>
+
+        {/* 10. Dịch nghĩa câu ví dụ (có dịch nghĩa) */}
+        {isJapanese && (
+          <div className="md:col-span-1">
+            <label className={labelClass} htmlFor="card-example-meaning">
+              10. 📝 Dịch nghĩa câu ví dụ (tùy chọn)
+            </label>
+            <textarea
+              id="card-example-meaning"
+              name="exampleMeaning"
+              rows={2}
+              placeholder="VD: Khi mùa xuân đến, hoa anh đào nở rất đẹp."
+              className={`${baseInput} resize-none py-2.5`}
+            />
+          </div>
+        )}
       </div>
 
       <div className="mt-5 flex items-center gap-3">

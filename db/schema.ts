@@ -31,10 +31,13 @@ export const cards = pgTable(
     // ── Content ──
     word: text("word").notNull(),
     kanji: text("kanji"), // Chữ Hán (Kanji)
-    translation: text("translation").notNull(),
+    furigana: text("furigana"), // Furigana
+    romaji: text("romaji"), // Romaji
     partOfSpeech: text("part_of_speech"), // NOUN, VERB, ADJ, ADV, CỤM TỪ, STRUCTURE...
-    definition: text("definition"),
-    example: text("example"),
+    translation: text("translation").notNull(),
+    definition: text("definition"), // Ngữ cảnh / Định nghĩa
+    example: text("example"), // Câu ví dụ
+    exampleMeaning: text("example_meaning"), // Dịch nghĩa câu ví dụ
     phonetic: text("phonetic"),
     imageUrl: text("image_url"),
 

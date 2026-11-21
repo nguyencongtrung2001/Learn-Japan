@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CardListItem, CardInput } from "@/lib/card-utils";
+import { ImageUploader } from "./image-uploader";
 
 interface EditCardModalProps {
   card: CardListItem | null;
@@ -28,11 +29,14 @@ function EditCardFormContent({
 }) {
   const [word, setWord] = useState(card.word);
   const [kanji, setKanji] = useState(card.kanji ?? "");
+  const [furigana, setFurigana] = useState(card.furigana ?? "");
+  const [romaji, setRomaji] = useState(card.romaji ?? "");
   const [translation, setTranslation] = useState(card.translation);
   const [partOfSpeech, setPartOfSpeech] = useState(card.partOfSpeech ?? "");
   const [phonetic, setPhonetic] = useState(card.phonetic ?? "");
   const [definition, setDefinition] = useState(card.definition ?? "");
   const [example, setExample] = useState(card.example ?? "");
+  const [exampleMeaning, setExampleMeaning] = useState(card.exampleMeaning ?? "");
   const [imageUrl, setImageUrl] = useState(card.imageUrl ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -49,11 +53,14 @@ function EditCardFormContent({
     const ok = await onSave(card.id, {
       word: word.trim(),
       kanji: kanji.trim() || undefined,
+      furigana: furigana.trim() || undefined,
+      romaji: romaji.trim() || undefined,
       translation: translation.trim(),
       partOfSpeech: partOfSpeech.trim() || undefined,
       phonetic: phonetic.trim() || undefined,
       definition: definition.trim() || undefined,
       example: example.trim() || undefined,
+      exampleMeaning: exampleMeaning.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
     });
     setSaving(false);
@@ -74,7 +81,7 @@ function EditCardFormContent({
         <button
           type="button"
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-[#586380] hover:bg-[#EDEFF4] hover:text-[#1A1D28] transition-colors cursor-pointer"
           title="Đóng"
         >
           ✕
@@ -82,10 +89,11 @@ function EditCardFormContent({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 1 & 2: Từ vựng (Kana) & Chữ Hán (Kanji) */}
         <div className={isJapanese ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
           <div>
             <label className={labelClass} htmlFor="edit-word">
-              {isJapanese ? "Từ vựng / Kana (Hiragana/Katakana)" : "Từ vựng"}{" "}
+              {isJapanese ? "1. Từ vựng / Kana" : "Từ vựng"}{" "}
               <span className="text-red-500">*</span>
             </label>
             <input
@@ -102,24 +110,71 @@ function EditCardFormContent({
           {isJapanese && (
             <div>
               <label className={labelClass} htmlFor="edit-kanji">
-                🈁 Chữ Hán (Kanji)
+                2. 🈁 Chữ Hán (Kanji)
               </label>
               <input
                 id="edit-kanji"
                 type="text"
                 value={kanji}
                 onChange={(e) => setKanji(e.target.value)}
-                placeholder="VD: 桜 hoặc 食べる hoặc 一期一会"
-                className={`${inputClass} text-base font-bold text-red-600`}
+                placeholder="VD: 桜 hoặc 食べる"
+                className={`${inputClass} text-base font-bold text-red-600 font-jp`}
               />
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* 3 & 4: Furigana & Romaji (hoặc Phiên âm IPA) */}
+        {isJapanese ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass} htmlFor="edit-furigana">
+                3. Furigana
+              </label>
+              <input
+                id="edit-furigana"
+                type="text"
+                value={furigana}
+                onChange={(e) => setFurigana(e.target.value)}
+                placeholder="VD: さくら / たべる"
+                className={`${inputClass} text-sakura-light`}
+              />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="edit-romaji">
+                4. Romaji
+              </label>
+              <input
+                id="edit-romaji"
+                type="text"
+                value={romaji}
+                onChange={(e) => setRomaji(e.target.value)}
+                placeholder="VD: sakura / taberu"
+                className={`${inputClass} text-[#4255FF] font-mono`}
+              />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <label className={labelClass} htmlFor="edit-phonetic">
+              Phiên âm IPA
+            </label>
+            <input
+              id="edit-phonetic"
+              type="text"
+              value={phonetic}
+              onChange={(e) => setPhonetic(e.target.value)}
+              placeholder="/ˈæp.əl/"
+              className={`${inputClass} text-[#4255FF]`}
+            />
+          </div>
+        )}
+
+        {/* 5 & 6: Loại từ & Nghĩa tiếng Việt */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="edit-pos">
-              Loại từ
+              {isJapanese ? "5. Loại từ" : "Loại từ"}
             </label>
             <input
               id="edit-pos"
@@ -140,20 +195,17 @@ function EditCardFormContent({
               <option value="Phó từ (副詞)" />
               <option value="Cụm từ (連語)" />
               <option value="Thành ngữ (慣用句)" />
-              <option value="Trợ từ (助詞)" />
               <option value="NOUN" />
               <option value="VERB" />
               <option value="ADJ" />
               <option value="ADV" />
-              <option value="PHRASE" />
-              <option value="CỤM TỪ" />
-              <option value="STRUCTURE" />
-              <option value="IDIOM" />
             </datalist>
           </div>
+
           <div>
             <label className={labelClass} htmlFor="edit-translation">
-              Nghĩa tiếng Việt <span className="text-red-500">*</span>
+              {isJapanese ? "6. Nghĩa tiếng Việt" : "Nghĩa tiếng Việt"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               id="edit-translation"
@@ -165,54 +217,19 @@ function EditCardFormContent({
               className={inputClass}
             />
           </div>
-          <div>
-            <label className={labelClass} htmlFor="edit-phonetic">
-              {isJapanese ? "Furigana / Romaji" : "Phiên âm IPA"}
-            </label>
-            <input
-              id="edit-phonetic"
-              type="text"
-              value={phonetic}
-              onChange={(e) => setPhonetic(e.target.value)}
-              placeholder={isJapanese ? "さくら / sakura" : "/ˈæp.əl/"}
-              className={`${inputClass} text-[#4255FF]`}
-            />
-          </div>
         </div>
 
-        <div>
-          <label className={labelClass} htmlFor="edit-imageUrl">
-            🖼️ Hình ảnh minh họa (Link URL)
-          </label>
-          <input
-            id="edit-imageUrl"
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://... (link hình ảnh minh họa)"
-            className={`${inputClass} font-mono text-xs`}
-          />
-          {imageUrl.trim() && (
-            <div className="mt-2 flex items-center gap-3 rounded-xl border border-[#E2E4E9] bg-[#F6F7FB] p-2">
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[#E2E4E9] bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageUrl.trim()}
-                  alt="Preview"
-                  className="h-full w-full object-cover"
-                  onError={() => {}}
-                />
-              </div>
-              <div className="text-xs text-[#586380] line-clamp-2 font-mono">
-                {imageUrl.trim()}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* 7. Hình ảnh minh họa */}
+        <ImageUploader
+          value={imageUrl}
+          onChange={setImageUrl}
+          language={folderLanguage}
+        />
 
+        {/* 8. Ngữ cảnh sử dụng & Sắc thái */}
         <div>
           <label className={labelClass} htmlFor="edit-definition">
-            💡 {isJapanese ? "Ngữ cảnh sử dụng & Sắc thái" : "Định nghĩa / Ngữ cảnh sử dụng"}
+            💡 {isJapanese ? "8. Ngữ cảnh sử dụng & Sắc thái" : "Định nghĩa / Ngữ cảnh sử dụng"}
           </label>
           <textarea
             id="edit-definition"
@@ -228,22 +245,41 @@ function EditCardFormContent({
           />
         </div>
 
-        <div>
-          <label className={labelClass} htmlFor="edit-example">
-            💬 {isJapanese ? "Câu ví dụ thực tế (kèm dịch nghĩa)" : "Ví dụ câu"}
-          </label>
-          <textarea
-            id="edit-example"
-            value={example}
-            onChange={(e) => setExample(e.target.value)}
-            placeholder={
-              isJapanese
-                ? "Câu ví dụ tiếng Nhật và dịch nghĩa..."
-                : "Câu ví dụ thực tế..."
-            }
-            rows={2}
-            className={`${inputClass} resize-none italic`}
-          />
+        {/* 9 & 10: Câu ví dụ & Dịch nghĩa ví dụ */}
+        <div className={isJapanese ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
+          <div>
+            <label className={labelClass} htmlFor="edit-example">
+              💬 {isJapanese ? "9. Câu ví dụ thực tế" : "Ví dụ câu"}
+            </label>
+            <textarea
+              id="edit-example"
+              value={example}
+              onChange={(e) => setExample(e.target.value)}
+              placeholder={
+                isJapanese
+                  ? "VD: 春になると桜が綺麗に咲きます。"
+                  : "Câu ví dụ thực tế..."
+              }
+              rows={2}
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+
+          {isJapanese && (
+            <div>
+              <label className={labelClass} htmlFor="edit-example-meaning">
+                📝 10. Dịch nghĩa câu ví dụ
+              </label>
+              <textarea
+                id="edit-example-meaning"
+                value={exampleMeaning}
+                onChange={(e) => setExampleMeaning(e.target.value)}
+                placeholder="VD: Khi mùa xuân đến, hoa anh đào nở rất đẹp."
+                rows={2}
+                className={`${inputClass} resize-none italic`}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2.5 pt-2">
@@ -272,11 +308,10 @@ export function EditCardModal({ card, isOpen, onClose, onSave, folderLanguage = 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
       onClick={onClose}
     >
       <EditCardFormContent
-        key={card.id}
         card={card}
         onClose={onClose}
         onSave={onSave}

@@ -201,11 +201,14 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
                   ...c,
                   word: input.word,
                   kanji: input.kanji || null,
+                  furigana: input.furigana || null,
+                  romaji: input.romaji || null,
                   translation: input.translation,
                   partOfSpeech: input.partOfSpeech || null,
-                  phonetic: input.phonetic || null,
                   definition: input.definition || null,
                   example: input.example || null,
+                  exampleMeaning: input.exampleMeaning || null,
+                  phonetic: input.phonetic || null,
                   imageUrl: input.imageUrl || null,
                 }
               : c
@@ -392,6 +395,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               selecting={selecting}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
+              folderLanguage={folder.language}
             />
           )}
         </main>

@@ -44,10 +44,13 @@ export async function getCardListByFolder(folderId: number): Promise<CardListIte
       id: cards.id,
       word: cards.word,
       kanji: cards.kanji,
+      furigana: cards.furigana,
+      romaji: cards.romaji,
       translation: cards.translation,
       partOfSpeech: cards.partOfSpeech,
       definition: cards.definition,
       example: cards.example,
+      exampleMeaning: cards.exampleMeaning,
       phonetic: cards.phonetic,
       imageUrl: cards.imageUrl,
       growthLevel: cards.growthLevel,
@@ -152,10 +155,13 @@ function toInsertRow(folderId: number, data: CardInput) {
     folderId,
     word: data.word.trim(),
     kanji: data.kanji?.trim() || null,
+    furigana: data.furigana?.trim() || null,
+    romaji: data.romaji?.trim() || null,
     translation: data.translation.trim(),
     partOfSpeech: data.partOfSpeech?.trim() || null,
     definition: data.definition?.trim() || null,
     example: data.example?.trim() || null,
+    exampleMeaning: data.exampleMeaning?.trim() || null,
     phonetic: data.phonetic?.trim() || null,
     imageUrl: data.imageUrl?.trim() || null,
     // growthLevel, consecutiveCorrect, nextReview, ... dùng default của schema
@@ -210,10 +216,13 @@ export async function updateCard(
   data: {
     word?: string;
     kanji?: string;
+    furigana?: string;
+    romaji?: string;
     translation?: string;
     partOfSpeech?: string;
     definition?: string;
     example?: string;
+    exampleMeaning?: string;
     phonetic?: string;
     imageUrl?: string;
     folderId?: number;
@@ -224,10 +233,13 @@ export async function updateCard(
     .set({
       ...(data.word !== undefined && { word: data.word.trim() }),
       ...(data.kanji !== undefined && { kanji: data.kanji?.trim() || null }),
+      ...(data.furigana !== undefined && { furigana: data.furigana?.trim() || null }),
+      ...(data.romaji !== undefined && { romaji: data.romaji?.trim() || null }),
       ...(data.translation !== undefined && { translation: data.translation.trim() }),
       ...(data.partOfSpeech !== undefined && { partOfSpeech: data.partOfSpeech?.trim() || null }),
       ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
       ...(data.example !== undefined && { example: data.example?.trim() || null }),
+      ...(data.exampleMeaning !== undefined && { exampleMeaning: data.exampleMeaning?.trim() || null }),
       ...(data.phonetic !== undefined && { phonetic: data.phonetic?.trim() || null }),
       ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl?.trim() || null }),
     })

@@ -45,9 +45,9 @@ export function FlashcardStep({ card, onPlay, onNext }: FlashcardStepProps) {
 
       <div className="flex items-center justify-center gap-2 flex-wrap mb-3">
         {/* 2. Phiên âm / Furigana / Romaji */}
-        {card.phonetic && (
-          <div className="inline-block rounded-full bg-indigo/15 border border-indigo/30 px-3.5 py-1 text-sm sm:text-base font-bold text-indigo-light">
-            {card.phonetic}
+        {(card.romaji || card.phonetic) && (
+          <div className="inline-block rounded-full bg-indigo/15 border border-indigo/30 px-3.5 py-1 text-sm sm:text-base font-bold text-indigo-light font-mono">
+            /{card.romaji || card.phonetic}/
           </div>
         )}
         {card.partOfSpeech && (
@@ -79,6 +79,11 @@ export function FlashcardStep({ card, onPlay, onNext }: FlashcardStepProps) {
             <span>💬</span> Câu ví dụ thực tế
           </div>
           <p className="italic text-foreground">&quot;{card.example}&quot;</p>
+          {card.exampleMeaning && (
+            <p className="mt-1 text-xs text-emerald-light font-medium italic">
+              📝 Dịch: {card.exampleMeaning}
+            </p>
+          )}
         </div>
       )}
 

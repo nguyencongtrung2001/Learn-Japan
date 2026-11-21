@@ -4,10 +4,13 @@ import type { Card } from "@/db/schema";
 export interface CardInput {
   word: string;
   kanji?: string;
+  furigana?: string;
+  romaji?: string;
   translation: string;
   partOfSpeech?: string;
   definition?: string;
   example?: string;
+  exampleMeaning?: string;
   phonetic?: string;
   imageUrl?: string;
 }
@@ -18,11 +21,38 @@ export interface CardInput {
  */
 export type CardListItem = Pick<
   Card,
-  "id" | "word" | "kanji" | "translation" | "partOfSpeech" | "definition" | "example" | "phonetic" | "imageUrl" | "growthLevel"
+  | "id"
+  | "word"
+  | "kanji"
+  | "furigana"
+  | "romaji"
+  | "translation"
+  | "partOfSpeech"
+  | "definition"
+  | "example"
+  | "exampleMeaning"
+  | "phonetic"
+  | "imageUrl"
+  | "growthLevel"
 > & { nextReviewAt: number };
 
 export function toCardListItem(
-  card: Pick<Card, "id" | "word" | "kanji" | "translation" | "partOfSpeech" | "definition" | "example" | "phonetic" | "imageUrl" | "growthLevel"> & {
+  card: Pick<
+    Card,
+    | "id"
+    | "word"
+    | "kanji"
+    | "furigana"
+    | "romaji"
+    | "translation"
+    | "partOfSpeech"
+    | "definition"
+    | "example"
+    | "exampleMeaning"
+    | "phonetic"
+    | "imageUrl"
+    | "growthLevel"
+  > & {
     nextReview: Date | string;
   }
 ): CardListItem {
@@ -30,10 +60,13 @@ export function toCardListItem(
     id: card.id,
     word: card.word,
     kanji: card.kanji,
+    furigana: card.furigana,
+    romaji: card.romaji,
     translation: card.translation,
     partOfSpeech: card.partOfSpeech,
     definition: card.definition,
     example: card.example,
+    exampleMeaning: card.exampleMeaning,
     phonetic: card.phonetic,
     imageUrl: card.imageUrl,
     growthLevel: card.growthLevel,

@@ -165,11 +165,14 @@ function parseCardsFromRows(
   let headerMap: {
     word?: number;
     kanji?: number;
+    furigana?: number;
+    romaji?: number;
     phonetic?: number;
     pos?: number;
     translation?: number;
     definition?: number;
     example?: number;
+    exampleMeaning?: number;
     imageUrl?: number;
   } | null = null;
 
@@ -217,6 +220,24 @@ function parseCardsFromRows(
       ) {
         headerMap!.kanji = idx;
       } else if (
+        isJapanese &&
+        (cLower.includes("furigana") || cLower.includes("cách đọc"))
+      ) {
+        headerMap!.furigana = idx;
+      } else if (
+        isJapanese &&
+        cLower.includes("romaji")
+      ) {
+        headerMap!.romaji = idx;
+      } else if (
+        cLower.includes("dịch nghĩa ví dụ") ||
+        cLower.includes("dịch ví dụ") ||
+        cLower.includes("nghĩa ví dụ") ||
+        cLower.includes("có dịch nghĩa") ||
+        cLower.includes("example meaning")
+      ) {
+        headerMap!.exampleMeaning = idx;
+      } else if (
         cLower.includes("loại từ") ||
         cLower.includes("từ loại") ||
         cLower.includes("part of speech") ||
@@ -246,11 +267,7 @@ function parseCardsFromRows(
         cLower.includes("phiên âm") ||
         cLower.includes("phonetic") ||
         cLower.includes("ipa") ||
-        cLower.includes("phát âm") ||
-        cLower.includes("romaji") ||
-        cLower.includes("furigana") ||
-        cLower.includes("reading") ||
-        cLower.includes("pronunciation")
+        cLower.includes("phát âm")
       ) {
         headerMap!.phonetic = idx;
       } else if (
@@ -284,21 +301,27 @@ function parseCardsFromRows(
 
     let word = "";
     let kanji = "";
+    let furigana = "";
+    let romaji = "";
     let phonetic = "";
     let partOfSpeech = "";
     let translation = "";
     let definition = "";
     let example = "";
+    let exampleMeaning = "";
     let imageUrl = "";
 
     if (headerMap && headerMap.word !== undefined) {
       word = cols[headerMap.word] || "";
       if (headerMap.kanji !== undefined && isJapanese) kanji = cols[headerMap.kanji] || "";
+      if (headerMap.furigana !== undefined && isJapanese) furigana = cols[headerMap.furigana] || "";
+      if (headerMap.romaji !== undefined && isJapanese) romaji = cols[headerMap.romaji] || "";
       if (headerMap.phonetic !== undefined) phonetic = cols[headerMap.phonetic] || "";
       if (headerMap.pos !== undefined) partOfSpeech = cols[headerMap.pos] || "";
       if (headerMap.translation !== undefined) translation = cols[headerMap.translation] || "";
       if (headerMap.definition !== undefined) definition = cols[headerMap.definition] || "";
       if (headerMap.example !== undefined) example = cols[headerMap.example] || "";
+      if (headerMap.exampleMeaning !== undefined) exampleMeaning = cols[headerMap.exampleMeaning] || "";
       if (headerMap.imageUrl !== undefined) imageUrl = cols[headerMap.imageUrl] || "";
     } else {
       word = cols[0];
@@ -312,102 +335,126 @@ function parseCardsFromRows(
       }
 
       if (isJapanese) {
-        // Tự động tìm cột Kanji nếu có (chứa ký tự Hán tự \u4E00-\u9FAF và ngắn gọn không phải câu ví dụ dài)
-        const kanjiIdx = remainingCols.findIndex(
-          (c, idx) => idx > 0 && idx <= 3 && /[\u4E00-\u9FAF]/.test(c) && c.length <= 15
-        );
-        if (kanjiIdx > 0) {
-          kanji = remainingCols[kanjiIdx];
-          remainingCols = remainingCols.filter((_, idx) => idx !== kanjiIdx);
-        }
+        // Cấu trúc chuẩn 9 cột: Từ vựng (Kana) | Kanji | Furigana | Romaji | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Hình ảnh
+        if (remainingCols.length >= 8) {
+          kanji = remainingCols[1] || "";
+          furigana = remainingCols[2] || "";
+          romaji = remainingCols[3] || "";
+          partOfSpeech = remainingCols[4] || "";
+          translation = remainingCols[5] || "";
+          definition = remainingCols[6] || "";
+          example = remainingCols[7] || "";
+          if (remainingCols.length >= 9 && !imageUrl) {
+            if (isImageUrl(remainingCols[8])) imageUrl = remainingCols[8];
+            else exampleMeaning = remainingCols[8];
+          }
+          if (remainingCols.length >= 10 && !imageUrl && isImageUrl(remainingCols[9])) {
+            imageUrl = remainingCols[9];
+          }
+        } else if (remainingCols.length === 7) {
+          kanji = remainingCols[1] || "";
+          romaji = remainingCols[2] || "";
+          partOfSpeech = remainingCols[3] || "";
+          translation = remainingCols[4] || "";
+          definition = remainingCols[5] || "";
+          example = remainingCols[6] || "";
+        } else {
+          // Tự động tìm cột Kanji nếu có (chứa ký tự Hán tự \u4E00-\u9FAF và ngắn gọn không phải câu ví dụ dài)
+          const kanjiIdx = remainingCols.findIndex(
+            (c, idx) => idx > 0 && idx <= 3 && /[\u4E00-\u9FAF]/.test(c) && c.length <= 15
+          );
+          if (kanjiIdx > 0) {
+            kanji = remainingCols[kanjiIdx];
+            remainingCols = remainingCols.filter((_, idx) => idx !== kanjiIdx);
+          }
 
-        if (remainingCols.length >= 6) {
-          // 6 Cột còn lại: Từ vựng (Kana) | Furigana / Phiên âm | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ
-          if (isPhonetic(remainingCols[1])) {
-            phonetic = remainingCols[1];
-            if (isPos(remainingCols[2])) {
+          if (remainingCols.length >= 6) {
+            // 6 Cột còn lại: Từ vựng (Kana) | Furigana / Phiên âm | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ
+            if (isPhonetic(remainingCols[1])) {
+              phonetic = remainingCols[1];
+              if (isPos(remainingCols[2])) {
+                partOfSpeech = remainingCols[2];
+                translation = remainingCols[3];
+              } else {
+                translation = remainingCols[2];
+                partOfSpeech = remainingCols[3];
+              }
+            } else if (isPos(remainingCols[1])) {
+              partOfSpeech = remainingCols[1];
+              if (isPhonetic(remainingCols[2])) {
+                phonetic = remainingCols[2];
+                translation = remainingCols[3];
+              } else {
+                translation = remainingCols[2];
+                phonetic = remainingCols[3];
+              }
+            } else {
+              phonetic = remainingCols[1];
               partOfSpeech = remainingCols[2];
               translation = remainingCols[3];
-            } else {
-              translation = remainingCols[2];
-              partOfSpeech = remainingCols[3];
             }
-          } else if (isPos(remainingCols[1])) {
-            partOfSpeech = remainingCols[1];
-            if (isPhonetic(remainingCols[2])) {
+            definition = remainingCols[4] || "";
+            example = remainingCols[5] || "";
+          } else if (remainingCols.length === 5) {
+            if (isPhonetic(remainingCols[1]) && isPos(remainingCols[2])) {
+              phonetic = remainingCols[1];
+              partOfSpeech = remainingCols[2];
+              translation = remainingCols[3];
+              definition = remainingCols[4];
+            } else if (isPos(remainingCols[1]) && isPhonetic(remainingCols[2])) {
+              partOfSpeech = remainingCols[1];
               phonetic = remainingCols[2];
               translation = remainingCols[3];
-            } else {
+              definition = remainingCols[4];
+            } else if (isPhonetic(remainingCols[1])) {
+              phonetic = remainingCols[1];
               translation = remainingCols[2];
-              phonetic = remainingCols[3];
+              definition = remainingCols[3];
+              example = remainingCols[4];
+            } else if (isPos(remainingCols[1])) {
+              partOfSpeech = remainingCols[1];
+              translation = remainingCols[2];
+              definition = remainingCols[3];
+              example = remainingCols[4];
+            } else if (isPos(remainingCols[2])) {
+              translation = remainingCols[1];
+              partOfSpeech = remainingCols[2];
+              definition = remainingCols[3];
+              example = remainingCols[4];
+            } else {
+              partOfSpeech = remainingCols[1];
+              translation = remainingCols[2];
+              definition = remainingCols[3];
+              example = remainingCols[4];
             }
-          } else {
-            phonetic = remainingCols[1];
-            partOfSpeech = remainingCols[2];
-            translation = remainingCols[3];
-          }
-          definition = remainingCols[4] || "";
-          example = remainingCols[5] || "";
-        } else if (remainingCols.length === 5) {
-          // 5 Cột:
-          if (isPhonetic(remainingCols[1]) && isPos(remainingCols[2])) {
-            phonetic = remainingCols[1];
-            partOfSpeech = remainingCols[2];
-            translation = remainingCols[3];
-            definition = remainingCols[4];
-          } else if (isPos(remainingCols[1]) && isPhonetic(remainingCols[2])) {
-            partOfSpeech = remainingCols[1];
-            phonetic = remainingCols[2];
-            translation = remainingCols[3];
-            definition = remainingCols[4];
-          } else if (isPhonetic(remainingCols[1])) {
-            phonetic = remainingCols[1];
-            translation = remainingCols[2];
-            definition = remainingCols[3];
-            example = remainingCols[4];
-          } else if (isPos(remainingCols[1])) {
-            partOfSpeech = remainingCols[1];
-            translation = remainingCols[2];
-            definition = remainingCols[3];
-            example = remainingCols[4];
-          } else if (isPos(remainingCols[2])) {
+          } else if (remainingCols.length === 4) {
+            if (isPhonetic(remainingCols[1])) {
+              phonetic = remainingCols[1];
+              translation = remainingCols[2];
+              definition = remainingCols[3];
+            } else if (isPos(remainingCols[1])) {
+              partOfSpeech = remainingCols[1];
+              translation = remainingCols[2];
+              definition = remainingCols[3];
+            } else {
+              translation = remainingCols[1];
+              definition = remainingCols[2];
+              example = remainingCols[3];
+            }
+          } else if (remainingCols.length === 3) {
+            if (isPhonetic(remainingCols[1])) {
+              phonetic = remainingCols[1];
+              translation = remainingCols[2];
+            } else if (isPos(remainingCols[1])) {
+              partOfSpeech = remainingCols[1];
+              translation = remainingCols[2];
+            } else {
+              translation = remainingCols[1];
+              definition = remainingCols[2];
+            }
+          } else if (remainingCols.length === 2) {
             translation = remainingCols[1];
-            partOfSpeech = remainingCols[2];
-            definition = remainingCols[3];
-            example = remainingCols[4];
-          } else {
-            partOfSpeech = remainingCols[1];
-            translation = remainingCols[2];
-            definition = remainingCols[3];
-            example = remainingCols[4];
           }
-        } else if (remainingCols.length === 4) {
-          if (isPhonetic(remainingCols[1])) {
-            phonetic = remainingCols[1];
-            translation = remainingCols[2];
-            definition = remainingCols[3];
-          } else if (isPos(remainingCols[1])) {
-            partOfSpeech = remainingCols[1];
-            translation = remainingCols[2];
-            definition = remainingCols[3];
-          } else {
-            translation = remainingCols[1];
-            definition = remainingCols[2];
-            example = remainingCols[3];
-          }
-        } else if (remainingCols.length === 3) {
-          if (isPhonetic(remainingCols[1])) {
-            phonetic = remainingCols[1];
-            translation = remainingCols[2];
-          } else if (isPos(remainingCols[1])) {
-            partOfSpeech = remainingCols[1];
-            translation = remainingCols[2];
-          } else {
-            translation = remainingCols[1];
-            definition = remainingCols[2];
-          }
-        } else if (remainingCols.length === 2) {
-          translation = remainingCols[1];
         }
       } else {
         // TIẾNG ANH: Cấu trúc chuẩn 7 cột:
@@ -474,11 +521,14 @@ function parseCardsFromRows(
       result.push({
         word,
         kanji: isJapanese && kanji ? kanji : undefined,
-        phonetic: phonetic ? normalizePhonetic(phonetic, isJapanese) : undefined,
+        furigana: isJapanese && furigana ? furigana : undefined,
+        romaji: isJapanese && romaji ? romaji : undefined,
+        phonetic: phonetic ? normalizePhonetic(phonetic, isJapanese) : (romaji || furigana || undefined),
         partOfSpeech: partOfSpeech ? normalizePos(partOfSpeech, isJapanese) : undefined,
         translation,
         definition: definition || undefined,
         example: example || undefined,
+        exampleMeaning: exampleMeaning || undefined,
         imageUrl: imageUrl || undefined,
       });
     }
@@ -522,27 +572,30 @@ function downloadSampleExcel(isJapanese: boolean) {
     ? [
         [
           "Từ vựng (Kana)",
-          "Chữ Hán (Kanji)",
-          "Furigana / Romaji",
+          "Kanji",
+          "Furigana",
+          "Romaji",
           "Loại từ",
-          "Nghĩa tiếng Việt",
-          "Ngữ cảnh sử dụng & Sắc thái",
-          "Câu ví dụ thực tế",
-          "Link ảnh minh họa",
+          "Nghĩa",
+          "Ngữ cảnh",
+          "Ví dụ",
+          "Hình ảnh",
         ],
         [
           "さくら",
           "桜",
+          "さくら",
           "sakura",
           "Danh từ",
           "Hoa anh đào",
-          "Biểu tượng mùa xuân nước Nhật, vẻ đẹp ngắn ngủi thanh khiết",
+          "Biểu tượng mùa xuân nước Nhật, vẻ đẹp thanh khiết",
           "春になると桜が綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.)",
           "https://images.unsplash.com/photo-1522383225653-ed111181a951",
         ],
         [
           "たべる",
           "食べる",
+          "たべる",
           "taberu",
           "Động từ N2",
           "Ăn",
@@ -553,6 +606,7 @@ function downloadSampleExcel(isJapanese: boolean) {
         [
           "いちごいちえ",
           "一期一会",
+          "いちごいちえ",
           "ichigoichie",
           "Thành ngữ",
           "Đời người chỉ gặp một lần",
@@ -563,6 +617,7 @@ function downloadSampleExcel(isJapanese: boolean) {
         [
           "なつかしい",
           "懐かしい",
+          "なつかしい",
           "natsukashii",
           "Tính từ -i",
           "Hoài niệm / Nhớ nhung",
@@ -894,10 +949,11 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
                     <tr>
                       <th className="p-2.5 w-10 text-center">#</th>
                       <th className="p-2.5">{isJapanese ? "Từ vựng (Kana)" : "Từ vựng"}</th>
-                      {isJapanese && <th className="p-2.5">Chữ Hán (Kanji)</th>}
-                      <th className="p-2.5">{isJapanese ? "Phiên âm / Furigana" : "Phiên âm IPA"}</th>
+                      {isJapanese && <th className="p-2.5">Kanji</th>}
+                      {isJapanese && <th className="p-2.5">Furigana</th>}
+                      <th className="p-2.5">{isJapanese ? "Romaji" : "Phiên âm IPA"}</th>
                       <th className="p-2.5">Loại từ</th>
-                      <th className="p-2.5">Nghĩa tiếng Việt</th>
+                      <th className="p-2.5">Nghĩa</th>
                       <th className="p-2.5">Ảnh</th>
                       <th className="p-2.5">{isJapanese ? "Ngữ cảnh & Ví dụ" : "Định nghĩa & Ví dụ"}</th>
                     </tr>
@@ -908,9 +964,12 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
                         <td className="p-2.5 text-center text-[#939BB4]">{idx + 1}</td>
                         <td className="p-2.5 font-bold text-[#1A1D28]">{c.word}</td>
                         {isJapanese && (
-                          <td className="p-2.5 font-bold text-red-600">{c.kanji || "—"}</td>
+                          <td className="p-2.5 font-bold text-red-600 font-jp">{c.kanji || "—"}</td>
                         )}
-                        <td className="p-2.5 text-[#4255FF] font-mono">{c.phonetic || "—"}</td>
+                        {isJapanese && (
+                          <td className="p-2.5 text-sakura-light">{c.furigana || "—"}</td>
+                        )}
+                        <td className="p-2.5 text-[#4255FF] font-mono">{c.romaji || c.phonetic || "—"}</td>
                         <td className="p-2.5">
                           {c.partOfSpeech ? (
                             <span className="rounded bg-[#EDEFF4] px-1.5 py-0.5 text-[10px] font-bold text-[#586380]">
@@ -952,11 +1011,11 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
               <span className="font-bold text-[#1A1D28]">
-                {isJapanese ? "Cấu trúc chuẩn tiếng Nhật (8 cột):" : "Cấu trúc chuẩn tiếng Anh (7 cột):"}
+                {isJapanese ? "Cấu trúc chuẩn tiếng Nhật (9 cột):" : "Cấu trúc chuẩn tiếng Anh (7 cột):"}
               </span>
               <span className="rounded-lg bg-[#F6F7FB] px-2.5 py-1 border border-[#E2E4E9] text-[#1A1D28] font-mono text-[11px] font-semibold">
                 {isJapanese
-                  ? "Từ vựng (Kana) | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh"
+                  ? "Từ vựng (Kana) | Kanji | Furigana | Romaji | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Hình ảnh"
                   : "Từ vựng | Phiên âm IPA | Loại từ | Nghĩa tiếng Việt | Định nghĩa | Ví dụ | Link ảnh"}
               </span>
             </div>
@@ -967,7 +1026,7 @@ export default function BulkImport({ onImport, onClose, folderLanguage = "japane
             onChange={(e) => setText(e.target.value)}
             placeholder={
               isJapanese
-                ? `Ví dụ bảng Markdown 8 cột tiếng Nhật chuẩn (Từ vựng | Kanji | Furigana | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Link ảnh):\n| さくら | 桜 | sakura | Danh từ | Hoa anh đào | Biểu tượng mùa xuân nước Nhật | 春になると桜が綺麗に咲きます。 | https://images.unsplash.com/photo-1522383225653-ed111181a951 |\n| たべる | 食べる | taberu | Động từ N2 | Ăn | Hành động ăn uống hàng ngày | 毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.) | https://images.unsplash.com/photo-1546069901-ba9599a7e63c |\n| いちごいちえ | 一期一会 | ichigoichie | Thành ngữ | Đời người chỉ gặp một lần | Bắt nguồn từ trà đạo | 一期一会の精神でおもてなしをする。 | |`
+                ? `Ví dụ bảng Markdown 9 cột tiếng Nhật chuẩn (Từ vựng (Kana) | Kanji | Furigana | Romaji | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Hình ảnh):\n| さくら | 桜 | さくら | sakura | Danh từ | Hoa anh đào | Biểu tượng mùa xuân nước Nhật | 春になると桜が綺麗に咲きます。(Khi mùa xuân đến, hoa anh đào nở rất đẹp.) | https://images.unsplash.com/photo-1522383225653-ed111181a951 |\n| たべる | 食べる | たべる | taberu | Động từ N2 | Ăn | Hành động ăn uống hàng ngày | 毎朝パンを食べます。(Mỗi sáng tôi ăn bánh mì.) | https://images.unsplash.com/photo-1546069901-ba9599a7e63c |\n| いちごいちえ | 一期一会 | いちごいちえ | ichigoichie | Thành ngữ | Đời người chỉ gặp một lần | Bắt nguồn từ trà đạo | 一期一会の精神でおもてなしをする。 | |`
                 : `Ví dụ bảng Markdown 7 cột tiếng Anh chuẩn (Từ vựng | Phiên âm IPA | Loại từ | Nghĩa tiếng Việt | Định nghĩa tiếng Anh | Ví dụ | Link ảnh):\n| Perseverance | /ˌpɜː.sɪˈvɪə.rəns/ | NOUN | Sự kiên trì, bền bỉ | Continued effort and determination despite difficulties | His perseverance was rewarded when he finally passed the exam. | https://images.unsplash.com/photo-1517838277536-f5f99be501cd |\n| Accomplish | /əˈkʌm.plɪʃ/ | VERB | Hoàn thành, đạt được | To achieve or complete successfully | She accomplished all her goals for the year. | https://images.unsplash.com/photo-1507525428034-b723cf961d3e |\n| Resilient | /rɪˈzɪl.jənt/ | ADJ | Kiên cường, mau phục hồi | Able to quickly recover from difficult conditions | He is a resilient person who never gives up in tough times. | https://images.unsplash.com/photo-1499209974431-9dddcece7f88 |\n| Piece of cake | /ˌpiːs əv ˈkeɪk/ | IDIOM | Dễ như ăn kẹo, rất dễ dàng | Something that is very easy and simple to do | The interview was a piece of cake; I got the job! | |`
             }
             className="w-full h-64 sm:h-72 p-3.5 rounded-xl bg-white border border-[#E2E4E9] text-[#1A1D28] text-xs font-mono outline-none focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 transition-all resize-y leading-relaxed placeholder:text-[#939BB4]"
