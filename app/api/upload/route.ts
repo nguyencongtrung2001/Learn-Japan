@@ -15,18 +15,23 @@ const EXT_MAP: Record<string, string> = {
 };
 
 /**
- * Lưu ảnh vào thư mục public/uploads cục bộ dự phòng
+ * Lưu ảnh vào thư mục public/uploads cục bộ, nếu lỗi ổ đĩa thì tự chuyển sang Base64 data URL
  */
 async function saveLocally(buffer: Buffer, mimeType: string): Promise<string> {
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadDir, { recursive: true });
+  try {
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(uploadDir, { recursive: true });
 
-  const ext = EXT_MAP[mimeType] || "jpg";
-  const uniqueName = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
-  const filePath = path.join(uploadDir, uniqueName);
+    const ext = EXT_MAP[mimeType] || "jpg";
+    const uniqueName = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+    const filePath = path.join(uploadDir, uniqueName);
 
-  await fs.writeFile(filePath, buffer);
-  return `/uploads/${uniqueName}`;
+    await fs.writeFile(filePath, buffer);
+    return `/uploads/${uniqueName}`;
+  } catch (fsErr) {
+    console.warn("Ghi file cục bộ thất bại, chuyển sang Base64:", fsErr);
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -94,7 +99,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. Tự động lưu cục bộ vào /public/uploads nếu Cloudinary bị vô hiệu hóa / thiếu quyền
+    // 2. Tự động lưu cục bộ (hoặc Base64) nếu Cloudinary chưa sẵn sàng
     const localUrl = await saveLocally(buffer, file.type);
     return NextResponse.json({
       url: localUrl,
@@ -102,6 +107,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("Upload API error:", err);
-    return NextResponse.json({ error: "Lỗi server khi upload ảnh." }, { status: 500 });
+    const detail = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `Lỗi server khi upload ảnh: ${detail}` }, { status: 500 });
   }
 }
