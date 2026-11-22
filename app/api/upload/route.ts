@@ -39,8 +39,64 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const remoteUrl = (formData.get("url") as string | null)?.trim();
     const language = (formData.get("language") as string) || "english";
 
+    if (!file && !remoteUrl) {
+      return NextResponse.json({ error: "Chưa cung cấp file ảnh hoặc link URL." }, { status: 400 });
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
+    const folder = language === "japanese" ? "Home/Japan" : "Home/English";
+
+    // ─── TRƯỜNG HỢP 1: DÁN LINK URL TỪ NGOÀI ───
+    if (remoteUrl) {
+      // 1. Thử đưa thẳng URL lên Cloudinary để lưu trữ vĩnh viễn
+      if (cloudName && apiKey && apiSecret) {
+        try {
+          cloudinary.config({
+            cloud_name: cloudName,
+            api_key: apiKey,
+            api_secret: apiSecret,
+            secure: true,
+          });
+
+          const uploadResult = await cloudinary.uploader.upload(remoteUrl, {
+            folder,
+            resource_type: "image",
+          });
+
+          if (uploadResult?.secure_url) {
+            return NextResponse.json({ url: uploadResult.secure_url, source: "cloudinary" });
+          }
+        } catch (cloudErr) {
+          console.warn("Cloudinary remote URL upload failed, trying local clone:", cloudErr);
+        }
+      }
+
+      // 2. Dự phòng: Tải ảnh từ URL về lưu cục bộ để tránh link chết
+      try {
+        const fetchRes = await fetch(remoteUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+        });
+        if (fetchRes.ok) {
+          const contentType = fetchRes.headers.get("content-type") || "image/jpeg";
+          const mimeType = contentType.split(";")[0].trim();
+          const arrayBuf = await fetchRes.arrayBuffer();
+          const localUrl = await saveLocally(Buffer.from(arrayBuf), mimeType);
+          return NextResponse.json({ url: localUrl, source: "local" });
+        }
+      } catch (fetchErr) {
+        console.warn("Fetch remote URL failed, using raw link:", fetchErr);
+      }
+
+      // 3. Fallback cuối cùng: giữ nguyên link người dùng nhập
+      return NextResponse.json({ url: remoteUrl, source: "raw" });
+    }
+
+    // ─── TRƯỜNG HỢP 2: TẢI FILE ẢNH TỪ MÁY ───
     if (!file) {
       return NextResponse.json({ error: "Chưa chọn file ảnh." }, { status: 400 });
     }
@@ -61,10 +117,6 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
-    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
-    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
-
     // 1. Thử upload lên Cloudinary nếu có cấu hình đầy đủ
     if (cloudName && apiKey && apiSecret) {
       try {
@@ -75,7 +127,6 @@ export async function POST(req: NextRequest) {
           secure: true,
         });
 
-        const folder = language === "japanese" ? "Home/Japan" : "Home/English";
         const b64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
         const uploadResult = await cloudinary.uploader.upload(b64, {
@@ -84,7 +135,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (uploadResult?.secure_url) {
-          return NextResponse.json({ url: uploadResult.secure_url });
+          return NextResponse.json({ url: uploadResult.secure_url, source: "cloudinary" });
         }
       } catch (cloudErr) {
         console.warn("Cloudinary upload failed, falling back to local storage:", cloudErr);

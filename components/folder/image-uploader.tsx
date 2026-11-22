@@ -91,9 +91,42 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
     setError(null);
   }, [onChange]);
 
-  const handleApplyUrl = () => {
-    onChange(urlInput.trim());
+  const handleApplyUrl = async () => {
+    const raw = urlInput.trim();
+    if (!raw) return;
+
+    // Nếu đã là link Cloudinary hoặc link nội bộ uploads, không cần tải lại
+    if (raw.includes("res.cloudinary.com") || raw.startsWith("/uploads/")) {
+      onChange(raw);
+      setError(null);
+      return;
+    }
+
+    setUploading(true);
     setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("url", raw);
+      formData.append("language", language);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        onChange(data.url);
+        setUrlInput(data.url);
+      } else {
+        onChange(raw);
+      }
+    } catch {
+      onChange(raw);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const previewUrl = localPreview || value;
@@ -209,21 +242,38 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
         </div>
       ) : (
         /* Chế độ nhập link URL */
-        <div className="flex items-center gap-2">
-          <input
-            type="url"
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            placeholder="Dán link ảnh (https://...)"
-            className="flex-1 rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2.5 text-xs text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 font-mono"
-          />
-          <button
-            type="button"
-            onClick={handleApplyUrl}
-            className="rounded-xl bg-[#4255FF] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#3344DD] transition-all cursor-pointer shrink-0"
-          >
-            Gắn link
-          </button>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="Dán link ảnh (https://...)"
+              disabled={uploading}
+              className="flex-1 rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2.5 text-xs text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 font-mono disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={handleApplyUrl}
+              disabled={uploading || !urlInput.trim()}
+              className="rounded-xl bg-[#4255FF] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#3344DD] transition-all cursor-pointer shrink-0 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {uploading ? (
+                <>
+                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span>Đang lưu...</span>
+                </>
+              ) : (
+                <span>Gắn link</span>
+              )}
+            </button>
+          </div>
+          <p className="text-[10px] text-[#586380] flex items-center gap-1">
+            <span>🛡️</span> Ảnh từ link ngoài sẽ được tự động sao lưu lên Cloudinary của bạn để đảm bảo không bao giờ bị mất link.
+          </p>
         </div>
       )}
 
