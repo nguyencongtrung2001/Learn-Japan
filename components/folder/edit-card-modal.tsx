@@ -38,12 +38,14 @@ function EditCardFormContent({
   const [example, setExample] = useState(card.example ?? "");
   const [exampleMeaning, setExampleMeaning] = useState(card.exampleMeaning ?? "");
   const [imageUrl, setImageUrl] = useState(card.imageUrl ?? "");
+  const [imageBusy, setImageBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isJapanese = folderLanguage === "japanese";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (imageBusy) return;
     if (!word.trim() || !translation.trim()) {
       alert("Từ vựng và Nghĩa tiếng Việt không được để trống!");
       return;
@@ -52,16 +54,17 @@ function EditCardFormContent({
     setSaving(true);
     const ok = await onSave(card.id, {
       word: word.trim(),
-      kanji: kanji.trim() || undefined,
-      furigana: furigana.trim() || undefined,
-      romaji: romaji.trim() || undefined,
+      // Gửi "" (không phải undefined) để updateCard xóa thật giá trị đã bị người dùng bỏ trống.
+      kanji: kanji.trim(),
+      furigana: furigana.trim(),
+      romaji: romaji.trim(),
       translation: translation.trim(),
-      partOfSpeech: partOfSpeech.trim() || undefined,
-      phonetic: phonetic.trim() || undefined,
-      definition: definition.trim() || undefined,
-      example: example.trim() || undefined,
-      exampleMeaning: exampleMeaning.trim() || undefined,
-      imageUrl: imageUrl.trim() || undefined,
+      partOfSpeech: partOfSpeech.trim(),
+      phonetic: phonetic.trim(),
+      definition: definition.trim(),
+      example: example.trim(),
+      exampleMeaning: exampleMeaning.trim(),
+      imageUrl: imageUrl.trim(),
     });
     setSaving(false);
     if (ok) {
@@ -224,6 +227,7 @@ function EditCardFormContent({
           value={imageUrl}
           onChange={setImageUrl}
           language={folderLanguage}
+          onBusyChange={setImageBusy}
         />
 
         {/* 8. Ngữ cảnh sử dụng & Sắc thái */}
@@ -285,10 +289,10 @@ function EditCardFormContent({
         <div className="flex gap-2.5 pt-2">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || imageBusy}
             className="flex-1 cursor-pointer rounded-xl bg-[#4255FF] py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:bg-[#3344DD] active:scale-98 disabled:opacity-50"
           >
-            {saving ? "⏳ Đang lưu..." : "💾 Lưu Thay Đổi"}
+            {saving ? "⏳ Đang lưu..." : imageBusy ? "🖼️ Chờ xử lý ảnh..." : "💾 Lưu Thay Đổi"}
           </button>
           <button
             type="button"

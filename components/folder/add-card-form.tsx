@@ -20,11 +20,14 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
   const formRef = useRef<HTMLFormElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageBusy, setImageBusy] = useState(false);
 
   const isJapanese = folderLanguage === "japanese";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // Ảnh đang upload / link chưa được gắn → chưa cho lưu để không mất ảnh.
+    if (imageBusy) return;
     const fd = new FormData(e.currentTarget);
     const get = (key: string) => String(fd.get(key) ?? "").trim();
 
@@ -223,6 +226,7 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
             value={imageUrl}
             onChange={setImageUrl}
             language={folderLanguage}
+            onBusyChange={setImageBusy}
           />
         </div>
 
@@ -291,12 +295,12 @@ export function AddCardForm({ onSubmit, onClose, folderLanguage = "japanese" }: 
         )}
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || imageBusy}
           className={`${
             onClose ? "flex-[2]" : "w-full"
           } cursor-pointer rounded-xl bg-[#4255FF] py-3 text-sm font-bold text-white transition-all hover:bg-[#3344DD] active:scale-98 disabled:opacity-50`}
         >
-          {submitting ? "⏳ Đang lưu..." : "💾 Lưu Thẻ"}
+          {submitting ? "⏳ Đang lưu..." : imageBusy ? "🖼️ Chờ xử lý ảnh..." : "💾 Lưu Thẻ"}
         </button>
       </div>
     </form>

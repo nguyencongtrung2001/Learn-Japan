@@ -1,64 +1,165 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 interface ImageUploaderProps {
   value: string;
   onChange: (url: string) => void;
   language?: string;
+  /**
+   * Báo cho form cha biết uploader đang bận (đang upload, hoặc đã gõ link
+   * nhưng chưa bấm "Gắn link") để form cha chặn nút Lưu → tránh lưu thẻ khi chưa có ảnh.
+   */
+  onBusyChange?: (busy: boolean) => void;
 }
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/svg+xml";
+interface UploadResponse {
+  url: string;
+  source?: "cloudinary" | "local";
+  warning?: string;
+  error?: string;
+}
 
-export function ImageUploader({ value, onChange, language = "english" }: ImageUploaderProps) {
+const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/svg+xml";
+const ALLOWED_TYPES = ACCEPT.split(",");
+
+const MAX_ORIGINAL_BYTES = 15 * 1024 * 1024; // ảnh gốc tối đa 15MB (sẽ được nén)
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // giới hạn thực tế gửi lên server (Vercel ~4.5MB)
+const MAX_DIMENSION = 1600;
+const COMPRESS_THRESHOLD = 1.5 * 1024 * 1024;
+
+/** Thu nhỏ + nén ảnh lớn về JPEG trước khi upload. GIF/SVG giữ nguyên. */
+async function prepareImage(file: File): Promise<File> {
+  if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    return file; // không giải mã được → để server báo lỗi định dạng
+  }
+
+  const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const needsResize = scale < 1;
+  const needsConvert = !ALLOWED_TYPES.includes(file.type);
+
+  if (!needsResize && !needsConvert && file.size <= COMPRESS_THRESHOLD) {
+    bitmap.close();
+    return file;
+  }
+
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    bitmap.close();
+    return file;
+  }
+  ctx.fillStyle = "#ffffff"; // JPEG không có nền trong suốt
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.85)
+  );
+  if (!blob || (!needsResize && !needsConvert && blob.size >= file.size)) return file;
+
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg" });
+}
+
+async function postUpload(formData: FormData): Promise<UploadResponse> {
+  const res = await fetch("/api/upload", { method: "POST", body: formData });
+
+  let data: Partial<UploadResponse> = {};
+  try {
+    data = await res.json();
+  } catch {
+    if (res.status === 413) {
+      throw new Error("File quá lớn so với giới hạn của server (4MB).");
+    }
+    throw new Error(`Server trả về lỗi ${res.status} (phản hồi không phải JSON).`);
+  }
+
+  if (!res.ok || !data.url) {
+    throw new Error(data.error || `Upload thất bại (HTTP ${res.status}).`);
+  }
+  return data as UploadResponse;
+}
+
+export function ImageUploader({
+  value,
+  onChange,
+  language = "english",
+  onBusyChange,
+}: ImageUploaderProps) {
   const [mode, setMode] = useState<"upload" | "url">("upload");
   const [urlInput, setUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [rawFallback, setRawFallback] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Đã gõ link nhưng chưa bấm "Gắn link" → ảnh chưa được lưu lên Cloudinary.
+  const urlPending = mode === "url" && !value && urlInput.trim() !== "";
+  const busy = uploading || urlPending;
+
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+
+  useEffect(() => {
+    return () => onBusyChange?.(false);
+  }, [onBusyChange]);
+
+  // Giải phóng blob URL của ảnh preview tạm
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
+
   const uploadFile = useCallback(
     async (file: File) => {
-      // Validate client-side
       if (!file.type.startsWith("image/")) {
         setError("Chỉ chấp nhận file ảnh.");
         return;
       }
-      if (file.size > MAX_SIZE) {
-        setError("File vượt quá 5MB.");
+      if (file.size > MAX_ORIGINAL_BYTES) {
+        setError("Ảnh vượt quá 15MB.");
         return;
       }
 
       setError(null);
+      setWarning(null);
+      setRawFallback(null);
       setLocalPreview(URL.createObjectURL(file));
       setUploading(true);
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("language", language);
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.url) {
-          throw new Error(data.error || "Upload thất bại.");
+        const prepared = await prepareImage(file);
+        if (prepared.size > MAX_UPLOAD_BYTES) {
+          throw new Error("Ảnh vẫn lớn hơn 4MB sau khi nén. Hãy chọn ảnh nhỏ hơn.");
         }
 
+        const formData = new FormData();
+        formData.append("file", prepared);
+        formData.append("language", language);
+
+        const data = await postUpload(formData);
         onChange(data.url);
-        setUrlInput(data.url);
-        setLocalPreview(null);
+        setWarning(data.source === "local" ? (data.warning ?? "Ảnh chưa được lưu lên Cloudinary.") : null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Lỗi upload ảnh.");
-        setLocalPreview(null);
       } finally {
+        setLocalPreview(null);
         setUploading(false);
       }
     },
@@ -89,44 +190,52 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
     setUrlInput("");
     setLocalPreview(null);
     setError(null);
+    setWarning(null);
+    setRawFallback(null);
   }, [onChange]);
 
   const handleApplyUrl = async () => {
     const raw = urlInput.trim();
-    if (!raw) return;
+    if (!raw || uploading) return;
 
-    // Nếu đã là link Cloudinary hoặc link nội bộ uploads, không cần tải lại
+    // Link Cloudinary / link nội bộ đã có sẵn → không cần tải lại
     if (raw.includes("res.cloudinary.com") || raw.startsWith("/uploads/")) {
       onChange(raw);
+      setUrlInput("");
       setError(null);
+      setRawFallback(null);
       return;
     }
 
     setUploading(true);
     setError(null);
+    setWarning(null);
+    setRawFallback(null);
 
     try {
       const formData = new FormData();
       formData.append("url", raw);
       formData.append("language", language);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok && data.url) {
-        onChange(data.url);
-        setUrlInput(data.url);
-      } else {
-        onChange(raw);
-      }
-    } catch {
-      onChange(raw);
+      const data = await postUpload(formData);
+      onChange(data.url);
+      setUrlInput("");
+    } catch (err) {
+      // KHÔNG âm thầm dùng link gốc nữa: báo lỗi và để người dùng chọn.
+      setError(err instanceof Error ? err.message : "Không thể lưu ảnh từ link này lên Cloudinary.");
+      setRawFallback(raw);
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleUseRawLink = () => {
+    if (!rawFallback) return;
+    onChange(rawFallback);
+    setUrlInput("");
+    setRawFallback(null);
+    setError(null);
+    setWarning("Đang dùng link gốc, ảnh KHÔNG nằm trên Cloudinary nên có thể bị mất nếu nguồn xóa ảnh.");
   };
 
   const previewUrl = localPreview || value;
@@ -176,7 +285,7 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
             />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-8">
             {uploading ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[#4255FF]">
@@ -192,10 +301,17 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
               </div>
             ) : (
               <div className="space-y-1">
-                <span className="text-xs font-bold text-[#23B26D] flex items-center gap-1">
-                  ✅ Đã gắn ảnh minh họa
+                <span
+                  className={`text-xs font-bold flex items-center gap-1 ${
+                    warning ? "text-amber-600" : "text-[#23B26D]"
+                  }`}
+                >
+                  {warning ? "⚠️ Đã gắn ảnh (chưa lên Cloudinary)" : "✅ Đã gắn ảnh minh họa"}
                 </span>
                 <p className="line-clamp-1 font-mono text-[10px] text-[#939BB4]">{value}</p>
+                {warning && (
+                  <p className="text-[10px] font-semibold leading-snug text-amber-600">{warning}</p>
+                )}
               </div>
             )}
           </div>
@@ -237,7 +353,9 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
           </div>
           <div className="text-center">
             <span className="text-xs font-bold text-[#1A1D28]">Kéo thả hoặc bấm để chọn ảnh từ máy</span>
-            <p className="text-[10px] text-[#939BB4] mt-0.5">Tự động tải lên Cloudinary (Tối đa 5MB)</p>
+            <p className="text-[10px] text-[#939BB4] mt-0.5">
+              Tự động nén và tải lên Cloudinary (ảnh tối đa 15MB)
+            </p>
           </div>
         </div>
       ) : (
@@ -248,6 +366,13 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
               type="url"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => {
+                // Enter trong input nằm trong <form> sẽ submit cả form (lưu thẻ không có ảnh) → chặn lại.
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleApplyUrl();
+                }
+              }}
               placeholder="Dán link ảnh (https://...)"
               disabled={uploading}
               className="flex-1 rounded-xl border border-[#E2E4E9] bg-white px-3.5 py-2.5 text-xs text-[#1A1D28] outline-none transition-all placeholder:text-[#939BB4] focus:border-[#4255FF] focus:ring-2 focus:ring-[#4255FF]/10 font-mono disabled:opacity-50"
@@ -272,8 +397,13 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
             </button>
           </div>
           <p className="text-[10px] text-[#586380] flex items-center gap-1">
-            <span>🛡️</span> Ảnh từ link ngoài sẽ được tự động sao lưu lên Cloudinary của bạn để đảm bảo không bao giờ bị mất link.
+            <span>🛡️</span> Ảnh từ link ngoài sẽ được sao lưu lên Cloudinary của bạn để không bao giờ bị mất link.
           </p>
+          {urlPending && !uploading && (
+            <p className="text-[10px] font-semibold text-amber-600">
+              ⚠️ Bấm “Gắn link” (hoặc Enter) để lưu ảnh trước khi lưu thẻ.
+            </p>
+          )}
         </div>
       )}
 
@@ -281,7 +411,18 @@ export function ImageUploader({ value, onChange, language = "english" }: ImageUp
       {error && (
         <div className="mt-1.5 flex items-start gap-1.5 text-xs text-red-500 font-medium bg-red-50 border border-red-200 p-2 rounded-xl">
           <span className="shrink-0 mt-0.5">⚠️</span>
-          <span className="flex-1 leading-snug">{error}</span>
+          <span className="flex-1 leading-snug">
+            {error}
+            {rawFallback && (
+              <button
+                type="button"
+                onClick={handleUseRawLink}
+                className="ml-2 underline font-semibold text-red-600 hover:text-red-700 cursor-pointer"
+              >
+                Vẫn dùng link gốc
+              </button>
+            )}
+          </span>
           <button
             type="button"
             onClick={() => setError(null)}

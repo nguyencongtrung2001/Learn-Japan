@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import {
+  v2 as cloudinary,
+  type UploadApiOptions,
+  type UploadApiResponse,
+} from "cloudinary";
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+export const maxDuration = 30;
+
+// Vercel giới hạn body của Serverless Function ở ~4.5MB → để 4MB cho an toàn
+// (client đã tự nén ảnh lớn trước khi gửi, xem components/folder/image-uploader.tsx).
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
 
 const EXT_MAP: Record<string, string> = {
@@ -15,142 +23,181 @@ const EXT_MAP: Record<string, string> = {
   "image/svg+xml": "svg",
 };
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
+type ErrorBody = { error: string; code: string };
+
+function fail(error: string, code: string, status: number) {
+  return NextResponse.json<ErrorBody>({ error, code }, { status });
+}
+
 /**
- * Lưu ảnh vào thư mục public/uploads cục bộ, nếu lỗi ổ đĩa thì tự chuyển sang Base64 data URL
+ * Cấu hình Cloudinary từ 3 biến riêng lẻ, hoặc CLOUDINARY_URL
+ * (SDK tự đọc CLOUDINARY_URL khi khởi tạo). Trả về false nếu thiếu cấu hình.
  */
-async function saveLocally(buffer: Buffer, mimeType: string): Promise<string> {
-  try {
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
+function configureCloudinary(): boolean {
+  const cloud_name = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const api_key = process.env.CLOUDINARY_API_KEY?.trim();
+  const api_secret = process.env.CLOUDINARY_API_SECRET?.trim();
 
-    const ext = EXT_MAP[mimeType] || "jpg";
-    const uniqueName = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
-    const filePath = path.join(uploadDir, uniqueName);
-
-    await fs.writeFile(filePath, buffer);
-    return `/uploads/${uniqueName}`;
-  } catch (fsErr) {
-    console.warn("Ghi file cục bộ thất bại, chuyển sang Base64:", fsErr);
-    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  if (cloud_name && api_key && api_secret) {
+    cloudinary.config({ cloud_name, api_key, api_secret, secure: true });
+    return true;
   }
+
+  const cfg = cloudinary.config();
+  return Boolean(cfg.cloud_name && cfg.api_key && cfg.api_secret);
+}
+
+/** Cloudinary reject bằng object {message, http_code} (đôi khi bọc trong .error). */
+function readCloudinaryError(err: unknown): { message: string; httpCode?: number } {
+  const raw = (typeof err === "object" && err !== null ? err : {}) as Record<string, unknown>;
+  const inner = (typeof raw.error === "object" && raw.error !== null ? raw.error : raw) as Record<
+    string,
+    unknown
+  >;
+  const message =
+    typeof inner.message === "string" && inner.message
+      ? inner.message
+      : err instanceof Error
+        ? err.message
+        : "Lỗi không xác định từ Cloudinary";
+  const httpCode = typeof inner.http_code === "number" ? inner.http_code : undefined;
+  return { message, httpCode };
+}
+
+function uploadOptions(folder: string, mimeType?: string): UploadApiOptions {
+  const options: UploadApiOptions = { folder, resource_type: "image" };
+  // Giới hạn kích thước ảnh gốc lưu trên Cloudinary (tiết kiệm dung lượng/băng thông).
+  if (mimeType !== "image/svg+xml") {
+    options.transformation = [{ width: 1600, height: 1600, crop: "limit" }];
+  }
+  return options;
+}
+
+function uploadBuffer(buffer: Buffer, options: UploadApiOptions): Promise<UploadApiResponse> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err || !result) return reject(err ?? new Error("Cloudinary không trả về kết quả."));
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+}
+
+/** CHỈ dùng khi chạy dev mà chưa cấu hình Cloudinary. Production không bao giờ dùng. */
+async function saveLocallyForDev(buffer: Buffer, mimeType: string): Promise<string> {
+  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(uploadDir, { recursive: true });
+  const ext = EXT_MAP[mimeType] || "jpg";
+  const uniqueName = `img-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`;
+  await fs.writeFile(path.join(uploadDir, uniqueName), buffer);
+  return `/uploads/${uniqueName}`;
 }
 
 export async function POST(req: NextRequest) {
+  let formData: FormData;
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const remoteUrl = (formData.get("url") as string | null)?.trim();
-    const language = (formData.get("language") as string) || "english";
+    formData = await req.formData();
+  } catch {
+    return fail("Không đọc được dữ liệu gửi lên (file quá lớn hoặc sai định dạng).", "bad_request", 400);
+  }
 
-    if (!file && !remoteUrl) {
-      return NextResponse.json({ error: "Chưa cung cấp file ảnh hoặc link URL." }, { status: 400 });
+  const file = formData.get("file");
+  const remoteUrl = (formData.get("url") as string | null)?.trim();
+  const language = (formData.get("language") as string) || "english";
+  const folder = language === "japanese" ? "Home/Japan" : "Home/English";
+
+  if (!(file instanceof File) && !remoteUrl) {
+    return fail("Chưa cung cấp file ảnh hoặc link URL.", "missing_input", 400);
+  }
+
+  const configured = configureCloudinary();
+
+  // ─── TRƯỜNG HỢP 1: DÁN LINK URL ───
+  // Cloudinary tự tải ảnh từ link → server của mình không fetch URL lạ (tránh SSRF).
+  if (remoteUrl) {
+    let parsed: URL;
+    try {
+      parsed = new URL(remoteUrl);
+    } catch {
+      return fail("Link ảnh không hợp lệ.", "invalid_url", 400);
     }
-
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
-    const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
-    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
-    const folder = language === "japanese" ? "Home/Japan" : "Home/English";
-
-    // ─── TRƯỜNG HỢP 1: DÁN LINK URL TỪ NGOÀI ───
-    if (remoteUrl) {
-      // 1. Thử đưa thẳng URL lên Cloudinary để lưu trữ vĩnh viễn
-      if (cloudName && apiKey && apiSecret) {
-        try {
-          cloudinary.config({
-            cloud_name: cloudName,
-            api_key: apiKey,
-            api_secret: apiSecret,
-            secure: true,
-          });
-
-          const uploadResult = await cloudinary.uploader.upload(remoteUrl, {
-            folder,
-            resource_type: "image",
-          });
-
-          if (uploadResult?.secure_url) {
-            return NextResponse.json({ url: uploadResult.secure_url, source: "cloudinary" });
-          }
-        } catch (cloudErr) {
-          console.warn("Cloudinary remote URL upload failed, trying local clone:", cloudErr);
-        }
-      }
-
-      // 2. Dự phòng: Tải ảnh từ URL về lưu cục bộ để tránh link chết
-      try {
-        const fetchRes = await fetch(remoteUrl, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-        });
-        if (fetchRes.ok) {
-          const contentType = fetchRes.headers.get("content-type") || "image/jpeg";
-          const mimeType = contentType.split(";")[0].trim();
-          const arrayBuf = await fetchRes.arrayBuffer();
-          const localUrl = await saveLocally(Buffer.from(arrayBuf), mimeType);
-          return NextResponse.json({ url: localUrl, source: "local" });
-        }
-      } catch (fetchErr) {
-        console.warn("Fetch remote URL failed, using raw link:", fetchErr);
-      }
-
-      // 3. Fallback cuối cùng: giữ nguyên link người dùng nhập
-      return NextResponse.json({ url: remoteUrl, source: "raw" });
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      return fail("Chỉ hỗ trợ link http/https.", "invalid_url", 400);
     }
-
-    // ─── TRƯỜNG HỢP 2: TẢI FILE ẢNH TỪ MÁY ───
-    if (!file) {
-      return NextResponse.json({ error: "Chưa chọn file ảnh." }, { status: 400 });
-    }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Chỉ chấp nhận file ảnh (JPG, PNG, WebP, GIF, SVG)." },
-        { status: 400 }
+    if (!configured) {
+      return fail(
+        "Server chưa cấu hình Cloudinary (thiếu CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET hoặc CLOUDINARY_URL).",
+        "cloudinary_not_configured",
+        503
       );
     }
+    try {
+      const result = await cloudinary.uploader.upload(remoteUrl, uploadOptions(folder));
+      return NextResponse.json({
+        url: result.secure_url,
+        publicId: result.public_id,
+        source: "cloudinary",
+      });
+    } catch (err) {
+      const { message, httpCode } = readCloudinaryError(err);
+      console.error("[upload] Cloudinary remote upload failed:", { message, httpCode, remoteUrl });
+      return fail(`Cloudinary không tải được link này: ${message}`, "cloudinary_error", 502);
+    }
+  }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "File vượt quá giới hạn 5MB." },
-        { status: 400 }
+  // ─── TRƯỜNG HỢP 2: FILE TỪ MÁY ───
+  if (!(file instanceof File)) {
+    return fail("Chưa chọn file ảnh.", "missing_input", 400);
+  }
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return fail("Chỉ chấp nhận file ảnh (JPG, PNG, WebP, GIF, SVG).", "invalid_type", 400);
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return fail("File vượt quá giới hạn 4MB.", "too_large", 413);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  if (!configured) {
+    if (IS_PROD) {
+      console.error("[upload] Thiếu biến môi trường Cloudinary trên server production.");
+      return fail(
+        "Server chưa cấu hình Cloudinary (thiếu CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET hoặc CLOUDINARY_URL).",
+        "cloudinary_not_configured",
+        503
       );
     }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // 1. Thử upload lên Cloudinary nếu có cấu hình đầy đủ
-    if (cloudName && apiKey && apiSecret) {
-      try {
-        cloudinary.config({
-          cloud_name: cloudName,
-          api_key: apiKey,
-          api_secret: apiSecret,
-          secure: true,
-        });
-
-        const b64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-        const uploadResult = await cloudinary.uploader.upload(b64, {
-          folder,
-          resource_type: "image",
-        });
-
-        if (uploadResult?.secure_url) {
-          return NextResponse.json({ url: uploadResult.secure_url, source: "cloudinary" });
-        }
-      } catch (cloudErr) {
-        console.warn("Cloudinary upload failed, falling back to local storage:", cloudErr);
-      }
+    // Dev: cho phép lưu cục bộ để không bị chặn, nhưng báo rõ để UI cảnh báo.
+    console.warn("[upload] Chưa cấu hình Cloudinary → lưu cục bộ (chỉ dev).");
+    try {
+      const url = await saveLocallyForDev(buffer, file.type);
+      return NextResponse.json({
+        url,
+        source: "local",
+        warning: "Chưa cấu hình Cloudinary nên ảnh chỉ lưu cục bộ, sẽ mất khi deploy.",
+      });
+    } catch (fsErr) {
+      console.error("[upload] Ghi file cục bộ thất bại:", fsErr);
+      return fail("Không thể lưu ảnh cục bộ.", "local_write_failed", 500);
     }
+  }
 
-    // 2. Tự động lưu cục bộ (hoặc Base64) nếu Cloudinary chưa sẵn sàng
-    const localUrl = await saveLocally(buffer, file.type);
+  try {
+    const result = await uploadBuffer(buffer, uploadOptions(folder, file.type));
     return NextResponse.json({
-      url: localUrl,
-      source: "local",
+      url: result.secure_url,
+      publicId: result.public_id,
+      source: "cloudinary",
     });
   } catch (err) {
-    console.error("Upload API error:", err);
-    const detail = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: `Lỗi server khi upload ảnh: ${detail}` }, { status: 500 });
+    const { message, httpCode } = readCloudinaryError(err);
+    console.error("[upload] Cloudinary upload failed:", { message, httpCode });
+    const hint =
+      httpCode === 401 || httpCode === 403
+        ? " (kiểm tra lại cloud name / API key / API secret có cùng một tài khoản không)"
+        : "";
+    return fail(`Upload lên Cloudinary thất bại: ${message}${hint}`, "cloudinary_error", 502);
   }
 }
