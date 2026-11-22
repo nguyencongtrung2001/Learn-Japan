@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
           secure: true,
         });
 
-        const folder = language === "japanese" ? "Image/Japan" : "Image/English";
+        const folder = language === "japanese" ? "Home/Japan" : "Home/English";
         const b64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
         const uploadResult = await cloudinary.uploader.upload(b64, {

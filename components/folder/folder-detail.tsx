@@ -184,11 +184,14 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
         const updated = await updateCard(cardId, {
           word: input.word,
           kanji: input.kanji,
+          furigana: input.furigana,
+          romaji: input.romaji,
           translation: input.translation,
           partOfSpeech: input.partOfSpeech,
           phonetic: input.phonetic,
           definition: input.definition,
           example: input.example,
+          exampleMeaning: input.exampleMeaning,
           imageUrl: input.imageUrl,
           folderId,
         });
@@ -196,29 +199,14 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
 
         commitCards(
           cardsRef.current.map((c) =>
-            c.id === cardId
-              ? {
-                  ...c,
-                  word: input.word,
-                  kanji: input.kanji || null,
-                  furigana: input.furigana || null,
-                  romaji: input.romaji || null,
-                  translation: input.translation,
-                  partOfSpeech: input.partOfSpeech || null,
-                  definition: input.definition || null,
-                  example: input.example || null,
-                  exampleMeaning: input.exampleMeaning || null,
-                  phonetic: input.phonetic || null,
-                  imageUrl: input.imageUrl || null,
-                }
-              : c
+            c.id === cardId ? updated : c
           )
         );
         setEditingCard(null);
         return true;
       } catch (error) {
         console.error("Lỗi cập nhật thẻ:", error);
-        alert("Không thể cập nhật thẻ. Vui lòng thử lại.");
+        alert(`Không thể cập nhật thẻ: ${error instanceof Error ? error.message : "Vui lòng thử lại"}`);
         return false;
       }
     },

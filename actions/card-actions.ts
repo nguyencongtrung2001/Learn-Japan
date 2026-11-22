@@ -227,31 +227,45 @@ export async function updateCard(
     imageUrl?: string;
     folderId?: number;
   }
-) {
-  const result = await db
-    .update(cards)
-    .set({
-      ...(data.word !== undefined && { word: data.word.trim() }),
-      ...(data.kanji !== undefined && { kanji: data.kanji?.trim() || null }),
-      ...(data.furigana !== undefined && { furigana: data.furigana?.trim() || null }),
-      ...(data.romaji !== undefined && { romaji: data.romaji?.trim() || null }),
-      ...(data.translation !== undefined && { translation: data.translation.trim() }),
-      ...(data.partOfSpeech !== undefined && { partOfSpeech: data.partOfSpeech?.trim() || null }),
-      ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
-      ...(data.example !== undefined && { example: data.example?.trim() || null }),
-      ...(data.exampleMeaning !== undefined && { exampleMeaning: data.exampleMeaning?.trim() || null }),
-      ...(data.phonetic !== undefined && { phonetic: data.phonetic?.trim() || null }),
-      ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl?.trim() || null }),
-    })
-    .where(eq(cards.id, id))
-    .returning();
+): Promise<CardListItem | null> {
+  try {
+    const result = await db
+      .update(cards)
+      .set({
+        ...(data.word !== undefined && { word: data.word.trim() }),
+        ...(data.kanji !== undefined && { kanji: data.kanji?.trim() || null }),
+        ...(data.furigana !== undefined && { furigana: data.furigana?.trim() || null }),
+        ...(data.romaji !== undefined && { romaji: data.romaji?.trim() || null }),
+        ...(data.translation !== undefined && { translation: data.translation.trim() }),
+        ...(data.partOfSpeech !== undefined && { partOfSpeech: data.partOfSpeech?.trim() || null }),
+        ...(data.definition !== undefined && { definition: data.definition?.trim() || null }),
+        ...(data.example !== undefined && { example: data.example?.trim() || null }),
+        ...(data.exampleMeaning !== undefined && { exampleMeaning: data.exampleMeaning?.trim() || null }),
+        ...(data.phonetic !== undefined && { phonetic: data.phonetic?.trim() || null }),
+        ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl?.trim() || null }),
+      })
+      .where(eq(cards.id, id))
+      .returning();
 
-  const folderId = data.folderId || result[0]?.folderId;
-  if (folderId) {
-    revalidatePath(`/folders/${folderId}`);
+    if (!result || result.length === 0) {
+      console.warn(`updateCard: Không tìm thấy thẻ id ${id}`);
+      return null;
+    }
+
+    const folderId = data.folderId || result[0]?.folderId;
+    if (folderId) {
+      try {
+        revalidatePath(`/folders/${folderId}`);
+      } catch (revErr) {
+        console.warn("revalidatePath warning:", revErr);
+      }
+    }
+
+    return toCardListItem(result[0]);
+  } catch (err) {
+    console.error("Lỗi khi cập nhật thẻ trong DB:", err);
+    throw new Error(err instanceof Error ? err.message : "Lỗi server khi cập nhật thẻ");
   }
-
-  return result[0];
 }
 
 // ─── Delete card ─────────────────────────────────────────────────
