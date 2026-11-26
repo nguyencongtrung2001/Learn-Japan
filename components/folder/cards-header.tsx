@@ -59,6 +59,20 @@ export function CardsHeader({
             {showBulkImport ? "✕ Đóng Nhập Excel" : "📊 Nhập File Excel"}
           </button>
         )}
+        {onToggleSheetSync && (
+          <button
+            type="button"
+            onClick={onToggleSheetSync}
+            className={`cursor-pointer rounded-xl px-3.5 py-2 text-xs font-bold transition-all shadow-xs ${
+              showSheetSync
+                ? "bg-emerald-600 text-white"
+                : "bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+            }`}
+            title="Đồng bộ trực tiếp 2 chiều với Google Sheet"
+          >
+            {showSheetSync ? "✕ Đóng Đồng Bộ Sheet" : "🔄 Đồng Bộ Google Sheet"}
+          </button>
+        )}
         {viewMode && onChangeMode && (
           <ViewSwitcher
             currentMode={viewMode}
