@@ -16,6 +16,8 @@ export const folders = pgTable("folders", {
   description: text("description"),
   maxCards: integer("max_cards"), // optional max number of cards, null = unlimited
   language: text("language").default("english").notNull(),
+  googleSheetUrl: text("google_sheet_url"),
+  lastSyncedAt: timestamp("last_synced_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

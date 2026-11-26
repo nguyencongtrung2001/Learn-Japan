@@ -28,6 +28,8 @@ export async function getFolders(): Promise<{ success: boolean; data?: FolderWit
         description: folders.description,
         maxCards: folders.maxCards,
         language: folders.language,
+        googleSheetUrl: folders.googleSheetUrl,
+        lastSyncedAt: folders.lastSyncedAt,
         createdAt: folders.createdAt,
         cardCount: sql<number>`count(${cards.id})::int`,
         learnedCount: sql<number>`count(case when ${cards.growthLevel} >= 5 then 1 end)::int`,
@@ -82,7 +84,14 @@ export async function createFolder(data: {
 // ─── Update folder ──────────────────────────────────────────────
 export async function updateFolder(
   id: number,
-  data: { name: string; description?: string; maxCards?: number; language?: string }
+  data: {
+    name: string;
+    description?: string;
+    maxCards?: number;
+    language?: string;
+    googleSheetUrl?: string | null;
+    lastSyncedAt?: Date | null;
+  }
 ) {
   const result = await db
     .update(folders)
@@ -91,6 +100,8 @@ export async function updateFolder(
       description: data.description || null,
       maxCards: data.maxCards ?? null,
       ...(data.language !== undefined && { language: data.language }),
+      ...(data.googleSheetUrl !== undefined && { googleSheetUrl: data.googleSheetUrl }),
+      ...(data.lastSyncedAt !== undefined && { lastSyncedAt: data.lastSyncedAt }),
     })
     .where(eq(folders.id, id))
     .returning();

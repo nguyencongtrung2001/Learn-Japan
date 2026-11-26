@@ -4,8 +4,10 @@ interface CardsHeaderProps {
   count: number;
   onToggleAddCard?: () => void;
   onToggleBulkImport?: () => void;
+  onToggleSheetSync?: () => void;
   showCardForm?: boolean;
   showBulkImport?: boolean;
+  showSheetSync?: boolean;
   viewMode?: FolderViewMode;
   onChangeMode?: (mode: FolderViewMode) => void;
 }
@@ -14,8 +16,10 @@ export function CardsHeader({
   count,
   onToggleAddCard,
   onToggleBulkImport,
+  onToggleSheetSync,
   showCardForm,
   showBulkImport,
+  showSheetSync,
   viewMode,
   onChangeMode,
 }: CardsHeaderProps) {
