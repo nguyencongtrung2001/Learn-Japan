@@ -59,6 +59,21 @@ export function FolderInfoCard({
           <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700">
             💧 {dueCount} cần ôn
           </span>
+          {folder.googleSheetUrl && (
+            <a
+              href={folder.googleSheetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors flex items-center gap-1"
+              title={
+                folder.lastSyncedAt
+                  ? `Mở file Google Sheet (Đồng bộ lần cuối: ${new Date(folder.lastSyncedAt).toLocaleString("vi-VN")})`
+                  : "Mở file Google Sheet liên kết"
+              }
+            >
+              <span>📊</span> Google Sheet ↗
+            </a>
+          )}
         </div>
       </div>
     </div>

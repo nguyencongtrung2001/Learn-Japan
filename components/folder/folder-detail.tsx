@@ -9,6 +9,7 @@ import { toCardListItem, type CardInput, type CardListItem } from "@/lib/card-ut
 import type { Folder } from "@/db/schema";
 import BulkImport from "@/components/bulk-import";
 import { FolderInfoCard } from "./folder-info-card";
+import { GoogleSheetSyncPanel } from "./google-sheet-sync-panel";
 
 import { QuizActions } from "./quiz-actions";
 import { FolderEditForm } from "./folder-edit-form";
@@ -38,6 +39,7 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
   const [cards, setCards] = useState(initialCards);
   const [showCardForm, setShowCardForm] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [showSheetSync, setShowSheetSync] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editingCard, setEditingCard] = useState<CardListItem | null>(null);
   const [now] = useState(serverNow);
@@ -160,6 +162,21 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
       return created.length;
     },
     [folderId, commitCards]
+  );
+
+  // Cập nhật khi đồng bộ Google Sheet thành công
+  const handleSyncSuccess = useCallback(
+    (newCards: CardListItem[], updatedSheetUrl?: string, lastSynced?: string) => {
+      commitCards(newCards);
+      if (updatedSheetUrl !== undefined || lastSynced !== undefined) {
+        setFolder((prev) => ({
+          ...prev,
+          googleSheetUrl: updatedSheetUrl !== undefined ? updatedSheetUrl : prev.googleSheetUrl,
+          lastSyncedAt: lastSynced ? new Date(lastSynced) : prev.lastSyncedAt,
+        }));
+      }
+    },
+    [commitCards]
   );
 
   const handleSaveFolder = useCallback(
@@ -346,18 +363,41 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
             />
           )}
 
+          {/* Bảng Đồng Bộ Google Sheet */}
+          {showSheetSync && (
+            <GoogleSheetSyncPanel
+              folder={folder}
+              onClose={() => setShowSheetSync(false)}
+              onSyncSuccess={handleSyncSuccess}
+            />
+          )}
+
           <CardsHeader
             count={cards.length}
             onToggleAddCard={() => {
               setShowCardForm((v) => !v);
-              if (!showCardForm) setShowBulkImport(false);
+              if (!showCardForm) {
+                setShowBulkImport(false);
+                setShowSheetSync(false);
+              }
             }}
             onToggleBulkImport={() => {
               setShowBulkImport((v) => !v);
-              if (!showBulkImport) setShowCardForm(false);
+              if (!showBulkImport) {
+                setShowCardForm(false);
+                setShowSheetSync(false);
+              }
+            }}
+            onToggleSheetSync={() => {
+              setShowSheetSync((v) => !v);
+              if (!showSheetSync) {
+                setShowCardForm(false);
+                setShowBulkImport(false);
+              }
             }}
             showCardForm={showCardForm}
             showBulkImport={showBulkImport}
+            showSheetSync={showSheetSync}
             viewMode={viewMode}
             onChangeMode={handleChangeViewMode}
           />
@@ -367,10 +407,17 @@ export default function FolderDetail({ folder: initialFolder, initialCards, serv
               onAddCard={() => {
                 setShowCardForm(true);
                 setShowBulkImport(false);
+                setShowSheetSync(false);
               }}
               onBulkImport={() => {
                 setShowBulkImport(true);
                 setShowCardForm(false);
+                setShowSheetSync(false);
+              }}
+              onSheetSync={() => {
+                setShowSheetSync(true);
+                setShowCardForm(false);
+                setShowBulkImport(false);
               }}
             />
           ) : (
