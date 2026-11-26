@@ -25,7 +25,7 @@ export interface SyncResult {
 }
 
 /** Chuyển đổi link Google Sheet thành link xuất bản CSV */
-export function getGoogleSheetCsvUrl(sheetUrl: string): string | null {
+function getGoogleSheetCsvUrl(sheetUrl: string): string | null {
   const trimmed = sheetUrl.trim();
   if (!trimmed) return null;
 
