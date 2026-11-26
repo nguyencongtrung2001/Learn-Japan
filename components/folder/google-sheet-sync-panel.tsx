@@ -25,6 +25,7 @@ export function GoogleSheetSyncPanel({
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<SyncStats | null>(null);
+  const [syncedSheetName, setSyncedSheetName] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState(false);
 
   const isJapanese = folder.language === "japanese";
@@ -40,6 +41,7 @@ export function GoogleSheetSyncPanel({
     setSyncing(true);
     setError(null);
     setStats(null);
+    setSyncedSheetName(null);
 
     try {
       const res = await syncFolderWithGoogleSheet(folder.id, trimmed);
@@ -47,6 +49,9 @@ export function GoogleSheetSyncPanel({
         setError(res.error || "Không thể đồng bộ từ Google Sheet.");
       } else {
         setStats(res.stats);
+        if (res.sheetName) {
+          setSyncedSheetName(res.sheetName);
+        }
         if (res.updatedCards) {
           onSyncSuccess(res.updatedCards, res.sheetUrl, res.lastSyncedAt);
         }
@@ -201,7 +206,7 @@ export function GoogleSheetSyncPanel({
         {/* Hướng dẫn quyền truy cập Google Sheet */}
         <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#586380] pt-0.5">
           <span className="flex items-center gap-1 text-amber-700">
-            <span>⚠️</span> File Sheet phải được bật: <strong>Chia sẻ $\rightarrow$ Bất kỳ ai có đường liên kết đều có thể xem</strong> (Viewer).
+            <span>⚠️</span> File Sheet phải được bật: <strong>Chia sẻ → Bất kỳ ai có đường liên kết đều có thể xem</strong> (Viewer).
           </span>
 
           {folder.lastSyncedAt && (
@@ -232,9 +237,18 @@ export function GoogleSheetSyncPanel({
         {/* Thông báo kết quả đồng bộ thành công */}
         {stats && (
           <div className="rounded-xl border border-emerald-300 bg-emerald-50/90 p-4 text-xs animate-fade-in-up">
-            <div className="font-bold text-emerald-900 flex items-center gap-1.5 mb-2 text-sm">
+            <div className="font-bold text-emerald-900 flex items-center gap-1.5 mb-1.5 text-sm">
               <span>🎉</span> Đồng bộ thành công với Google Sheet!
             </div>
+            {syncedSheetName && (
+              <div className="text-[11px] text-emerald-800 font-medium mb-2.5 flex items-center gap-1.5">
+                <span>📑</span>
+                <span>Trang tính:</span>
+                <span className="font-bold bg-white/90 px-2 py-0.5 rounded-md border border-emerald-300 text-emerald-900 shadow-2xs">
+                  {syncedSheetName}
+                </span>
+              </div>
+            )}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-bold">
               <div className="bg-white rounded-lg p-2 border border-emerald-200 shadow-2xs">
                 <div className="text-emerald-700 text-base">+{stats.added}</div>

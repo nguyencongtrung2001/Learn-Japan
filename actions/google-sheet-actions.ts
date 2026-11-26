@@ -21,33 +21,185 @@ export interface SyncResult {
   lastSyncedAt?: string;
   error?: string;
   sheetUrl?: string;
+  sheetName?: string;
   updatedCards?: CardListItem[];
 }
 
-/** Chuyển đổi link Google Sheet thành link xuất bản CSV */
-function getGoogleSheetCsvUrl(sheetUrl: string): string | null {
+/**
+ * Phân tích link Google Sheet để lấy document ID, gid và trạng thái publish
+ */
+function parseGoogleSheetUrl(sheetUrl: string): {
+  docId: string | null;
+  gid: string | null;
+  isPub: boolean;
+  exportUrl: string | null;
+} {
   const trimmed = sheetUrl.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return { docId: null, gid: null, isPub: false, exportUrl: null };
 
-  // Dạng link xuất bản web (publish to web): .../pubhtml hoặc .../pub
   if (trimmed.includes("/pubhtml") || trimmed.includes("/pub?")) {
-    return trimmed.replace(/\/pubhtml.*$/, "/pub?output=csv").replace(/\/pub\?.*$/, "/pub?output=csv");
+    const pubCsv = trimmed
+      .replace(/\/pubhtml.*$/, "/pub?output=csv")
+      .replace(/\/pub\?.*$/, "/pub?output=csv");
+    return { docId: null, gid: null, isPub: true, exportUrl: pubCsv };
   }
 
-  // Dạng link chia sẻ bình thường: https://docs.google.com/spreadsheets/d/{ID}/edit...
-  const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if (!match) return null;
+  // Khớp cả link docs.google.com/spreadsheets/d/{id} và drive.google.com/file/d/{id}
+  let docId: string | null = null;
+  const docMatch = trimmed.match(/\/(?:spreadsheets(?:\/u\/\d+)?|file)\/d\/([a-zA-Z0-9-_]+)/);
+  if (docMatch) {
+    docId = docMatch[1];
+  } else {
+    const idParamMatch = trimmed.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+    if (idParamMatch) docId = idParamMatch[1];
+  }
 
-  const docId = match[1];
-
-  // Tìm gid nếu có (trang tính cụ thể)
-  let gid = "0";
+  let gid: string | null = null;
   const gidMatch = trimmed.match(/[#&?]gid=([0-9]+)/);
   if (gidMatch) {
     gid = gidMatch[1];
   }
 
-  return `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+  return { docId, gid, isPub: false, exportUrl: null };
+}
+
+/** Tách từ khóa để so khớp tên thư mục với tên tab trên Google Sheet */
+function cleanWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/&/g, " va ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 1 && w !== "va");
+}
+
+/** Tìm sheet trong file có tên khớp nhất với tên thư mục */
+function findBestSheetName(folderName: string, availableSheets: string[]): string {
+  if (availableSheets.length === 0) return "";
+  if (availableSheets.length === 1) return availableSheets[0];
+
+  const fWords = cleanWords(folderName);
+  let best = availableSheets[0];
+  let maxScore = 0;
+
+  for (const s of availableSheets) {
+    const sWords = cleanWords(s);
+    let score = 0;
+    for (const fw of fWords) {
+      if (sWords.some((sw) => sw.includes(fw) || fw.includes(sw))) {
+        score++;
+      }
+    }
+    if (score > maxScore) {
+      maxScore = score;
+      best = s;
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Tải dữ liệu bảng tính Google Sheet (hỗ trợ cả link thanh địa chỉ có gid và link nút chia sẻ)
+ */
+async function fetchGoogleSheetRows(
+  effectiveUrl: string,
+  folderName: string
+): Promise<{ sheetName: string; rawRows: (string | number | undefined)[][] }> {
+  const { docId, gid, isPub, exportUrl } = parseGoogleSheetUrl(effectiveUrl);
+
+  // Link Publish to web
+  if (isPub && exportUrl) {
+    const res = await fetch(exportUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      next: { revalidate: 0 },
+    });
+    if (!res.ok) throw new Error(`Google Sheets trả về mã lỗi HTTP ${res.status}.`);
+    const text = await res.text();
+    const wb = XLSX.read(text, { type: "string" });
+    const sName = wb.SheetNames[0] || "Sheet1";
+    return {
+      sheetName: sName,
+      rawRows: XLSX.utils.sheet_to_json(wb.Sheets[sName], { header: 1, defval: "" }),
+    };
+  }
+
+  if (!docId) {
+    throw new Error("Đường dẫn Google Sheet không hợp lệ. Hãy kiểm tra lại liên kết.");
+  }
+
+  // 1. Nếu link có gid cụ thể (người dùng copy từ thanh địa chỉ khi chọn tab): tải trực tiếp CSV của tab đó
+  if (gid) {
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+    try {
+      const res = await fetch(csvUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+        next: { revalidate: 0 },
+      });
+      if (res.ok) {
+        const text = await res.text();
+        const wb = XLSX.read(text, { type: "string" });
+        const sName = wb.SheetNames[0] || "Sheet1";
+        return {
+          sheetName: sName,
+          rawRows: XLSX.utils.sheet_to_json(wb.Sheets[sName], { header: 1, defval: "" }),
+        };
+      }
+    } catch {
+      // Nếu lỗi thì tiếp tục thử phương thức XLSX bên dưới
+    }
+  }
+
+  // 2. Nếu link không có gid (ví dụ nút Chia sẻ `?usp=sharing`), hoặc CSV thất bại:
+  // Tải file XLSX đa sheet và tự động khớp sheet phù hợp với tên thư mục
+  const xlsxUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=xlsx`;
+  try {
+    const res = await fetch(xlsxUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+      next: { revalidate: 0 },
+    });
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer());
+      const wb = XLSX.read(buf, { type: "buffer" });
+      const targetSheetName = findBestSheetName(folderName, wb.SheetNames);
+      const sheet = wb.Sheets[targetSheetName];
+      return {
+        sheetName: targetSheetName,
+        rawRows: XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" }),
+      };
+    }
+  } catch {
+    // Nếu lỗi thì thử phương thức CSV fallback bên dưới
+  }
+
+  // 3. Fallback cuối cùng: tải CSV mặc định không có gid
+  const csvFallbackUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`;
+  const resFallback = await fetch(csvFallbackUrl, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+    next: { revalidate: 0 },
+  });
+
+  if (!resFallback.ok) {
+    if (resFallback.status === 404 || resFallback.status === 403 || resFallback.status === 401) {
+      throw new Error(
+        "Không thể truy cập Google Sheet. Vui lòng kiểm tra quyền: 'Bất kỳ ai có đường liên kết đều có thể xem' (Anyone with the link can view)."
+      );
+    }
+    throw new Error(
+      `Google Sheets trả về mã lỗi HTTP ${resFallback.status}. Vui lòng kiểm tra lại quyền truy cập link.`
+    );
+  }
+
+  const text = await resFallback.text();
+  const wb = XLSX.read(text, { type: "string" });
+  const sName = wb.SheetNames[0] || "Sheet1";
+  return {
+    sheetName: sName,
+    rawRows: XLSX.utils.sheet_to_json(wb.Sheets[sName], { header: 1, defval: "" }),
+  };
 }
 
 /** Tách câu ví dụ và bản dịch nghĩa của ví dụ nếu có dạng "Câu ví dụ (Bản dịch)" */
@@ -97,55 +249,17 @@ export async function syncFolderWithGoogleSheet(
       };
     }
 
-    const csvUrl = getGoogleSheetCsvUrl(effectiveUrl);
-    if (!csvUrl) {
-      return {
-        success: false,
-        error: "Đường dẫn Google Sheet không hợp lệ. Hãy kiểm tra lại link bảng tính.",
-      };
-    }
-
-    // 2. Tải dữ liệu CSV từ Google Sheets
-    const res = await fetch(csvUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-      },
-      next: { revalidate: 0 },
-    });
-
-    if (!res.ok) {
-      if (res.status === 404 || res.status === 403 || res.status === 401) {
-        return {
-          success: false,
-          error:
-            "Không thể truy cập Google Sheet. Vui lòng mở quyền 'Bất kỳ ai có đường liên kết đều có thể xem' (Anyone with the link can view) trên file Google Sheet của bạn.",
-        };
-      }
-      return {
-        success: false,
-        error: `Google Sheets trả về mã lỗi HTTP ${res.status}. Vui lòng kiểm tra lại quyền truy cập link.`,
-      };
-    }
-
-    const arrayBuffer = await res.arrayBuffer();
-    const workbook = XLSX.read(Buffer.from(arrayBuffer), { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      return { success: false, error: "File Google Sheet không có trang tính nào hợp lệ." };
-    }
-
-    const rawRows: (string | number | undefined)[][] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-      header: 1,
-      defval: "",
-    });
+    // 2. Tải dữ liệu bảng tính (chuẩn hóa UTF-8, hỗ trợ cả URL thanh địa chỉ & URL chia sẻ)
+    const { sheetName: loadedSheetName, rawRows } = await fetchGoogleSheetRows(
+      effectiveUrl,
+      folder.name
+    );
 
     if (!rawRows || rawRows.length === 0) {
       return { success: false, error: "Google Sheet đang trống, không có dữ liệu." };
     }
 
     // 3. Phân tích Header & Thứ tự cột
-    // Cấu trúc chuẩn người dùng:
-    // ID | Từ vựng (Kana) | Kanji | Furigana | Romaji | Loại từ | Nghĩa | Ngữ cảnh | Ví dụ | Có dịch nghĩa | Hình ảnh
     let headerMap: {
       id?: number;
       word?: number;
@@ -180,13 +294,32 @@ export async function syncFolderWithGoogleSheet(
         const c = col.toLowerCase();
         if (c === "id" || c === "mã" || c === "stt") {
           headerMap!.id = idx;
-        } else if (c.includes("dịch nghĩa ví dụ") || c.includes("có dịch nghĩa") || c.includes("dịch ví dụ") || c.includes("nghĩa ví dụ") || c.includes("例文訳")) {
+        } else if (
+          c.includes("dịch nghĩa ví dụ") ||
+          c.includes("có dịch nghĩa") ||
+          c.includes("dịch ví dụ") ||
+          c.includes("nghĩa ví dụ") ||
+          c.includes("例文訳")
+        ) {
           headerMap!.exampleMeaning = idx;
         } else if (c.includes("ví dụ") || c.includes("example") || c.includes("例文")) {
           headerMap!.example = idx;
-        } else if (c.includes("ngữ cảnh") || c.includes("sắc thái") || c.includes("định nghĩa") || c.includes("definition") || c.includes("context") || c.includes("文脈")) {
+        } else if (
+          c.includes("ngữ cảnh") ||
+          c.includes("sắc thái") ||
+          c.includes("định nghĩa") ||
+          c.includes("definition") ||
+          c.includes("context") ||
+          c.includes("文脈")
+        ) {
           headerMap!.definition = idx;
-        } else if (c.includes("loại từ") || c.includes("từ loại") || c.includes("pos") || c.includes("part of speech") || c.includes("品詞")) {
+        } else if (
+          c.includes("loại từ") ||
+          c.includes("từ loại") ||
+          c.includes("pos") ||
+          c.includes("part of speech") ||
+          c.includes("品詞")
+        ) {
           headerMap!.pos = idx;
         } else if (c.includes("nghĩa") || c.includes("translation") || c.includes("meaning") || c.includes("意味")) {
           headerMap!.translation = idx;
@@ -266,7 +399,6 @@ export async function syncFolderWithGoogleSheet(
           explicitMeaning = String(row[9] ?? "").trim();
           imageUrl = String(row[10] ?? "").trim();
         } else if (row.length === 10) {
-          // 10 cột (không có ID): Từ vựng (0) | Kanji (1) | Furigana (2) | Romaji (3) | Loại từ (4) | Nghĩa (5) | Ngữ cảnh (6) | Ví dụ (7) | Có dịch nghĩa (8) | Hình ảnh (9)
           word = String(row[0] ?? "").trim();
           kanji = String(row[1] ?? "").trim();
           furigana = String(row[2] ?? "").trim();
@@ -283,6 +415,14 @@ export async function syncFolderWithGoogleSheet(
         }
       }
 
+      // Bỏ qua các hàng trống ở cuối trang tính
+      const hasAnyData = Boolean(
+        word || translation || kanji || furigana || romaji || rawExample || definition
+      );
+      if (!hasAnyData) {
+        continue;
+      }
+
       if (!word || !translation) {
         skipped++;
         continue;
@@ -294,7 +434,7 @@ export async function syncFolderWithGoogleSheet(
       );
 
       // 5. Kiểm tra đối chiếu thẻ:
-      // Ưu tiên 1: Tìm theo ID
+      // Ưu tiên 1: Tìm theo ID (nếu ID thuộc về thư mục này)
       let matchedCard = idVal ? cardByIdMap.get(idVal) : undefined;
       // Ưu tiên 2: Nếu không có ID, tìm theo cặp Từ vựng + Kanji
       if (!matchedCard) {
@@ -373,7 +513,7 @@ export async function syncFolderWithGoogleSheet(
     return {
       success: true,
       stats: {
-        totalRows: rawRows.length - startRowIndex,
+        totalRows: added + updated + unchanged + skipped,
         added,
         updated,
         unchanged,
@@ -381,6 +521,7 @@ export async function syncFolderWithGoogleSheet(
       },
       lastSyncedAt: now.toISOString(),
       sheetUrl: effectiveUrl,
+      sheetName: loadedSheetName,
       updatedCards: freshCards.map(toCardListItem),
     };
   } catch (err) {
